@@ -28,3 +28,22 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins."pipeline_generator"]
 sapientml_core = "core:SapientMLGenerator"
+
+[tool.pysen]
+version = "0.10"
+
+[tool.pysen-cli]
+settings_dir = ".pysen"
+
+[tool.pysen.lint]
+enable_black = true
+enable_flake8 = true
+enable_isort = true
+enable_mypy = false
+line_length = 120
+py_version = "py310"
+
+[tool.pysen.lint.source]
+includes = ["sapientml/", "tests/"]
+[pytest]
+addopts = "-p no:cacheprovider -s"
