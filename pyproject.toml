@@ -4,7 +4,7 @@ version = "0"
 description = "A SapientML plugin of SapientMLGenerator"
 authors = ["Kosaku Kimura <kimura.kosaku@fujitsu.com>"]
 license = "Apache-2.0"
-packages = [{ include = "core" }]
+include = ["core/**/*.py", "templates/**/*.py.jinja"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
