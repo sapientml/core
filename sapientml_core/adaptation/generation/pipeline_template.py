@@ -234,7 +234,7 @@ class PipelineTemplate(BaseModel):
         # read component template(s)
         template_files = []
         path = str(
-            Path(os.path.dirname(__file__)) / "../../../templates/preprocessing_templates"
+            Path(os.path.dirname(__file__)) / "../../templates/preprocessing_templates"
         )
         for file in os.listdir(path):
             if file.startswith(api_label):
@@ -463,7 +463,7 @@ class PipelineTemplate(BaseModel):
         component_description_dict = load_json(
             str(
                 Path(os.path.dirname(__file__))
-                / "../../../templates/explainability_templates"
+                / "../../templates/explainability_templates"
                 / "component_description.json"
             )
         )
