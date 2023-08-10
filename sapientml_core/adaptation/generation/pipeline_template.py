@@ -28,7 +28,7 @@ from ...seeding.predictor import name_to_label_mapping
 
 logger = logging.getLogger("sapientml")
 env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/../../../templates"), trim_blocks=True
+    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/../../templates"), trim_blocks=True
 )
 
 MODEL_IMPORT_LIBRARY_MAP = {

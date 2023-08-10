@@ -9,8 +9,8 @@ include = ["core/**/*.py", "templates/**/*.py.jinja"]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 sapientml = "^0.1.4"
-sapientml-loaddata = "^0.1.0"
-sapientml-preprocess = "^0.1.0"
+sapientml-loaddata = "^0.1.2"
+sapientml-preprocess = "^0.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -27,7 +27,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins."pipeline_generator"]
-sapientml_core = "core:SapientMLGenerator"
+sapientml_core = "sapientml_core:SapientMLGenerator"
 
 [tool.pysen]
 version = "0.10"

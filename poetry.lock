@@ -1981,35 +1981,31 @@ xgboost = ">=1.7.6,<2.0.0"
 
 [[package]]
 name = "sapientml-loaddata"
-version = "0.1.0"
+version = "0.1.2"
 description = "A SapientML plugin of CodeBlockGenerator for loading dataset"
 optional = false
 python-versions = ">=3.9,<3.13"
-files = []
-develop = true
+files = [
+    {file = "sapientml_loaddata-0.1.2-py3-none-any.whl", hash = "sha256:e7052a8c09054229118519eb7ab3089784b02fcfee2a97179d4df47e58a0408d"},
+    {file = "sapientml_loaddata-0.1.2.tar.gz", hash = "sha256:1211b761b0ba9489d005f23f254bc0c03da4805b7c15de8c34166c77d007ee98"},
+]
 
 [package.dependencies]
-sapientml = "^0.1.4"
-
-[package.source]
-type = "directory"
-url = "../loaddata"
+sapientml = ">=0.1.4,<0.2.0"
 
 [[package]]
 name = "sapientml-preprocess"
-version = "0.1.0"
+version = "0.1.2"
 description = "A SapientML plugin of preprocess CodeBlockGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
-files = []
-develop = true
+files = [
+    {file = "sapientml_preprocess-0.1.2-py3-none-any.whl", hash = "sha256:da1f906e3916a179e227778744b0ef66656a22a73a11614c73915a224083fa0b"},
+    {file = "sapientml_preprocess-0.1.2.tar.gz", hash = "sha256:9dd13b24c05bf01ca058d5d58ea3d74680bb8d822e6b4e714327531ee6f4eef1"},
+]
 
 [package.dependencies]
-sapientml = "^0.1.4"
-
-[package.source]
-type = "directory"
-url = "../preprocess"
+sapientml = ">=0.1.4,<0.2.0"
 
 [[package]]
 name = "scikit-learn"
@@ -2433,4 +2429,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "2f8c3e3b167e1c5bc72755140147566b4ca8b5ccd353b0219c3273b0dbaf6ab5"
+content-hash = "02ee22e73ee3107bfbd6ad482bb75feeac439c2c1978a3ab478c031b453d1b4e"
