@@ -125,7 +125,7 @@
 {% elif model_name == "LinearSVR" %}
             params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
             params['loss'] =  trial.suggest_categorical('loss', ['epsilon_insensitive', 'squared_epsilon_insensitive']) # epsilon_insensitive
-            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2. log=True) # 1  
+            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2, log=True) # 1  
 {#% elif model_name == "LinearRegression" %#}
 {% elif model_name == "Lasso" %}
             params['alpha'] = trial.suggest_loguniform('alpha', 1e-5, 10.0) # 1 
