@@ -1973,13 +1973,13 @@ xgboost = ">=1.7.6,<2.0.0"
 
 [[package]]
 name = "sapientml-loaddata"
-version = "0.1.5"
+version = "0.1.6"
 description = "A SapientML plugin of CodeBlockGenerator for loading dataset"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_loaddata-0.1.5-py3-none-any.whl", hash = "sha256:c05a3e30a1bc2b2e32b5a450be69a672c645c0ab0744260ecd7f37aa03c438b3"},
-    {file = "sapientml_loaddata-0.1.5.tar.gz", hash = "sha256:86056338181c00fd96652c460d4ad9c3fd3273faa443e28752db4ab0f451bcda"},
+    {file = "sapientml_loaddata-0.1.6-py3-none-any.whl", hash = "sha256:080c65845ac4027b9a354b551458fdf00505b5b9e636df3e55404a22d7dd1bb2"},
+    {file = "sapientml_loaddata-0.1.6.tar.gz", hash = "sha256:848b75bfae423a27aeb1cc11352927ddcc5597029df1a3a2d7215733129413c7"},
 ]
 
 [package.dependencies]
@@ -2421,4 +2421,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "59d81098757cfba6017e079f6ebc359bc75ac0e5ee85e2f382d3f2505c9452d7"
+content-hash = "9c89d509ef351257ee5b3004f828596b5a888c5f2624aefc411be60224d419a0"
