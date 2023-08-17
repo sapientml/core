@@ -53,21 +53,6 @@ def _is_strnum_column(c):
     return ratio > 0.9
 
 
-def _confirm_mixed_type(df: pd.DataFrame) -> list[str]:
-    mixed_df_cols = []
-    for df_col in df.columns:
-        df_per_col = df[df_col].replace([-np.inf, np.inf], np.nan)
-        df_per_col2 = df_per_col[df_per_col.notnull()]
-        types_per_col = pd.api.types.infer_dtype(df_per_col2)
-
-        is_strnum = _is_strnum_column(df[df_col])
-
-        if types_per_col == "mixed" or types_per_col == "mixed-integer" or (types_per_col == "string" and is_strnum):
-            mixed_df_cols.append(df_col)
-
-    return mixed_df_cols
-
-
 class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     def __init__(self, config: Config):
         CodeBlockGenerator.__init__(self, config)
@@ -98,11 +83,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         if cols_has_symbols:
             df = df.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col)
             task.target_columns = [remove_symbols(col) if col in cols_has_symbols else col for col in task.target_columns]
-        cols_numeric_and_string = _confirm_mixed_type(df)
-        for col in cols_numeric_and_string:
-            df[col + "__str"] = np.where(pd.to_numeric(df[col], errors="coerce").isnull(), df[col], np.nan)
-            df[col + "__num"] = np.where(pd.to_numeric(df[col], errors="coerce").isnull(), np.nan, df[col]).astype(float)
-            df = df.drop(col, axis=1)
         # inf is converted to nan, so convert here to apply imputer to inf columns
         X = df.columns.drop(task.target_columns)
         df[X] = df[X].replace([np.inf, -np.inf], np.nan)
