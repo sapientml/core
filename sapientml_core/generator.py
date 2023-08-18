@@ -12,40 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
+import copy
 import re
-from importlib.metadata import entry_points
-from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from sapientml.generator import CodeBlockGenerator, PipelineGenerator
-from sapientml.params import Code, Config, Dataset, Task
+from pathlib import Path
+
+from importlib.metadata import entry_points
+from typing import Tuple, Optional
+from sapientml.generator import PipelineGenerator, CodeBlockGenerator
+from sapientml.params import CancellationToken, Config, Task, Dataset, Code, RunningResult, PipelineResult
+from sapientml.result import SapientMLGeneratorResult
+
 from sapientml.util.logging import setup_logger
 
 from . import ps_macros
 from .adaptation.generation.template_based_adaptation import Adaptation
 from .params import Pipeline, summarize_dataset
+from .explain.main import process as explain
 from .seeding.predictor import predict
 
 model_dir_path_default = Path(__file__).parent / "models"
 
 logger = setup_logger()
-
-INHIBITED_SYMBOL_PATTERN = re.compile(r"[\{\}\[\]\",:<'\\]+")
-
-
-def check_cols_has_symbols(columns: list) -> list[str]:
-    cols_has_symbols = []
-    for col in columns:
-        if INHIBITED_SYMBOL_PATTERN.search(col):
-            cols_has_symbols.append(col)
-    return cols_has_symbols
-
-
-def remove_symbols(column_name: str) -> str:
-    return INHIBITED_SYMBOL_PATTERN.sub("", column_name)
-
 
 def _is_strnum_column(c):
     c2 = c.loc[c.notnull()]
@@ -78,18 +69,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
     def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[Pipeline]]:
         df = dataset.training_dataframe
-        # Apply column name changes(mixed_type__num, mixed_type__str, Remove special symbols) to avoid KeyError
-        cols_has_symbols = []
-        cols_has_symbols = check_cols_has_symbols(df.columns.to_list())
-        if cols_has_symbols:
-            df = df.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col)
-            task.target_columns = [
-                remove_symbols(col) if col in cols_has_symbols else col for col in task.target_columns
-            ]
-        # inf is converted to nan, so convert here to apply imputer to inf columns
-        X = df.columns.drop(task.target_columns)
-        df[X] = df[X].replace([np.inf, -np.inf], np.nan)
-
         dataset_summary = summarize_dataset(df, task)  # type: ignore
         if dataset_summary.has_inf_value_targets:
             raise ValueError("Stopped generation because target columns have infinity value.")
@@ -119,3 +98,121 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         pipelines = adapt.run_adaptation()
 
         return dataset, pipelines
+
+    def evaluate(self, pipeline_results: list[tuple[Code, RunningResult]], lower_is_better: bool=False) -> None:
+        self._best_pipeline = None
+        self._best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
+        candidate_scripts = []
+        for pipeline, result in pipeline_results:
+            if result.returncode == 0:
+                pipeline_score = self._parse_pipeline_output(result.output)
+            else:
+                pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
+            candidate_scripts.append((pipeline, pipeline_score))
+        self._candidate_scripts = candidate_scripts
+
+        # When an error occurs while running a pipeline, the score becomes None
+        error_pipelines = [pipeline for pipeline in candidate_scripts if pipeline[1].score is None]
+
+        # If none of them have the score, stop ranking them
+        if len(candidate_scripts) == len(error_pipelines):
+            return None, candidate_scripts
+
+        # sort descending
+        succeeded_scripts = sorted(
+            [x for x in candidate_scripts if x[1].score is not None], key=lambda x: x[1].score, reverse=(not lower_is_better)
+        )
+        failed_scripts = [x for x in candidate_scripts if x[1].score is None]
+
+        ranked_candidate_scripts = succeeded_scripts + failed_scripts
+        best_pipeline_tuple = ranked_candidate_scripts[0]
+        if best_pipeline_tuple is None:
+            return None, ranked_candidate_scripts
+
+        best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
+        if best_pipeline_tuple[1].best_params is not None:
+            best_pipeline.test = best_pipeline.test.replace(
+                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
+            )
+            best_pipeline.train = best_pipeline.train.replace(
+                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
+            )
+        self._best_pipeline = best_pipeline
+        self._best_pipeline_score = best_pipeline_tuple[1]
+
+    @staticmethod
+    def _parse_pipeline_output(output: str):
+        score = None
+        best_params = None
+        metric = None
+        output_lines = output.splitlines()
+        try:
+            for line in output_lines:
+                if re.match("best params: ", line):
+                    best_params = ast.literal_eval(re.findall("best params: (.+)", line)[0])
+                elif re.match("RESULT: ", line):
+                    parts = [x.strip() for x in line.split(":")]
+                    metric = parts[-2].strip().split(" ")[0]
+                    score = float(parts[-1])
+        except Exception:
+            pass
+        return PipelineResult(score=score, metric=metric, best_params=best_params)
+    
+    def save(
+        self,
+        result: SapientMLGeneratorResult,
+        output_dir_path: str,
+        project_name: str = "",
+        save_user_scripts: bool = True,
+        save_dev_scripts: bool = True,
+        save_datasets: bool = False,
+        save_run_info: bool = True,
+        save_running_arguments: bool = False,
+        add_explain: bool = True,
+        cancel: Optional[CancellationToken] = None,
+    ):
+        final_script = (self._best_pipeline, self._best_pipeline_score)
+        candidate_scripts = self._candidate_scripts
+        skeleton = final_script[0].labels
+
+        result.skeleton = skeleton
+        result.final_script = final_script
+        result.candidate_scripts = candidate_scripts
+
+        result.save(
+            output_dir_path=output_dir_path,
+            project_name=project_name,
+            save_user_scripts=save_user_scripts,
+            save_dev_scripts=save_dev_scripts,
+            save_datasets=save_datasets,
+            save_run_info=save_run_info,
+            save_running_arguments=save_running_arguments,
+            cancel=cancel
+        )
+
+        def add_prefix(filename, prefix):
+            if not prefix:
+                return filename
+            return f"{prefix}_{filename}"
+
+        if add_explain:
+            debug_info = {}
+            for i, candidate in enumerate(candidate_scripts):
+                info = {"content": candidate[0].dict(), "run_info": candidate[1].__dict__}
+                debug_info[i] = info
+    
+            explain(
+                visualization=True,
+                eda=True,
+                dataframe=result.training_data,
+                script_path=(Path(output_dir_path) / add_prefix("final_script.py", project_name)).absolute().as_posix(),
+                target_columns=result.target_columns,
+                problem_type=result.task_type,
+                ignore_columns=result.ignore_columns,
+                skeleton=skeleton,
+                explanation=final_script[0].pipeline_json,
+                run_info=debug_info,
+                internal_execution=True,
+                timeout=result.timeout_for_test,
+                cancel=cancel,
+            )

@@ -30,7 +30,7 @@ from .meta_features import (
     generate_pp_meta_features,
 )
 
-PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
+PipelineSkeleton = dict #dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
 
 MAX_NUM_OF_COLUMNS = 10000000
 MAX_COLUMN_NAME_LENGTH = 1000
