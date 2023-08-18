@@ -14,13 +14,13 @@
 
 import re
 from collections import defaultdict
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
-from sapientml.params import Config, Task, Code
+from sapientml.params import Code, Config, Task
 
 from .meta_features import (
     MetaFeatures,
@@ -29,7 +29,9 @@ from .meta_features import (
     generate_pp_meta_features,
 )
 
-PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
+PipelineSkeleton = (
+    dict  # dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
+)
 
 MAX_NUM_OF_COLUMNS = 10000000
 MAX_COLUMN_NAME_LENGTH = 1000
