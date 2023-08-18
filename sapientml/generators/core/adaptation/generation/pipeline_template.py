@@ -27,9 +27,7 @@ from ...params import Pipeline
 from ...seeding.predictor import name_to_label_mapping
 
 logger = logging.getLogger("sapientml")
-env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/../../templates"), trim_blocks=True
-)
+env = Environment(loader=FileSystemLoader(f"{os.path.dirname(__file__)}/../../templates"), trim_blocks=True)
 
 MODEL_IMPORT_LIBRARY_MAP = {
     "XGBRegressor": "xgboost",
@@ -233,9 +231,7 @@ class PipelineTemplate(BaseModel):
 
         # read component template(s)
         template_files = []
-        path = str(
-            Path(os.path.dirname(__file__)) / "../../templates/preprocessing_templates"
-        )
+        path = str(Path(os.path.dirname(__file__)) / "../../templates/preprocessing_templates")
         for file in os.listdir(path):
             if file.startswith(api_label):
                 if api_label in ["SMOTE"] and train_predict_flag in ["", "train"]:

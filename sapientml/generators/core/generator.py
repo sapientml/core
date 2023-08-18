@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import pandas as pd
-from pathlib import Path
 import re
 from importlib.metadata import entry_points
+from pathlib import Path
 from typing import Tuple
-from sapientml.generator import PipelineGenerator, CodeBlockGenerator
-from sapientml.params import Config, Task, Dataset, Code
+
+import numpy as np
+import pandas as pd
+from sapientml.generator import CodeBlockGenerator, PipelineGenerator
+from sapientml.params import Code, Config, Dataset, Task
 from sapientml.util.logging import setup_logger
 
 from . import ps_macros
@@ -57,8 +58,8 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     def __init__(self, config: Config):
         CodeBlockGenerator.__init__(self, config)
         eps = entry_points(group="code_block_generator")
-        self.loaddata = eps['loaddata'].load()(config)
-        self.preprocess = eps['preprocess'].load()(config)
+        self.loaddata = eps["loaddata"].load()(config)
+        self.preprocess = eps["preprocess"].load()(config)
 
     def generate_pipeline(self, dataset: Dataset, task: Task) -> list[Code]:
         dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
@@ -82,7 +83,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         cols_has_symbols = check_cols_has_symbols(df.columns.to_list())
         if cols_has_symbols:
             df = df.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col)
-            task.target_columns = [remove_symbols(col) if col in cols_has_symbols else col for col in task.target_columns]
+            task.target_columns = [
+                remove_symbols(col) if col in cols_has_symbols else col for col in task.target_columns
+            ]
         # inf is converted to nan, so convert here to apply imputer to inf columns
         X = df.columns.drop(task.target_columns)
         df[X] = df[X].replace([np.inf, -np.inf], np.nan)
