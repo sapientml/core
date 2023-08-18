@@ -114,7 +114,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         # If none of them have the score, stop ranking them
         if len(candidate_scripts) == len(error_pipelines):
-            return None, candidate_scripts
+            return
 
         # sort descending
         succeeded_scripts = sorted(
@@ -127,7 +127,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         ranked_candidate_scripts = succeeded_scripts + failed_scripts
         best_pipeline_tuple = ranked_candidate_scripts[0]
         if best_pipeline_tuple is None:
-            return None, ranked_candidate_scripts
+            return
 
         best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
         if best_pipeline_tuple[1].best_params is not None:
@@ -139,6 +139,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             )
         self._best_pipeline = best_pipeline
         self._best_pipeline_score = best_pipeline_tuple[1]
+
+    def get_result(self):
+        return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
     @staticmethod
     def _parse_pipeline_output(output: str):
@@ -163,56 +166,35 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         result: SapientMLGeneratorResult,
         output_dir_path: str,
         project_name: str = "",
-        save_user_scripts: bool = True,
-        save_dev_scripts: bool = True,
-        save_datasets: bool = False,
-        save_run_info: bool = True,
-        save_running_arguments: bool = False,
-        add_explain: bool = True,
         cancel: Optional[CancellationToken] = None,
     ):
-        final_script = (self._best_pipeline, self._best_pipeline_score)
-        candidate_scripts = self._candidate_scripts
-        skeleton = final_script[0].labels
-
-        result.skeleton = skeleton
-        result.final_script = final_script
-        result.candidate_scripts = candidate_scripts
-
-        result.save(
-            output_dir_path=output_dir_path,
-            project_name=project_name,
-            save_user_scripts=save_user_scripts,
-            save_dev_scripts=save_dev_scripts,
-            save_datasets=save_datasets,
-            save_run_info=save_run_info,
-            save_running_arguments=save_running_arguments,
-            cancel=cancel,
-        )
+        if self._best_pipeline is None:
+            return
+        
+        skeleton = self._best_pipeline.labels
 
         def add_prefix(filename, prefix):
             if not prefix:
                 return filename
             return f"{prefix}_{filename}"
 
-        if add_explain:
-            debug_info = {}
-            for i, candidate in enumerate(candidate_scripts):
-                info = {"content": candidate[0].dict(), "run_info": candidate[1].__dict__}
-                debug_info[i] = info
+        debug_info = {}
+        for i, candidate in enumerate(self._candidate_scripts):
+            info = {"content": candidate[0].dict(), "run_info": candidate[1].__dict__}
+            debug_info[i] = info
 
-            explain(
-                visualization=True,
-                eda=True,
-                dataframe=result.training_data,
-                script_path=(Path(output_dir_path) / add_prefix("final_script.py", project_name)).absolute().as_posix(),
-                target_columns=result.target_columns,
-                problem_type=result.task_type,
-                ignore_columns=result.ignore_columns,
-                skeleton=skeleton,
-                explanation=final_script[0].pipeline_json,
-                run_info=debug_info,
-                internal_execution=True,
-                timeout=result.timeout_for_test,
-                cancel=cancel,
-            )
+        explain(
+            visualization=True,
+            eda=True,
+            dataframe=result.training_data,
+            script_path=(Path(output_dir_path) / add_prefix("final_script.py", project_name)).absolute().as_posix(),
+            target_columns=result.target_columns,
+            problem_type=result.task_type,
+            ignore_columns=result.ignore_columns,
+            skeleton=skeleton,
+            explanation=self._best_pipeline.pipeline_json,
+            run_info=debug_info,
+            internal_execution=True,
+            timeout=result.timeout_for_test,
+            cancel=cancel,
+        )
