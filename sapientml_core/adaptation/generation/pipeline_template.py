@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 import os
 import textwrap
 from pathlib import Path
@@ -22,11 +21,12 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 from sapientml import macros
 from sapientml.util.json_util import JSONEncoder
+from sapientml.util.logging import setup_logger
 
 from ...params import Pipeline
 from ...seeding.predictor import name_to_label_mapping
 
-logger = logging.getLogger("sapientml")
+logger = setup_logger()
 env = Environment(loader=FileSystemLoader(f"{os.path.dirname(__file__)}/../../templates"), trim_blocks=True)
 
 MODEL_IMPORT_LIBRARY_MAP = {

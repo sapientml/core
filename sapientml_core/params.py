@@ -20,8 +20,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
-from sapientml.params import Config, Task
-from sapientml.result import Code
+from sapientml.params import Config, Task, Code
 
 from .meta_features import (
     MetaFeatures,
