@@ -140,6 +140,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self._best_pipeline = best_pipeline
         self._best_pipeline_score = best_pipeline_tuple[1]
 
+
     def get_result(self):
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
