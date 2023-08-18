@@ -170,7 +170,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     ):
         if self._best_pipeline is None:
             return
-        
+
         skeleton = self._best_pipeline.labels
 
         def add_prefix(filename, prefix):
