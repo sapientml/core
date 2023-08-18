@@ -8,8 +8,7 @@ maintainers = [
     "Akira Ura <ura.akira@fujitsu.com>",
 ]
 license = "Apache-2.0"
-include = ["core/**/*.py", "templates/**/*.py.jinja"]
-
+packages = [{ include = "sapientml" }]
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 sapientml = "*"
@@ -41,7 +40,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins."pipeline_generator"]
-sapientml_core = "sapientml_core:SapientMLGenerator"
+sapientml_core = "sapientml:plugins:core:SapientMLGenerator"
 
 [tool.pysen]
 version = "0.10"
