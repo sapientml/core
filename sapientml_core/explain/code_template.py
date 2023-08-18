@@ -26,4 +26,3 @@ class Code_Template:
                 line = line.replace(key, self.str_reverse[key])
             out.append(line)
         return out
-

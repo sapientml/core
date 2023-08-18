@@ -14,9 +14,8 @@
 
 import numpy as np
 import pandas as pd
-from scipy import stats
-
 from sapientml.util.logging import setup_logger
+from scipy import stats
 
 
 class Dataset:

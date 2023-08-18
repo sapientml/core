@@ -15,9 +15,9 @@
 from typing import Literal, Optional
 
 import pandas as pd
-
-from sapientml.util.logging import setup_logger
 from sapientml.params import CancellationToken
+from sapientml.util.logging import setup_logger
+
 from .AutoEDA import EDA
 from .AutoVisualization import AutoVisualization_Class
 from .code_miner import Miner

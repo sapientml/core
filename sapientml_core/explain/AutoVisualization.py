@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import warnings
 from collections import defaultdict
-import re
 from typing import Literal, Optional
 
 import numpy as np
 import pandas as pd
-
 from sapientml.util.logging import setup_logger
 
 warnings.filterwarnings("ignore")
 logger = setup_logger()
 
 INHIBITED_SYMBOL_PATTERN = re.compile(r"[\{\}\[\]\",:<'\\]+")
+
 
 def check_cols_has_symbols(columns: list) -> list[str]:
     cols_has_symbols = []

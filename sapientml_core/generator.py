@@ -15,28 +15,26 @@
 import ast
 import copy
 import re
-
-import numpy as np
-import pandas as pd
-from pathlib import Path
-
 from importlib.metadata import entry_points
-from typing import Tuple, Optional
-from sapientml.generator import PipelineGenerator, CodeBlockGenerator
-from sapientml.params import CancellationToken, Config, Task, Dataset, Code, RunningResult, PipelineResult
-from sapientml.result import SapientMLGeneratorResult
+from pathlib import Path
+from typing import Optional, Tuple
 
+import pandas as pd
+from sapientml.generator import CodeBlockGenerator, PipelineGenerator
+from sapientml.params import CancellationToken, Code, Config, Dataset, PipelineResult, RunningResult, Task
+from sapientml.result import SapientMLGeneratorResult
 from sapientml.util.logging import setup_logger
 
 from . import ps_macros
 from .adaptation.generation.template_based_adaptation import Adaptation
-from .params import Pipeline, summarize_dataset
 from .explain.main import process as explain
+from .params import Pipeline, summarize_dataset
 from .seeding.predictor import predict
 
 model_dir_path_default = Path(__file__).parent / "models"
 
 logger = setup_logger()
+
 
 def _is_strnum_column(c):
     c2 = c.loc[c.notnull()]
@@ -99,7 +97,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         return dataset, pipelines
 
-    def evaluate(self, pipeline_results: list[tuple[Code, RunningResult]], lower_is_better: bool=False) -> None:
+    def evaluate(self, pipeline_results: list[tuple[Code, RunningResult]], lower_is_better: bool = False) -> None:
         self._best_pipeline = None
         self._best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
         candidate_scripts = []
@@ -120,7 +118,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         # sort descending
         succeeded_scripts = sorted(
-            [x for x in candidate_scripts if x[1].score is not None], key=lambda x: x[1].score, reverse=(not lower_is_better)
+            [x for x in candidate_scripts if x[1].score is not None],
+            key=lambda x: x[1].score,
+            reverse=(not lower_is_better),
         )
         failed_scripts = [x for x in candidate_scripts if x[1].score is None]
 
@@ -157,7 +157,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         except Exception:
             pass
         return PipelineResult(score=score, metric=metric, best_params=best_params)
-    
+
     def save(
         self,
         result: SapientMLGeneratorResult,
@@ -187,7 +187,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             save_datasets=save_datasets,
             save_run_info=save_run_info,
             save_running_arguments=save_running_arguments,
-            cancel=cancel
+            cancel=cancel,
         )
 
         def add_prefix(filename, prefix):
@@ -200,7 +200,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             for i, candidate in enumerate(candidate_scripts):
                 info = {"content": candidate[0].dict(), "run_info": candidate[1].__dict__}
                 debug_info[i] = info
-    
+
             explain(
                 visualization=True,
                 eda=True,
