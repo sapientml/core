@@ -36,7 +36,8 @@
 {% elif (model_name == "CatBoostClassifier"  or model_name == "CatBoostRegressor") %}
             params['depth'] =  trial.suggest_int('depth', 1, 12) #  
             params['boosting_type'] =  trial.suggest_categorical('boosting_type', ['Ordered','Plain']) #  
-            params['bootstrap_type'] =  trial.suggest_categorical('bootstrap_type', ['Bayesian','Bernoulli', 'MVS']) #  
+            params['bootstrap_type'] =  trial.suggest_categorical('bootstrap_type', ['Bayesian','Bernoulli', 'MVS']) #
+            params['silent'] = True
 {% elif model_name == "GradientBoostingClassifier" %}
             params['loss'] =  trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential']) # log_loss 
             params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100

@@ -1,16 +1,21 @@
 import numpy as np
 from {{import_library}} import {{ model_name }}
 
+{% if "CatBoost" in model_name %}
+{% set silent="silent=True, " %}
+{% else %}
+{% set silent="" %}
+{% endif %}
 {% if model_arg == "HPO_noRandomSeed" %}
 __model = {{ model_name }}(**best_params)
 {% elif model_arg == "HPO_RandomSeed" %}
 random_state_model = {{ pipeline.task.seed_for_model}}
 __model = {{ model_name }}(random_state=random_state_model, **best_params)
 {% elif model_arg == "noHPO_noRandomSeed" %}
-__model = {{ model_name }}({{ params }})
+__model = {{ model_name }}({{ silent }}{{ params }})
 {% elif model_arg == "noHPO_RandomSeed" %}
 random_state_model = {{ pipeline.task.seed_for_model}}
-__model = {{ model_name }}(random_state=random_state_model, {{ params }})
+__model = {{ model_name }}({{ silent }}random_state=random_state_model, {{ params }})
 {% endif %}
 
 {% if is_multioutput_regression%}
