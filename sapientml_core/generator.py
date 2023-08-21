@@ -244,18 +244,19 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             with open(path / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8") as f:
                 json.dump(debug_info, f, cls=JSONEncoder, indent=4)
 
-        explain(
-            visualization=True,
-            eda=True,
-            dataframe=self.dataset.training_dataframe,
-            script_path=(Path(output_dir) / add_prefix("final_script.py", self.config.project_name)).absolute().as_posix(),
-            target_columns=self.task.target_columns,
-            problem_type=self.task.task_type,
-            ignore_columns=self.task.ignore_columns,
-            skeleton=skeleton,
-            explanation=self._best_pipeline.pipeline_json,
-            run_info=debug_info,
-            internal_execution=True,
-            timeout=self.config.timeout_for_test,
-            cancel=self.config.cancel,
-        )
+        if self.config.add_explanation:
+            explain(
+                visualization=True,
+                eda=True,
+                dataframe=self.dataset.training_dataframe,
+                script_path=(Path(output_dir) / add_prefix("final_script.py", self.config.project_name)).absolute().as_posix(),
+                target_columns=self.task.target_columns,
+                problem_type=self.task.task_type,
+                ignore_columns=self.task.ignore_columns,
+                skeleton=skeleton,
+                explanation=self._best_pipeline.pipeline_json,
+                run_info=debug_info,
+                internal_execution=True,
+                timeout=self.config.timeout_for_test,
+                cancel=self.config.cancel,
+            )
