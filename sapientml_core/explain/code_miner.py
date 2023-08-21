@@ -763,7 +763,7 @@ class Miner:
             if (timeout > 0) and (time.time() - start_time) > timeout:
                 ep_thread.trigger_interrupt_kernel()
                 is_interrupted = True
-            if cancel and cancel.isTriggered:
+            if cancel and cancel.is_triggered:
                 ep_thread.trigger_interrupt_kernel()
                 is_interrupted = True
             time.sleep(1)
@@ -778,7 +778,7 @@ class Miner:
             path = os.path.join(self.output_path, rec["filename"] + ".ipynb")
             self.__save__(path, rec["jupyter"])
             self.logger.info(f"saved:{path}")
-            if execution and (cancel is None or cancel.isTriggered is False):
+            if execution and (cancel is None or cancel.is_triggered is False):
                 try:
                     self.logger.info("Running the explained notebook...")
                     with open(path, "r", encoding="utf-8") as f:

@@ -13,5 +13,6 @@
 # limitations under the License.
 
 from .generator import SapientMLGenerator
+from .params import SapientMLConfig
 
-__all__ = ["SapientMLGenerator"]
+__all__ = ["SapientMLGenerator", "SapientMLConfig"]
