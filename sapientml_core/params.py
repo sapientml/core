@@ -14,13 +14,14 @@
 
 import re
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any, Optional, Literal, Union
 
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
 from sapientml.params import Code, Config, Task
+from sapientml_preprocess import PreprocessConfig
 
 from .meta_features import (
     MetaFeatures,
@@ -34,7 +35,107 @@ PipelineSkeleton = (
 )
 
 MAX_NUM_OF_COLUMNS = 10000000
+MAX_SEED = 2**32 - 1
 MAX_COLUMN_NAME_LENGTH = 1000
+MAX_HPO_N_TRIALS = 100000
+MAX_HPO_TIMEOUT = 500000
+MAX_N_MODELS = 30
+INITIAL_TIMEOUT = 600
+
+
+class SapientMLConfig(PreprocessConfig):
+    n_models: int = 3
+    seed_for_model: int = 42
+    id_columns_for_prediction: Optional[list[str]] = None
+    use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
+    use_pos_list: Optional[list[str]] = None
+    use_word_stemming: Optional[bool] = None
+    split_stratify: Optional[bool] = None
+    use_hyperparameters: bool = False
+    impute_all: bool = True
+    hyperparameter_tuning: bool = False
+    hyperparameter_tuning_n_trials: int = 10
+    hyperparameter_tuning_timeout: int = 0
+    hyperparameter_tuning_random_state: int = 1023
+    predict_option: Literal["default", "probability"] = "default"
+    permutation_importance: bool = True
+    add_explanation: bool = False
+
+    def postinit(self):
+        if self.id_columns_for_prediction is None:
+            self.id_columns_for_prediction = []
+
+        if self.initial_timeout is None:
+            if self.hyperparameter_tuning:
+                self.initial_timeout = 0
+            else:
+                self.initial_timeout = INITIAL_TIMEOUT
+            if self.hyperparameter_tuning_timeout is None:
+                self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
+        elif self.hyperparameter_tuning_timeout is None:
+            if self.hyperparameter_tuning:
+                self.hyperparameter_tuning_timeout = self.initial_timeout
+            else:
+                self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
+
+        if self.use_pos_list is None:
+            self.use_pos_list = []
+
+
+    @validator("n_models")
+    def check_n_models(cls, v):
+        if v <= 0 or MAX_N_MODELS < v:
+            raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
+        return v
+
+    @validator(
+        "id_columns_for_prediction",
+        "use_word_list",
+        "use_pos_list",
+    )
+    def check_num_of_column_names(cls, v):
+        if v is None:
+            return v
+        if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
+            raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
+        return v
+
+    @validator(
+        "id_columns_for_prediction",
+        "use_word_list",
+        "use_pos_list",
+    )
+    def check_column_name_length(cls, v):
+        if v is None:
+            return v
+        for _v in v.keys() if isinstance(v, dict) else v:
+            if len(_v) >= MAX_COLUMN_NAME_LENGTH:
+                raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
+        return v
+
+    @validator("seed_for_model")
+    def check_seed(cls, v):
+        if v < 0 or MAX_SEED < v:
+            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
+        return v
+
+    @validator("hyperparameter_tuning_n_trials")
+    def check_hyperparameter_tuning_n_trials(cls, v):
+        if v < 1 or MAX_HPO_N_TRIALS < v:
+            raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
+        return v
+
+    @validator("hyperparameter_tuning_timeout")
+    def check_hyperparameter_tuning_timeout(cls, v):
+        if v < 0 or MAX_HPO_TIMEOUT < v:
+            raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
+        return v
+
+    @validator("hyperparameter_tuning_random_state")
+    def check_hyperparameter_tuning_random_state(cls, v):
+        if v < 0 or MAX_SEED < v:
+            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
+        return v
 
 
 class Column(BaseModel):
