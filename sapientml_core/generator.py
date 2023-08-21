@@ -52,7 +52,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.dataset = dataset
         self.task = task
 
-        logger.info("Generating pipelines ...")
+        logger.info("Generating pipelines...")
         dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
         code_block = loaddata_block + preprocess_block
@@ -66,7 +66,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             pipeline.predict = code_block.predict + pipeline.predict
             result_pipelines.append(pipeline)
 
-        logger.info("Executing generated pipelines ...")
+        logger.info("Executing generated pipelines...")
         executor = PipelineExecutor()
         execution_results = executor.execute(
             result_pipelines,
@@ -75,7 +75,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             self.config.cancel,
         )
 
-        logger.info("Evaluating execution results of generated pipelines ...")
+        logger.info("Evaluating execution results of generated pipelines...")
         lower_is_better = self.task.adaptation_metric in metric_lower_is_better
         self.evaluate(execution_results, lower_is_better)
         logger.info("Done.")
