@@ -220,7 +220,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             lib_path = path / "lib"
             lib_path.mkdir(exist_ok=True)
 
-            eps = entry_points(group="export_modules")
+            eps = entry_points(group="sapientml.export_modules")
             for ep in eps:
                 for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
                     copyfile(file, lib_path / Path(file).name)
