@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
-from sapientml.params import Code, Config, Task
+from sapientml.params import Code, Task
 from sapientml_preprocess import PreprocessConfig
 
 from .meta_features import (
@@ -80,7 +80,6 @@ class SapientMLConfig(PreprocessConfig):
 
         if self.use_pos_list is None:
             self.use_pos_list = []
-
 
     @validator("n_models")
     def check_n_models(cls, v):
@@ -237,7 +236,7 @@ class ModelLabel(BaseModel):
 class Pipeline(Code):
     task: Task
     dataset_summary: DatasetSummary
-    config: Config
+    config: SapientMLConfig
     adaptation_metric: Optional[str] = None
     all_columns_datatypes: dict = Field(default_factory=dict)
     model: Optional[ModelLabel] = None

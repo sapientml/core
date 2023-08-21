@@ -100,7 +100,7 @@ class Objective(object):
 n_trials = {{ pipeline.config.hyperparameter_tuning_n_trials }}
 timeout = {{ timeout }} 
 random_state = {{ pipeline.config.hyperparameter_tuning_random_state}} 
-random_state_model = {{ pipeline.task.seed_for_model}} 
+random_state_model = {{ pipeline.config.seed_for_model}} 
 
 {% set maximize_metrics = [macros.Metric.AUC.value, macros.Metric.Accuracy.value, macros.Metric.F1.value, macros.Metric.R2.value, macros.Metric.Gini.value, macros.Metric.ROC_AUC.value] %}
 {% set minimize_metrics = [macros.Metric.RMSE.value, macros.Metric.RMSLE.value, macros.Metric.MAE.value, macros.Metric.LogLoss.value] %}

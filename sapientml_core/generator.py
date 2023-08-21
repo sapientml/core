@@ -43,6 +43,7 @@ logger = setup_logger()
 class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     def __init__(self, **kwargs):
         self.config = SapientMLConfig(**kwargs)
+        self.config.postinit()
         eps = entry_points(group="sapientml.code_block_generator")
         self.loaddata = eps["loaddata"].load()(**kwargs)
         self.preprocess = eps["preprocess"].load()(**kwargs)
