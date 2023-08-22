@@ -87,7 +87,6 @@ class SapientMLConfig(Config):
     @validator(
         "id_columns_for_prediction",
         "use_word_list",
-        "use_pos_list",
     )
     def check_num_of_column_names(cls, v):
         if v is None:
@@ -99,7 +98,6 @@ class SapientMLConfig(Config):
     @validator(
         "id_columns_for_prediction",
         "use_word_list",
-        "use_pos_list",
     )
     def check_column_name_length(cls, v):
         if v is None:
