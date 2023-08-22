@@ -178,9 +178,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return PipelineResult(score=score, metric=metric, best_params=best_params)
 
     def save(self, output_dir: Union[Path, str]):
-        if self.config.dry_run:
-            return
-
         def add_prefix(filename, prefix):
             if not prefix:
                 return filename
