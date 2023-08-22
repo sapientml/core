@@ -20,8 +20,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
-from sapientml.params import Code, Task
-from sapientml_preprocess import PreprocessConfig
+from sapientml.params import Code, Task, Config
 
 from .meta_features import (
     MetaFeatures,
@@ -43,7 +42,7 @@ MAX_N_MODELS = 30
 INITIAL_TIMEOUT = 600
 
 
-class SapientMLConfig(PreprocessConfig):
+class SapientMLConfig(Config):
     n_models: int = 3
     seed_for_model: int = 42
     id_columns_for_prediction: Optional[list[str]] = None
