@@ -14,13 +14,13 @@
 
 import re
 from collections import defaultdict
-from typing import Any, Optional, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, validator
-from sapientml.params import Code, Task, Config
+from sapientml.params import Code, Config, Task
 
 from .meta_features import (
     MetaFeatures,
@@ -47,8 +47,6 @@ class SapientMLConfig(Config):
     seed_for_model: int = 42
     id_columns_for_prediction: Optional[list[str]] = None
     use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
-    use_pos_list: Optional[list[str]] = None
-    use_word_stemming: Optional[bool] = None
     split_stratify: Optional[bool] = None
     use_hyperparameters: bool = False
     impute_all: bool = True

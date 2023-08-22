@@ -16,10 +16,10 @@ import ast
 import copy
 import glob
 import json
-from shutil import copyfile
 import re
 from importlib.metadata import entry_points
 from pathlib import Path
+from shutil import copyfile
 from typing import Tuple, Union
 
 from sapientml.executor import PipelineExecutor
@@ -68,7 +68,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         logger.info("Executing generated pipelines...")
         executor = PipelineExecutor()
-        execution_results = executor.execute(
+        self.execution_results = executor.execute(
             result_pipelines,
             self.config.initial_timeout,
             Path(dataset.output_dir),
@@ -77,7 +77,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         logger.info("Evaluating execution results of generated pipelines...")
         lower_is_better = self.task.adaptation_metric in metric_lower_is_better
-        self.evaluate(execution_results, lower_is_better)
+        self.evaluate(self.execution_results, lower_is_better)
         logger.info("Done.")
 
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
@@ -215,7 +215,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             else:
                 logger.warning("All candidate scripts failed. Final script is not saved.")
                 raise RuntimeError("All candidate scripts failed. Final script is not saved.")
-            
+
             # copy libs
             lib_path = path / "lib"
             lib_path.mkdir(exist_ok=True)
@@ -249,7 +249,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 visualization=True,
                 eda=True,
                 dataframe=self.dataset.training_dataframe,
-                script_path=(Path(output_dir) / add_prefix("final_script.py", self.config.project_name)).absolute().as_posix(),
+                script_path=(Path(output_dir) / add_prefix("final_script.py", self.config.project_name))
+                .absolute()
+                .as_posix(),
                 target_columns=self.task.target_columns,
                 problem_type=self.task.task_type,
                 ignore_columns=self.task.ignore_columns,
