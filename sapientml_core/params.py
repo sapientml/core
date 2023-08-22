@@ -47,7 +47,6 @@ class SapientMLConfig(Config):
     seed_for_model: int = 42
     id_columns_for_prediction: Optional[list[str]] = None
     use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
-    split_stratify: Optional[bool] = None
     use_hyperparameters: bool = False
     impute_all: bool = True
     hyperparameter_tuning: bool = False
@@ -75,9 +74,6 @@ class SapientMLConfig(Config):
             else:
                 self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
 
-        if self.use_pos_list is None:
-            self.use_pos_list = []
-
     @validator("n_models")
     def check_n_models(cls, v):
         if v <= 0 or MAX_N_MODELS < v:
@@ -87,7 +83,6 @@ class SapientMLConfig(Config):
     @validator(
         "id_columns_for_prediction",
         "use_word_list",
-        "use_pos_list",
     )
     def check_num_of_column_names(cls, v):
         if v is None:
@@ -99,7 +94,6 @@ class SapientMLConfig(Config):
     @validator(
         "id_columns_for_prediction",
         "use_word_list",
-        "use_pos_list",
     )
     def check_column_name_length(cls, v):
         if v is None:
