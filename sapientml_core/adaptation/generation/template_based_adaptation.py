@@ -93,7 +93,7 @@ class Adaptation:
             )
         )
 
-        n_models = self.task.n_models
+        n_models = self.config.n_models
         if n_models < 1:
             raise ValueError("Please set 'n_models' to a number greater than or equal to 1.")
         model_labels = dict(list(model_labels.items())[0:n_models])
