@@ -46,9 +46,9 @@ class AST_Update:
             "_STRING_COLS_WITH_MISSING_VALUES": "__cat_missing_data__",
             "_NUMERIC_COLS_WITH_MISSING_VALUES": "__num_missing_data__",
             "_NUMERIC_COLS_TO_SCALE =": "__num_to_scale__",
-            "# SUBMISSION": "__set_submission__",
-            "__feature_train = __train_dataset": "__set_target__",
-            "__model.fit": "__fit__",
+            "# OUTPUT PREDICTION": "__set_prediction__",
+            "_TARGET_COLUMNS =": "__set_target__",
+            "__model =": "__model__",
             "_ohe = OrdinalEncoder": "__OrdinalEncoder_exp__",
             "__train_dataset.drop([": "__drop_Irrelevant__",
             "def process_text": "__process_text_exp__",
@@ -58,23 +58,23 @@ class AST_Update:
             "__standard_scaler = StandardScaler()": "__standard_scaler__exp__",
             "__simple_imputer = SimpleImputer(": "__simple_imputer__exp__",
             # The followings all mean "after #LOAD DATA block"
-            "# TIME SERIES SETTING AND GENERATING FEATURES": "__test_dataset_submission_columns__exp__",
-            "# TRAIN-TEST SPLIT": "__test_dataset_submission_columns__exp__",
-            "# HANDLE MIXED TYPE": "__test_dataset_submission_columns__exp__",
-            "# CONVERT INF TO NAN": "__test_dataset_submission_columns__exp__",
-            "# HANDLE JAPANESE TEXT": "__test_dataset_submission_columns__exp__",
-            "# HANDLE ITERABLE VALUES IN DATAFRAME": "__test_dataset_submission_columns__exp__",
-            "# STORE SUBMISSION RELEVANT COLUMNS": "__test_dataset_submission_columns__exp__",
-            "# PREPROCESSING-1": "__test_dataset_submission_columns__exp__",
-            "# DETACH TARGET": "__test_dataset_submission_columns__exp__",
+            "# TRAIN-TEST SPLIT": "__test_dataset_prediction_columns__exp__",
+            "# HANDLE MIXED TYPE": "__test_dataset_prediction_columns__exp__",
+            "# CONVERT INF TO NAN": "__test_dataset_prediction_columns__exp__",
+            "# HANDLE JAPANESE TEXT": "__test_dataset_prediction_columns__exp__",
+            "# HANDLE ITERABLE VALUES IN DATAFRAME": "__test_dataset_prediction_columns__exp__",
+            "# STORE PREDICTION RELEVANT COLUMNS": "__test_dataset_prediction_columns__exp__",
+            "# PREPROCESSING-1": "__test_dataset_prediction_columns__exp__",
+            "# DETACH TARGET": "__test_dataset_prediction_columns__exp__",
         }
 
         # add functionname:Bool to show the function can be added as duplicate
         self.FUNCION_MAPPING_DUPLICATE_FLAG = {
+            "__model__": False,
             "__standard_scaler__exp__": False,
             "__simple_imputer__exp__": False,
             "__smote__exp__": False,
-            "__test_dataset_submission_columns__exp__": False,
+            "__test_dataset_prediction_columns__exp__": False,
         }
         self.last_status = {}
 
@@ -101,7 +101,7 @@ class AST_Update:
                 except AttributeError:
                     raise NotImplementedError(f"{fired_func}")
 
-    def __fit__(self, loc, prev):
+    def __model__(self, loc, prev):
         added_codes = []
         added_codes.append(
             (
@@ -113,7 +113,7 @@ class AST_Update:
                 "markdown",
             )
         )
-        if "__model = CatBoostRegressor()" in prev:
+        if "__model = CatBoostRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -124,7 +124,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = RandomForestClassifier()" in prev:
+        elif "__model = RandomForestClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -136,7 +136,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = CatBoostClassifier()" in prev:
+        elif "__model = CatBoostClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -147,7 +147,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LGBMRegressor()" in prev:
+        elif "__model = LGBMRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -158,7 +158,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = XGBClassifier()" in prev:
+        elif "__model = XGBClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -169,7 +169,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LogisticRegression()" in prev:
+        elif "__model = LogisticRegression" in loc:
             added_codes.append(
                 (
                     [
@@ -181,7 +181,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = ExtraTreesRegressor()" in prev:
+        elif "__model = ExtraTreesRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -197,7 +197,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LinearRegression()" in prev:
+        elif "__model = LinearRegression" in loc:
             added_codes.append(
                 (
                     [
@@ -208,7 +208,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = DecisionTreeClassifier()" in prev:
+        elif "__model = DecisionTreeClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -221,7 +221,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = XGBRegressor()" in prev:
+        elif "__model = XGBRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -236,17 +236,13 @@ class AST_Update:
 
         return added_codes
 
-    def __update_dataset_path__(self, loc, prev):
-        if self.local_path:
-            return f"dataset_path = {self.local_path}"
-
-    def __set_submission__(self, loc, prev):
+    def __set_prediction__(self, loc, prev):
         added_codes = []
         added_codes.append(
             (
                 [
-                    "# Submission File",
-                    'We have to maintain the target columns in "submission.csv" which will be submitted as our prediction results.',
+                    "## Prediction File",
+                    'Our prediction results will be output to "prediction_result.csv".',
                 ],
                 "markdown",
             )
@@ -273,7 +269,7 @@ class AST_Update:
             (
                 [
                     "## Standard Scaler"
-                    "\nWe will use Scikit-Learn  *StandardScaler* which standardizes features by removing the mean and scaling to unit variance.",
+                    "\nWe will use Scikit-Learn *StandardScaler* which standardizes features by removing the mean and scaling to unit variance.",
                     "The deatil can be found [here](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html).",
                 ],
                 "markdown",
@@ -286,7 +282,7 @@ class AST_Update:
         added_codes.append(
             (
                 [
-                    "We need to predict the probabilities for each group, therefore we will use **predict_proba()** features that generates probability for each group.",
+                    "We need to predict the probability for each example, therefore we will use **predict_proba()** that generates the probability.",
                 ],
                 "markdown",
             )
@@ -311,18 +307,18 @@ class AST_Update:
         added_codes = []
         if "_TEXT_COLUMNS" in prev:
             tree = ast.parse(prev)
-            keys = [_.value for _ in tree.body[0].value.elts]
+            keys = [v.value for v in tree.body[0].value.elts]
+            recs = u", ".join(keys)
             singular = "s" if len(keys) > 1 else ""
             if len(keys):
                 added_codes.append(
                     (
                         [
-                            "# Text Processing",
-                            f"The dataset has **{len(keys)}** text value{singular} as follows: **{u','.join(_ for _ in keys)}**.",
+                            "## Text Processing",
+                            f"The dataset has **{len(keys)}** text value{singular} as follows: **{recs}**.",
                             "Now, let's covert the text as follows.\n",
                             "- First, convert text to lowercase;\n",
                             "- Second, strip all punctuations;\n",
-                            # TODO: Does this rule apply always?!
                             "- Finally, convert all numbers in text to 'num'; therefore, in the next step our model will use a single token instead of valriety of tokens of numbers.",
                         ],
                         "markdown",
@@ -336,7 +332,7 @@ class AST_Update:
             (
                 [
                     "# Text Vectorizer",
-                    "In the next step, we will transfer pre-processed text columns to a vector representation. The vector representations allows us to train a model based on numerical representations.",
+                    "In the next step, we will transfer pre-processed text columns to a vector representation. The vector representation allows us to train a model based on numerical representations.",
                     "We will use TfidfVectorizer and more detail can be found [here](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html).",
                 ],
                 "markdown",
@@ -349,19 +345,21 @@ class AST_Update:
         try:
             if "DISCARD IRRELEVANT COLUMNS" in prev:
                 tree = ast.parse(loc)
-                keys = [_.value for _ in tree.body[0].value.args[0].elts]
-                plural = "s" if len(keys) > 1 else ""
+                keys = [v.value for v in tree.body[0].value.args[0].elts]
+                recs = u", ".join(keys)
+                singular = "s" if len(keys) > 1 else ""
+                singular_verb = "are" if len(keys) > 1 else "is"
                 added_codes.append(
                     (
                         [
                             "### Discard Irrelevant Columns",
-                            f'In the given input dataset there are **{len(keys)}** column{plural} that can be removed as follows: {", ".join(_ for _ in  keys)}.',
+                            f'In the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be removed as follows: {recs}.',
                         ],
                         "markdown",
                     )
                 )
         except Exception as ex:
-            self.logger.warning(f"Warning 134: target column extraction issue ({ex})")
+            self.logger.warning(f"Column extraction issue ({ex})")
             return []
         return added_codes
 
@@ -370,50 +368,23 @@ class AST_Update:
         try:
             if "_CATEGORICAL_COLS" in prev:
                 tree = ast.parse(prev)
-                keys = [_.value for _ in tree.body[0].value.elts]
-                plural = "s" if len(keys) > 1 else ""
+                keys = [v.value for v in tree.body[0].value.elts]
+                recs = u", ".join(keys)
+                singular = "s" if len(keys) > 1 else ""
+                singular_verb = "are" if len(keys) > 1 else "is"
                 added_codes.append(
                     (
                         [
                             "## Encoding Ordinal Categorical Features",
                             "Let's transfer categorical features as an integer array.",
                             "We will use Ordinal Encoder as explained [here](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OrdinalEncoder.html).",
-                            f'\nIn the given input dataset there are **{len(keys)}** column{plural} that can be transfered to integer and it includes:* {", ".join(_ for _ in  keys)} *.',
+                            f'\nIn the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be transfered to integer and it includes: {recs}.',
                         ],
                         "markdown",
                     )
                 )
         except Exception as ex:
-            self.logger.warning(f"Warning 134: target column extraction issue ({ex})")
-            return []
-        return added_codes
-
-    def __set_submission_cols__(self, loc, prev):
-        added_codes = []
-        try:
-            tree = ast.parse(loc)
-            cols_elts = tree.body[0].value.args[0].elts
-            cols = [_.value for _ in cols_elts]
-            added_codes.append(
-                (
-                    [
-                        "# Generate Submission File",
-                        "We have to maintain the following columns in *prediction_result.csv*.",
-                        "then, we can drop that column(s) from original dataset because it is unique and not useful for training a model.",
-                        "In some cases, an ID may carry useful information such as student ID where it may consist of admission year and other related info.",
-                    ],
-                    "markdown",
-                )
-            )
-            if len(cols):
-                added_codes.append(([f"""submission_columns = ['{u"','".join(_ for _ in cols)}']"""], "code"))
-                added_codes.append((["submission=pd.DataFrame(__test_dataset[submission_columns].copy())"], "code"))
-            else:
-                self.logger.warning("Warning 608: submission file cannot be generated.")
-                added_codes.append((["submission_columns = []"], "code"))
-
-        except Exception as ex:
-            self.logger.warning(f"Warning 134: target column extraction issue ({ex})")
+            self.logger.warning(f"Column extraction issue ({ex})")
             return []
         return added_codes
 
@@ -421,7 +392,8 @@ class AST_Update:
         added_codes = []
         try:
             tree = ast.parse(loc)
-            target_col = [_.value for _ in tree.body[0].value.args[0].elts]
+            target_col = [v.value for v in tree.body[0].value.elts]
+            recs = u", ".join(target_col)
             singular = "s" if len(target_col) > 1 else ""
             singular_verb = "are" if len(target_col) > 1 else "is"
             added_codes.append(
@@ -430,43 +402,16 @@ class AST_Update:
                         f"### Target Column{singular}",
                         f"We need to predict the target column{singular}.",
                         f"Therefore, we need to detach the target column{singular} in prediction.",
-                        f"Note that if we don't drop the field{singular}, it will generate a model with high accuracy on training and worst accuracy on test (because the value in test dataset is Null).",
-                        f'Here {singular_verb} the list of *target column{singular}*: **{u", ".join(_ for _ in target_col)}**',
+                        f"When the test data has the target column{singular}, the detaching is also executed for the test data."
+                        f'Here {singular_verb} the list of *target column{singular}*: **{recs}**',
                     ],
                     "markdown",
                 )
             )
         except Exception as ex:
-            self.logger.warning(f"Warning 134: target column extraction issue ({ex})")
+            self.logger.warning(f"Column extraction issue ({ex})")
             return []
-        except Exception as ex:
-            self.logger.warning(f"Warning 134: visualization processing issue ({ex})")
-            return added_codes
         return added_codes
-
-    def __dataset_drop__(self, loc, prev):
-        description = []
-        keys = []
-        tree = ast.parse(loc)
-        if tree:
-            if tree.body:
-                if isinstance(tree.body[0], ast.Assign):
-                    if tree.body[0].targets[0].id == "__feature":  # target col
-                        for key in tree.body[0].value.args[0].elts:
-                            keys.append(key.value)
-        singular = "s" if len(keys) > 1 else ""
-        # singular_verb = "are" if len(keys) > 1 else "is"
-        description.append(
-            (
-                [
-                    f"## Drop Target Column{singular}",
-                    f"We need to drop target column{singular} from the training dataset.",
-                    f"Now let's drops the target column{singular} of **{u','.join(_ for _ in keys)}** from the dataset.",
-                ],
-                "markdown",
-            )
-        )
-        return description
 
     def __num_missing_data__(self, loc, prev):
         description = []
@@ -477,14 +422,14 @@ class AST_Update:
                 if isinstance(tree.body[0], ast.Assign):
                     for key in tree.body[0].value.elts:
                         keys.append(key.value)
-        recs = ", ".join(_ for _ in keys)
+        recs = u", ".join(keys)
         singular = "s" if len(keys) > 1 else ""
         singular_verb = "are" if len(keys) > 1 else "is"
-        description.append(([f"## Remove Missing Values in Numerical Column{singular}"], "markdown"))
         description.append(
             (
                 [
-                    f"In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with missing data as follows: {recs}.",
+                    f"## Remove Missing Values in Numerical Column{singular}",
+                    f"\nIn the given input dataset there {singular_verb} **{len(keys)} column{singular}** with missing data as follows: {recs}.",
                     f"\nThe following code removes the missing values from those column{singular}. We use an average value of each column or 0 to replace the Null values according to the missing value ratio.",
                 ],
                 "markdown",
@@ -501,13 +446,15 @@ class AST_Update:
                 if isinstance(tree.body[0], ast.Assign):
                     for key in tree.body[0].value.elts:
                         keys.append(key.value)
-        recs = ", ".join(_ for _ in keys)
+        recs = u", ".join(keys)
+        singular = "s" if len(keys) > 1 else ""
+        singular_verb = "are" if len(keys) > 1 else "is"
         description.append(
             (
                 [
-                    "## Remove Missing Values in Categorical Columns",
-                    f'\nIn the given input dataset there are **{len(keys)} column{"s" if len(keys)>1 else ""}** with missing data as follows: {recs}.',
-                    "\nThe following code removes the missing values from those columns. We use the most frequent value of each column or empty character to replace the Null values according to the missing value ratio.",
+                    f"## Remove Missing Values in Categorical Column{singular}",
+                    f'\nIn the given input dataset there {singular_verb} **{len(keys)} column{singular}** with missing data as follows: {recs}.',
+                    f"\nThe following code removes the missing values from those column{singular}. We use the most frequent value of each column or empty character to replace the Null values according to the missing value ratio.",
                 ],
                 "markdown",
             )
@@ -518,16 +465,19 @@ class AST_Update:
         description = []
         keys = []
         tree = ast.parse(loc)
+        recs = u", ".join(keys)
+        singular = "s" if len(keys) > 1 else ""
+        singular_verb = "are" if len(keys) > 1 else "is"
         if tree:
             if tree.body:
                 if isinstance(tree.body[0], ast.Assign):
-                    keys = [_.value for _ in tree.body[0].value.elts]
+                    keys = [v.value for v in tree.body[0].value.elts]
                     description.append(
                         (
                             [
                                 "## Encoding Ordinal Categorical Features",
                                 "We will encode categorical features as an integer array.",
-                                f'In the given input dataset there are *{len(keys)}* column{"s" if len(keys)>1 else ""} with string values as follows: {(u", ".join(_) for _ in keys)}',
+                                f'In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with string values as follows: {recs}',
                             ],
                             "markdown",
                         )
@@ -543,21 +493,22 @@ class AST_Update:
         if tree:
             if tree.body:
                 if isinstance(tree.body[0], ast.Assign):
-                    keys = [_.value for _ in tree.body[0].value.elts]
-        description.append((["## Numeric to Scale"], "markdown"))
+                    keys = [v.value for v in tree.body[0].value.elts]
+        recs = u", ".join(keys)
+        singular = "s" if len(keys) > 1 else ""
+        singular_verb = "are" if len(keys) > 1 else "is"
         description.append(
             (
                 [
-                    f'In the given input dataset there are **{len(keys)} column{"s" if len(keys)>1 else ""}** with numeric values as follows where we can convert those values to scale through [log1p](https://numpy.org/doc/stable/reference/generated/numpy.log1p.html).'
+                    "## Numeric to Scale",
+                    f'In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with numeric values as follows where we can convert those values to scale through [log1p](https://numpy.org/doc/stable/reference/generated/numpy.log1p.html): {recs}.'
                 ],
                 "markdown",
             )
         )
-        recs = ", ".join(_ for _ in keys)
-        description.append(([recs], "markdown"))
         return description
 
-    def __test_dataset_submission_columns__exp__(self, loc, prev):
+    def __test_dataset_prediction_columns__exp__(self, loc, prev):
         added_codes = []
         try:
             if self.visualization_code:
@@ -565,7 +516,7 @@ class AST_Update:
                     added_codes.append(
                         (
                             [
-                                "### Visualization for data distribution of columns",
+                                "## Visualization for data distribution of columns",
                             ],
                             "markdown",
                         )
@@ -575,14 +526,14 @@ class AST_Update:
                     added_codes.append(
                         (
                             [
-                                "### Visualization for feature heatmap",
+                                "## Visualization for feature heatmap",
                             ],
                             "markdown",
                         )
                     )
                     added_codes.append((self.visualization_code["heatmap"], "code"))
         except Exception as ex:
-            self.logger.warning(f"Warning 134: visualization processing issue ({ex})")
+            self.logger.warning(f"Visualization processing issue ({ex})")
             return []
         return added_codes
 
@@ -667,7 +618,7 @@ class Miner:
             self.content.append(
                 {
                     "path": path,
-                    "filename": "".join(_ for _ in (path.split("/")[-1].split(".")[:-1])),
+                    "filename": "".join(path.split("/")[-1].split(".")[:-1]),
                     "code": code,
                     "blocks": updated_block,
                 }
@@ -681,7 +632,7 @@ class Miner:
                 # adding initial_blocks if provided (i.e., from AutoEDA)
                 cell_rows, cell_type = block
                 if cell_type == "markdown":
-                    cell = {"cell_type": "markdown", "metadata": {}, "source": "\n".join(_ for _ in cell_rows)}
+                    cell = {"cell_type": "markdown", "metadata": {}, "source": "\n".join(cell_rows)}
                 else:
                     # process code type cells
                     cell = {
@@ -689,7 +640,7 @@ class Miner:
                         "execution_count": None,
                         "metadata": {},
                         "outputs": [],
-                        "source": "\n".join(_ for _ in cell_rows),
+                        "source": "\n".join(cell_rows),
                     }
                 jnote["cells"].append(cell)
 
@@ -697,7 +648,7 @@ class Miner:
                 # processing generated blocks
                 cell_rows, cell_type = block
                 if cell_type == "markdown":
-                    cell = {"cell_type": "markdown", "metadata": {}, "source": "\n".join(_ for _ in cell_rows)}
+                    cell = {"cell_type": "markdown", "metadata": {}, "source": "\n".join(cell_rows)}
                 else:
                     if explains:
                         # code cell
@@ -738,7 +689,7 @@ class Miner:
                         "execution_count": None,
                         "metadata": {},
                         "outputs": [],
-                        "source": "\n".join(_ for _ in cell_rows),
+                        "source": "\n".join(cell_rows),
                     }
 
                 jnote["cells"].append(cell)
