@@ -19,7 +19,7 @@ from typing import Any, Literal, Optional, Union
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from sapientml.params import Code, Config, Task
 
 from .meta_features import (
@@ -74,13 +74,13 @@ class SapientMLConfig(Config):
             else:
                 self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
 
-    @validator("n_models")
+    @field_validator("n_models")
     def check_n_models(cls, v):
         if v <= 0 or MAX_N_MODELS < v:
             raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
         return v
 
-    @validator(
+    @field_validator(
         "id_columns_for_prediction",
         "use_word_list",
     )
@@ -91,7 +91,7 @@ class SapientMLConfig(Config):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
-    @validator(
+    @field_validator(
         "id_columns_for_prediction",
         "use_word_list",
     )
@@ -103,25 +103,25 @@ class SapientMLConfig(Config):
                 raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("seed_for_model")
+    @field_validator("seed_for_model")
     def check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
-    @validator("hyperparameter_tuning_n_trials")
+    @field_validator("hyperparameter_tuning_n_trials")
     def check_hyperparameter_tuning_n_trials(cls, v):
         if v < 1 or MAX_HPO_N_TRIALS < v:
             raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
         return v
 
-    @validator("hyperparameter_tuning_timeout")
+    @field_validator("hyperparameter_tuning_timeout")
     def check_hyperparameter_tuning_timeout(cls, v):
         if v < 0 or MAX_HPO_TIMEOUT < v:
             raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
         return v
 
-    @validator("hyperparameter_tuning_random_state")
+    @field_validator("hyperparameter_tuning_random_state")
     def check_hyperparameter_tuning_random_state(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
@@ -133,13 +133,13 @@ class Column(BaseModel):
     meta_features: Optional[MetaFeatures]
     has_negative_value: bool
 
-    @validator("dtype")
+    @field_validator("dtype")
     def check_dtype(cls, v):
         if len(v) > 100:
             raise ValueError(f"'{v}' is invalid as a dtype")
         return v
 
-    @validator("meta_features")
+    @field_validator("meta_features")
     def check_meta_features(cls, v):
         if v is None:
             return v
@@ -172,7 +172,7 @@ class DatasetSummary(BaseModel):
     cols_almost_missing_string: Optional[list[str]] = None
     cols_almost_missing_numeric: Optional[list[str]] = None
 
-    @validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
     def check_num_of_columns(cls, v):
         if v is None:
             return v
@@ -180,7 +180,7 @@ class DatasetSummary(BaseModel):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
-    @validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
     def check_column_name_length(cls, v):
         if v is None:
             return v
@@ -189,7 +189,7 @@ class DatasetSummary(BaseModel):
                 raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("meta_features_pp", "meta_features_m")
+    @field_validator("meta_features_pp", "meta_features_m")
     def check_meta_features(cls, v):
         for k, _v in v.items():
             if not re.match(r"feature:[a-z_0-9]+", k):

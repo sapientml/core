@@ -234,7 +234,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         debug_info = {}
         for i, candidate in enumerate(candidate_scripts, start=1):
-            info = {"content": candidate[0].dict(), "run_info": candidate[1].__dict__}
+            info = {"content": candidate[0].model_dump(), "run_info": candidate[1].__dict__}
             debug_info[i] = info
 
         if self.config.debug:
