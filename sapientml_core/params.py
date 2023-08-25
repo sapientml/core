@@ -172,7 +172,7 @@ class DatasetSummary(BaseModel):
     has_inf_value_targets: bool
     cols_almost_missing_string: Optional[list[str]] = None
     cols_almost_missing_numeric: Optional[list[str]] = None
-    cols_str_other : Optional[list[str]] = None
+    cols_str_other: Optional[list[str]] = None
 
     @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_num_of_columns(cls, v):
