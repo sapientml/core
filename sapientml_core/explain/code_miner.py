@@ -50,7 +50,7 @@ class AST_Update:
             "_TARGET_COLUMNS =": "__set_target__",
             "__model =": "__model__",
             "_ohe = OrdinalEncoder": "__OrdinalEncoder_exp__",
-            "__train_dataset.drop([": "__drop_Irrelevant__",
+            "irrelevant_columns =": "__drop_Irrelevant__",
             "def process_text": "__process_text_exp__",
             "__tfidfvectorizer =": "__tfidfvectorizer_exp__",
             "__y_pred = __model.predict_proba": "__predict_proba_exp__",
@@ -343,21 +343,20 @@ class AST_Update:
     def __drop_Irrelevant__(self, loc, prev):
         added_codes = []
         try:
-            if "DISCARD IRRELEVANT COLUMNS" in prev:
-                tree = ast.parse(loc)
-                keys = [v.value for v in tree.body[0].value.args[0].elts]
-                recs = u", ".join(keys)
-                singular = "s" if len(keys) > 1 else ""
-                singular_verb = "are" if len(keys) > 1 else "is"
-                added_codes.append(
-                    (
-                        [
-                            "### Discard Irrelevant Columns",
-                            f'In the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be removed as follows: {recs}.',
-                        ],
-                        "markdown",
-                    )
+            tree = ast.parse(loc)
+            keys = [v.value for v in tree.body[0].value.elts]
+            recs = u", ".join(keys)
+            singular = "s" if len(keys) > 1 else ""
+            singular_verb = "are" if len(keys) > 1 else "is"
+            added_codes.append(
+                (
+                    [
+                        "### Discard Irrelevant Columns",
+                        f'In the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be removed as follows: {recs}',
+                    ],
+                    "markdown",
                 )
+            )
         except Exception as ex:
             self.logger.warning(f"Column extraction issue ({ex})")
             return []

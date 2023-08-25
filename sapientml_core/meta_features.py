@@ -729,7 +729,6 @@ def _collect_pp_meta_features(data_df: pd.DataFrame, target_column_name: Union[s
     column_type_dict = _collect_csv_column_type_presence_pp(dataX, preprocess=True)
     feature_dict.update(column_type_dict)
     feature_dict["missing_values_presence"] = _get_missing_values_presence(dataX)
-    feature_dict["all_missing_values"] = _collect_csv_missing_all_value_presence(dataX)
     feature_dict["num_target"] = datay.shape[1]
     column_types = _get_target_column_type_pp(datay, preprocess=True)
     feature_dict.update(_count_column_type_pp(column_types))
@@ -750,7 +749,6 @@ def _collect_column_meta_features(column_df: pd.DataFrame):
     column_type_dict = _collect_csv_column_type_presence_pp(column_df, preprocess=True)
     feature_dict.update(column_type_dict)
     feature_dict["missing_values_presence"] = _get_missing_values_presence(column_df)
-    feature_dict["all_missing_values"] = _collect_csv_missing_all_value_presence(column_df)
     feature_dict["max_normalized_mean"] = _get_max_normalized_mean(column_df)
     feature_dict["max_normalized_stddev"] = _get_max_normalized_stddev(column_df)
     feature_dict["normalized_variation_across_columns"] = _get_normalized_variation_across_columns(column_df)
@@ -878,11 +876,6 @@ def _count_column_type_pp(column_type):
     res["target_catg_num_max"] = catg_num_max
     res["target_catg_num_min"] = catg_num_min
     return res
-
-
-def _collect_csv_missing_all_value_presence(dataset):
-    cols_with_all_missing_values = dataset.columns[dataset.isnull().all()].tolist()
-    return cols_with_all_missing_values
 
 
 def _get_missing_values_presence(dataset):
@@ -1064,7 +1057,7 @@ def generate_pp_meta_features(
         print("Could not generate meta-features.")
         print("Exception: {}".format(e))
         raise
-    interesting_features = search_space.meta_feature_list + [ps_macros.STR_OTHER] + [ps_macros.ALL_MISSING_PRESENCE]
+    interesting_features = search_space.meta_feature_list + [ps_macros.STR_OTHER]
     return {k: v for k, v in pp_meta_feature_dict.items() if k in interesting_features}
 
 

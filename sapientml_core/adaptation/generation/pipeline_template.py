@@ -113,15 +113,12 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("other_templates/store_prediction_columns.py.jinja")
         pipeline.pipeline_json["store_prediction_columns"]["code"] = self._render(tpl, pipeline=pipeline)
 
-        if len(pipeline.task.ignore_columns) > 0:
-            pipeline.train_ignore_columns = pipeline.task.ignore_columns
-            pipeline.test_ignore_columns = pipeline.task.ignore_columns
+        if len(pipeline.dataset_summary.cols_str_other) > 0:
+            irrelevant_columns = pipeline.dataset_summary.cols_str_other
             tpl = env.get_template("other_templates/drop_columns.py.jinja")
-            pipeline.pipeline_json["discard_columns"]["code"] = self._render(tpl, pipeline=pipeline)
-            tpl = env.get_template("other_templates/drop_columns_train.py.jinja")
-            pipeline.pipeline_json["discard_columns"]["code_train"] = self._render(tpl, pipeline=pipeline)
-            tpl = env.get_template("other_templates/drop_columns_predict.py.jinja")
-            pipeline.pipeline_json["discard_columns"]["code_predict"] = self._render(tpl, pipeline=pipeline)
+            pipeline.pipeline_json["discard_columns"]["code"] = self._render(tpl, train=True, test=True, irrelevant_columns=irrelevant_columns)
+            pipeline.pipeline_json["discard_columns"]["code_train"] = self._render(tpl, train=True, test=False, irrelevant_columns=irrelevant_columns)
+            pipeline.pipeline_json["discard_columns"]["code_predict"] = self._render(tpl, train=False, test=True, irrelevant_columns=irrelevant_columns)
 
         tpl = env.get_template("other_templates/target_separation_validation.py.jinja")
         pipeline.pipeline_json["target_separation"]["code_validation"] = self._render(tpl, pipeline=pipeline)

@@ -1,7 +1,8 @@
 # DISCARD IRRELEVANT COLUMNS
-{% if pipeline.train_ignore_columns|length > 0 %}
-__train_dataset.drop({{ pipeline.train_ignore_columns }}, axis=1, inplace=True, errors="ignore")
+irrelevant_columns = {{ irrelevant_columns }}
+{% if train %}
+__train_dataset = __train_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
 {% endif %}
-{% if pipeline.test_ignore_columns|length > 0 %}
-__test_dataset.drop({{ pipeline.test_ignore_columns }}, axis=1, inplace=True, errors="ignore")
+{% if test %}
+__test_dataset = __test_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
 {% endif %}
