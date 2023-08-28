@@ -129,7 +129,7 @@ def compare_basic(project, static_info):
         summary["status"] = "FINALIZED"
     else:
         summary["status"] = "IN_PROGRESS"
-        print(file_util.read_file(project.pipeline_path))
+        logger.debug(file_util.read_file(project.pipeline_path))
 
     return summary
 

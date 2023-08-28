@@ -224,7 +224,7 @@ def generate_mutated_accuracy(project):
         # then run muted types
         with Pool(cpu_count() // 4 or 1) as p:
             for j, now_t in tqdm(p.imap(run, muted_types)):
-                print(f"  [{j + 1}/{len(muted_types) + 1}] run type {now_t}")
+                logger.debug(f"  [{j + 1}/{len(muted_types) + 1}] run type {now_t}")
         p.join()
 
 

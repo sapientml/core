@@ -20,9 +20,11 @@ import pandas as pd
 from sapientml_core import internal_path
 from sapientml_core.design import search_space
 from sklearn.tree import DecisionTreeClassifier
+from sapientml.util.logging import setup_logger
 
 from . import meta_feature_selector, pp_model_struct
 
+logger = setup_logger()
 
 # Model optimization
 def train_p_model(X, y):
@@ -32,7 +34,7 @@ def train_p_model(X, y):
 
 
 def _train_preprocessors(train_data, cross_validation, feature_selection):
-    print("Training skeleton predictor for preprocessors...")
+    logger.info("Training skeleton predictor for preprocessors...")
     data = train_data
     data.drop(
         data.filter(regex="(TEMPLATE|IGNORE|EVAL:|RPEPROCESS:|MODEL:|Unnamed:)").columns,
@@ -53,7 +55,7 @@ def _train_preprocessors(train_data, cross_validation, feature_selection):
 
     for _, detail_labels in second_to_full_labels.items():
         for label in detail_labels:
-            print(label)
+            logger.debug(label)
             main_df = data.copy()
             # Feature Selection On
             y = main_df[label]
@@ -61,13 +63,13 @@ def _train_preprocessors(train_data, cross_validation, feature_selection):
 
             if feature_selection == "select_manually":
                 selected_features = meta_feature_selector.select_features(label)
-                print("Selected Features:", selected_features)
+                logger.info("Selected Features:", selected_features)
                 X = main_df[selected_features]
             elif feature_selection == "customized":
                 selected_features = selected_features_map[label]
                 if len(selected_features) == 0:
                     selected_features = meta_feature_selector.select_sequentially(X, y)
-                print("Selected Features:", selected_features)
+                logger.info("Selected Features:", selected_features)
                 X = main_df[selected_features]
 
             pp_model = train_p_model(X, y)

@@ -53,7 +53,7 @@ def extract(json_metadata_file):
 # Created but not used
 def _collect_csv_missing_value_presence(dataset):
     missing_columns = dataset.columns[dataset.isnull().any()].tolist()
-    print(missing_columns)
+    logger.debug(missing_columns)
     num_of_missing_value_cols = len(missing_columns)
     return num_of_missing_value_cols
 
