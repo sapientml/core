@@ -17,14 +17,15 @@ import pickle
 from collections import OrderedDict, defaultdict
 
 import pandas as pd
+from sapientml.util.logging import setup_logger
 from sapientml_core import internal_path
 from sapientml_core.design import search_space
 from sklearn.tree import DecisionTreeClassifier
-from sapientml.util.logging import setup_logger
 
 from . import meta_feature_selector, pp_model_struct
 
 logger = setup_logger()
+
 
 # Model optimization
 def train_p_model(X, y):
@@ -33,7 +34,7 @@ def train_p_model(X, y):
     return model
 
 
-def _train_preprocessors(train_data, cross_validation, feature_selection):
+def _train_preprocessors(train_data, feature_selection):
     logger.info("Training skeleton predictor for preprocessors...")
     data = train_data
     data.drop(
@@ -89,13 +90,13 @@ def _prepare_model_training_data(raw_meta_feature_train):
     return final_meta_features
 
 
-def main(cross_validation=False):
+def main():
     training_data_path = internal_path.training_cache / "pp_metafeatures_training.csv"
     # "select_manually" | "customized"
     feature_selection = "customized"
     raw_meta_feature_train = pd.read_csv(training_data_path)
     meta_feature_train = _prepare_model_training_data(raw_meta_feature_train)
-    pp_models = _train_preprocessors(meta_feature_train, cross_validation, feature_selection)
+    pp_models = _train_preprocessors(meta_feature_train, feature_selection)
     # Save model
     with open(internal_path.training_cache / "pp_models.pkl", "wb") as f:
         pickle.dump(pp_models, f)

@@ -17,9 +17,7 @@ from typing import Optional
 
 import libcst as cst
 from libcst.metadata import ParentNodeProvider, PositionProvider
-from sapientml.util.logging import setup_logger
 
-logger = setup_logger()
 
 class SpecialVariableRetrieval(cst.CSTVisitor):
     METADATA_DEPENDENCIES = (
@@ -170,12 +168,10 @@ class ImportMapRetrieval(cst.CSTVisitor):
     def visit_AsName_name(self, node) -> None:
         pos = self.get_metadata(PositionProvider, node).start
         self.as_names[node.name.value] = pos.line
-        # logger.debug(node.name.value)
 
     def visit_ImportAlias(self, node) -> Optional[bool]:
         pos = self.get_metadata(PositionProvider, node).start
         self.as_names[node.name.value] = pos.line
-        # logger.debug(node.name.value)
 
     def visit_Name(self, node) -> Optional[bool]:
         if node.value in self.as_names:
@@ -193,8 +189,7 @@ def get_import_map(code):
     retriever = ImportMapRetrieval()
     wrapper = cst.metadata.MetadataWrapper(source_tree)
     wrapper.visit(retriever)
-    # logger.debug(retriever.as_names)
-    # logger.debug(retriever.uses)
+
     line_2_import_map = {}
     for key1 in retriever.uses:
         uses = retriever.uses[key1]
@@ -205,8 +200,6 @@ def get_import_map(code):
                 import_set = line_2_import_map[use]
             import_set.add(retriever.as_names[key1])
             line_2_import_map[use] = import_set
-
-    # logger.debug(line_2_import_map)
 
     return line_2_import_map
 
