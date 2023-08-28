@@ -14,10 +14,14 @@
 
 import ast
 import copy
-import glob
 import json
+import os
 import re
+import time
+from datetime import datetime
+from glob import glob
 from importlib.metadata import entry_points
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from shutil import copyfile
 from typing import Tuple, Union
@@ -28,14 +32,17 @@ from sapientml.macros import metric_lower_is_better
 from sapientml.params import Code, Dataset, PipelineResult, RunningResult, Task
 from sapientml.util.json_util import JSONEncoder
 from sapientml.util.logging import setup_logger
+from tqdm import tqdm
 
-from . import ps_macros
+from . import internal_path, ps_macros
 from .adaptation.generation.template_based_adaptation import Adaptation
 from .explain.main import process as explain
 from .params import Pipeline, SapientMLConfig, summarize_dataset
 from .seeding.predictor import predict
-
-model_dir_path_default = Path(__file__).parent / "models"
+from .training import meta_feature_extractor, meta_model_trainer, pp_model_trainer, project_corpus
+from .training.augmentation import mutation_results, mutation_runner
+from .training.dataflowmodel import dependent_api_extractor, determine_label_order
+from .training.denoising import dataset_snapshot_extractor, determine_used_features, static_analysis_of_columns
 
 logger = setup_logger()
 
@@ -47,6 +54,68 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         eps = entry_points(group="sapientml.code_block_generator")
         self.loaddata = eps["loaddata"].load()(**kwargs)
         self.preprocess = eps["preprocess"].load()(**kwargs)
+
+    def train(self, tag=None):
+        def wait_for(file_pattern, n_files=1):
+            logger.info(f"Waiting for {file_pattern}" + (f" * {n_files}" if n_files > 1 else ""))
+            latest = 0
+            with tqdm(total=n_files) as pbar:
+                pbar.update(latest)
+                while latest < n_files:
+                    time.sleep(2)
+                    k = len(glob(f"{internal_path.training_cache}/{file_pattern}"))
+                    if k > latest:
+                        pbar.update(k - latest)
+                        latest = k
+
+        corpus = project_corpus.ProjectCorpus()
+        projects = corpus.project_list
+
+        if tag:
+            internal_path.training_cache = internal_path.training_cache / tag
+            internal_path.execution_cache_dir = internal_path.training_cache / "exec_info"
+
+        os.makedirs(internal_path.training_cache, exist_ok=True)
+        if not os.path.exists(internal_path.execution_cache_dir):
+            os.makedirs(internal_path.execution_cache_dir)
+
+        start = datetime.now()
+
+        logger.info(f"Start: {start}")
+
+        # Step-1
+        static_analysis_of_columns.main()
+        wait_for("static_info.json")
+        dataset_snapshot_extractor.main()
+        wait_for("dataset-snapshots/*/*.txt", len(projects))
+
+        # Step-2
+        p = Pool(cpu_count())
+        values = [(12, y) for y in range(12)]
+        p.map(mutation_runner.main, values)
+
+        wait_for("exec_info/mutation_*.finished", 12)
+        determine_used_features.main()
+        wait_for("feature_analysis_summary.json")
+        mutation_results.main()
+
+        # Step-3
+        meta_feature_extractor.main()
+        wait_for("*_metafeatures_training.csv", 2)
+
+        # Step-4
+        pp_model_trainer.main()
+        meta_model_trainer.main()
+        wait_for("*.pkl", 3)
+
+        # Step-5
+        dependent_api_extractor.main()
+        wait_for("dependent_labels.json")
+        determine_label_order.main()
+        wait_for("label_order.json")
+
+        end = datetime.now()
+        logger.info(f"End: {end}")
 
     def generate_pipeline(self, dataset: Dataset, task: Task):
         self.dataset = dataset

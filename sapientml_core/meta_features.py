@@ -157,7 +157,7 @@ def test_feature_preprocess(raw_df: pd.DataFrame, is_clf_task: Literal[0, 1]):
     return real_feature_preprocess(raw_df)
 
 
-# Generate the model mata features for online and offline processing
+# Generate the model mata features for training processing
 def _collect_model_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
     if isinstance(target_column_name, str):
         target_column_name = [target_column_name]
@@ -293,10 +293,10 @@ def collect_labels(annotated_notebooks_path):
     # One-hot encode the labels
     feature_map_list = []
     for file_name, group in groups:
-        labels = group["new_label"].tolist()
-
+        labels = group["new_label"].to_list()
+        name = list(file_name)
         feature_map = {}
-        feature_map["file_name"] = str(file_name)
+        feature_map["file_name"] = str(name[0])
         for label in labels:
             feature_map[label] = 1
         feature_map_list.append(feature_map)
@@ -679,7 +679,7 @@ def _get_missing_values_named_columns(dataset):
     return int(feature)
 
 
-# Generate the model meta_feature for offline processing
+# Generate the model meta_feature for training processing
 def compute_model_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_model_meta_features(df, target_column_name)
@@ -706,7 +706,7 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     return meta_feature_dict
 
 
-# Generate the pp mata features for online and offline processing
+# Generate the pp mata features for training processing
 def _collect_pp_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
     if isinstance(target_column_name, str):
         target_column_name = [target_column_name]
@@ -1027,7 +1027,7 @@ def _is_text_column_pp(c, preprocess):
     return cells_satisfy_space and not is_category
 
 
-# Generate the PP meta_feature for offline processing
+# Generate the PP meta_feature for training processing
 def compute_pp_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_pp_meta_features(df, target_column_name)

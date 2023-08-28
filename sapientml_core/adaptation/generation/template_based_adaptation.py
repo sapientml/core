@@ -61,7 +61,7 @@ class Adaptation:
         self.config = config
         self.adaptation_metric: Optional[str] = self._get_adaptation_metric_label()
 
-        # Load all the Offline Data
+        # Load all the training Data
         with open(Path(os.path.dirname(__file__)) / "../artifacts/label_order.json", "r", encoding="utf-8") as f:
             label_order = json.load(f)
 
