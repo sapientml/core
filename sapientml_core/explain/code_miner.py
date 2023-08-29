@@ -50,7 +50,7 @@ class AST_Update:
             "_TARGET_COLUMNS =": "__set_target__",
             "__model =": "__model__",
             "_ohe = OrdinalEncoder": "__OrdinalEncoder_exp__",
-            "__train_dataset.drop([": "__drop_Irrelevant__",
+            "irrelevant_columns =": "__drop_Irrelevant__",
             "def process_text": "__process_text_exp__",
             "__tfidfvectorizer =": "__tfidfvectorizer_exp__",
             "__y_pred = __model.predict_proba": "__predict_proba_exp__",
@@ -308,7 +308,7 @@ class AST_Update:
         if "_TEXT_COLUMNS" in prev:
             tree = ast.parse(prev)
             keys = [v.value for v in tree.body[0].value.elts]
-            recs = u", ".join(keys)
+            recs = ", ".join(keys)
             singular = "s" if len(keys) > 1 else ""
             if len(keys):
                 added_codes.append(
@@ -343,21 +343,20 @@ class AST_Update:
     def __drop_Irrelevant__(self, loc, prev):
         added_codes = []
         try:
-            if "DISCARD IRRELEVANT COLUMNS" in prev:
-                tree = ast.parse(loc)
-                keys = [v.value for v in tree.body[0].value.args[0].elts]
-                recs = u", ".join(keys)
-                singular = "s" if len(keys) > 1 else ""
-                singular_verb = "are" if len(keys) > 1 else "is"
-                added_codes.append(
-                    (
-                        [
-                            "### Discard Irrelevant Columns",
-                            f'In the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be removed as follows: {recs}.',
-                        ],
-                        "markdown",
-                    )
+            tree = ast.parse(loc)
+            keys = [v.value for v in tree.body[0].value.elts]
+            recs = ", ".join(keys)
+            singular = "s" if len(keys) > 1 else ""
+            singular_verb = "are" if len(keys) > 1 else "is"
+            added_codes.append(
+                (
+                    [
+                        "### Discard Irrelevant Columns",
+                        f"In the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be removed as follows: {recs}",
+                    ],
+                    "markdown",
                 )
+            )
         except Exception as ex:
             self.logger.warning(f"Column extraction issue ({ex})")
             return []
@@ -369,7 +368,7 @@ class AST_Update:
             if "_CATEGORICAL_COLS" in prev:
                 tree = ast.parse(prev)
                 keys = [v.value for v in tree.body[0].value.elts]
-                recs = u", ".join(keys)
+                recs = ", ".join(keys)
                 singular = "s" if len(keys) > 1 else ""
                 singular_verb = "are" if len(keys) > 1 else "is"
                 added_codes.append(
@@ -378,7 +377,7 @@ class AST_Update:
                             "## Encoding Ordinal Categorical Features",
                             "Let's transfer categorical features as an integer array.",
                             "We will use Ordinal Encoder as explained [here](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OrdinalEncoder.html).",
-                            f'\nIn the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be transfered to integer and it includes: {recs}.',
+                            f"\nIn the given input dataset there {singular_verb} **{len(keys)}** column{singular} that can be transfered to integer and it includes: {recs}.",
                         ],
                         "markdown",
                     )
@@ -393,7 +392,7 @@ class AST_Update:
         try:
             tree = ast.parse(loc)
             target_col = [v.value for v in tree.body[0].value.elts]
-            recs = u", ".join(target_col)
+            recs = ", ".join(target_col)
             singular = "s" if len(target_col) > 1 else ""
             singular_verb = "are" if len(target_col) > 1 else "is"
             added_codes.append(
@@ -403,7 +402,7 @@ class AST_Update:
                         f"We need to predict the target column{singular}.",
                         f"Therefore, we need to detach the target column{singular} in prediction.",
                         f"When the test data has the target column{singular}, the detaching is also executed for the test data."
-                        f'Here {singular_verb} the list of *target column{singular}*: **{recs}**',
+                        f"Here {singular_verb} the list of *target column{singular}*: **{recs}**",
                     ],
                     "markdown",
                 )
@@ -422,7 +421,7 @@ class AST_Update:
                 if isinstance(tree.body[0], ast.Assign):
                     for key in tree.body[0].value.elts:
                         keys.append(key.value)
-        recs = u", ".join(keys)
+        recs = ", ".join(keys)
         singular = "s" if len(keys) > 1 else ""
         singular_verb = "are" if len(keys) > 1 else "is"
         description.append(
@@ -446,14 +445,14 @@ class AST_Update:
                 if isinstance(tree.body[0], ast.Assign):
                     for key in tree.body[0].value.elts:
                         keys.append(key.value)
-        recs = u", ".join(keys)
+        recs = ", ".join(keys)
         singular = "s" if len(keys) > 1 else ""
         singular_verb = "are" if len(keys) > 1 else "is"
         description.append(
             (
                 [
                     f"## Remove Missing Values in Categorical Column{singular}",
-                    f'\nIn the given input dataset there {singular_verb} **{len(keys)} column{singular}** with missing data as follows: {recs}.',
+                    f"\nIn the given input dataset there {singular_verb} **{len(keys)} column{singular}** with missing data as follows: {recs}.",
                     f"\nThe following code removes the missing values from those column{singular}. We use the most frequent value of each column or empty character to replace the Null values according to the missing value ratio.",
                 ],
                 "markdown",
@@ -465,7 +464,7 @@ class AST_Update:
         description = []
         keys = []
         tree = ast.parse(loc)
-        recs = u", ".join(keys)
+        recs = ", ".join(keys)
         singular = "s" if len(keys) > 1 else ""
         singular_verb = "are" if len(keys) > 1 else "is"
         if tree:
@@ -477,7 +476,7 @@ class AST_Update:
                             [
                                 "## Encoding Ordinal Categorical Features",
                                 "We will encode categorical features as an integer array.",
-                                f'In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with string values as follows: {recs}',
+                                f"In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with string values as follows: {recs}",
                             ],
                             "markdown",
                         )
@@ -494,14 +493,14 @@ class AST_Update:
             if tree.body:
                 if isinstance(tree.body[0], ast.Assign):
                     keys = [v.value for v in tree.body[0].value.elts]
-        recs = u", ".join(keys)
+        recs = ", ".join(keys)
         singular = "s" if len(keys) > 1 else ""
         singular_verb = "are" if len(keys) > 1 else "is"
         description.append(
             (
                 [
                     "## Numeric to Scale",
-                    f'In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with numeric values as follows where we can convert those values to scale through [log1p](https://numpy.org/doc/stable/reference/generated/numpy.log1p.html): {recs}.'
+                    f"In the given input dataset there {singular_verb} **{len(keys)} column{singular}** with numeric values as follows where we can convert those values to scale through [log1p](https://numpy.org/doc/stable/reference/generated/numpy.log1p.html): {recs}.",
                 ],
                 "markdown",
             )

@@ -264,7 +264,7 @@ class Adaptation:
                 continue
 
             rel_cols = component.get_relevant_columns(
-                self.dataset_summary, self.task.target_columns, self.task.ignore_columns
+                self.dataset_summary, self.task.target_columns, self.dataset_summary.cols_str_other
             )
 
             if (
@@ -278,7 +278,9 @@ class Adaptation:
                 ]
                 # remove boolean and datetime columns, since Simple Imputer cannot handle boolean and datetime dtype
                 rel_cols = sorted(list(set(rel_cols) - set(bool_cols) - set(datetime_cols)))
-                rel_cols = sorted(list(set(rel_cols) - set(self.task.ignore_columns) - set(self.task.target_columns)))
+                rel_cols = sorted(
+                    list(set(rel_cols) - set(self.dataset_summary.cols_str_other) - set(self.task.target_columns))
+                )
 
             # handle special case for log transformation if target feature is in relevant columns
             if (

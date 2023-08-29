@@ -22,6 +22,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, field_validator
 from sapientml.params import Code, Config, Task
 
+from . import ps_macros
 from .meta_features import (
     MetaFeatures,
     generate_column_meta_features,
@@ -171,8 +172,9 @@ class DatasetSummary(BaseModel):
     has_inf_value_targets: bool
     cols_almost_missing_string: Optional[list[str]] = None
     cols_almost_missing_numeric: Optional[list[str]] = None
+    cols_str_other: Optional[list[str]] = None
 
-    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_num_of_columns(cls, v):
         if v is None:
             return v
@@ -180,7 +182,7 @@ class DatasetSummary(BaseModel):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
-    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_column_name_length(cls, v):
         if v is None:
             return v
@@ -235,8 +237,6 @@ class Pipeline(Code):
     sparse_matrix: bool = False  # Whether the data is converted to sparse matrix in the pipeline
     train_column_names: list[str] = Field(default_factory=list)
     test_column_names: list[str] = Field(default_factory=list)
-    train_ignore_columns: list[str] = Field(default_factory=list)
-    test_ignore_columns: list[str] = Field(default_factory=list)
 
     # To handle following case;
     #   metrics : Accuracy
@@ -283,10 +283,7 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
 
     columns = dict()
     for column_name in df_train.columns:
-        if column_name not in task.ignore_columns:
-            meta_features = generate_column_meta_features(df_train[[column_name]])
-        else:  # in case ignore_columns (columns.keys() be called by Adaptation class)
-            meta_features = None
+        meta_features = generate_column_meta_features(df_train[[column_name]])
 
         columns[column_name] = Column(
             dtype=str(df_train[column_name].dtype),
@@ -298,6 +295,9 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
 
     # Generate the meta-features
     meta_features_pp = generate_pp_meta_features(df_train, task.target_columns)
+    if ps_macros.STR_OTHER in meta_features_pp:
+        cols_str_other = meta_features_pp[ps_macros.STR_OTHER]
+        del meta_features_pp[ps_macros.STR_OTHER]
 
     is_clf_task = 1 if task.task_type == "classification" else 0
     meta_features_m = generate_model_meta_features(df_train, task.target_columns, is_clf_task)
@@ -310,4 +310,5 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
         has_inf_value_targets=has_inf_value_targets,
         cols_almost_missing_string=cols_almost_missing_string,
         cols_almost_missing_numeric=cols_almost_missing_numeric,
+        cols_str_other=cols_str_other,
     )
