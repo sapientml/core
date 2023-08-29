@@ -231,6 +231,7 @@ class SimplePipeline(Code):
     pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
 
     labels: Optional[PipelineSkeleton] = None
+    model: Optional[ModelLabel] = None
 
 
 class Pipeline(SimplePipeline):
@@ -239,7 +240,6 @@ class Pipeline(SimplePipeline):
     config: SapientMLConfig
     adaptation_metric: Optional[str] = None
     all_columns_datatypes: dict = Field(default_factory=dict)
-    model: Optional[ModelLabel] = None
     inverse_target: bool = False
     sparse_matrix: bool = False  # Whether the data is converted to sparse matrix in the pipeline
     train_column_names: list[str] = Field(default_factory=list)
