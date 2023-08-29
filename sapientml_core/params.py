@@ -226,7 +226,14 @@ class ModelLabel(BaseModel):
         return str(self)
 
 
-class Pipeline(Code):
+class SimplePipeline(Code):
+    # pipeline json
+    pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
+
+    labels: Optional[PipelineSkeleton] = None
+
+
+class Pipeline(SimplePipeline):
     task: Task
     dataset_summary: DatasetSummary
     config: SapientMLConfig
@@ -246,11 +253,6 @@ class Pipeline(Code):
 
     id_columns_for_prediction: list[str] = Field(default_factory=list)
     output_dir_path: str = ""
-
-    # pipeline json
-    pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
-
-    labels: Optional[PipelineSkeleton] = None
 
 
 def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:

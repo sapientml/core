@@ -23,7 +23,7 @@ from sapientml import macros
 from sapientml.params import Config, Task
 from sapientml.util.logging import setup_logger
 
-from ...params import DatasetSummary, ModelLabel, Pipeline, PipelineSkeleton
+from ...params import DatasetSummary, ModelLabel, Pipeline, SimplePipeline, PipelineSkeleton
 from .pipeline_template import PipelineTemplate, is_allowed_to_apply_to_target
 from .preprocessing_label import PreprocessingLabel
 
@@ -357,7 +357,7 @@ class Adaptation:
 
         return pipeline_list
 
-    def run_adaptation(self) -> list[Pipeline]:
+    def run_adaptation(self) -> list[SimplePipeline]:
         # SapientML default run
         self._setup_pipeline_basics()
         preprocessing, model = self._get_labels_from_skeleton_predictor()
@@ -367,4 +367,4 @@ class Adaptation:
             pipeline.generate()
             pipeline.pipeline.labels = self.labels
 
-        return [pipeline.pipeline for pipeline in pipeline_list]
+        return [SimplePipeline(**pipeline.pipeline.model_dump()) for pipeline in pipeline_list]

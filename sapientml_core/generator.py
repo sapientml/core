@@ -31,7 +31,7 @@ from sapientml.util.logging import setup_logger
 
 from .adaptation.generation.template_based_adaptation import Adaptation
 from .explain.main import process as explain
-from .params import Pipeline, SapientMLConfig, summarize_dataset
+from .params import SimplePipeline, SapientMLConfig, summarize_dataset
 from .seeding.predictor import predict
 
 model_dir_path_default = Path(__file__).parent / "models"
@@ -87,7 +87,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
-    def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[Pipeline]]:
+    def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[SimplePipeline]]:
         df = dataset.training_dataframe
         # Generate the meta-features
         logger.info("Generating meta features ...")
