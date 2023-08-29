@@ -253,11 +253,6 @@ class Pipeline(Code):
     labels: Optional[PipelineSkeleton] = None
 
 
-class CoreResult(BaseModel):
-    pipelines: list[Pipeline]
-    labels: PipelineSkeleton
-
-
 def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
     """
     Args:

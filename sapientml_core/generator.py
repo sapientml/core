@@ -39,6 +39,12 @@ model_dir_path_default = Path(__file__).parent / "models"
 logger = setup_logger()
 
 
+def add_prefix(filename, prefix):
+    if not prefix:
+        return filename
+    return f"{prefix}_{filename}"
+
+
 class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     def __init__(self, **kwargs):
         self.config = SapientMLConfig(**kwargs)
@@ -162,13 +168,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return PipelineResult(score=score, metric=metric, best_params=best_params)
 
     def save(self, output_dir: Union[Path, str]):
-        def add_prefix(filename, prefix):
-            if not prefix:
-                return filename
-            return f"{prefix}_{filename}"
-
-        path = Path(output_dir)
-        path.mkdir(parents=True, exist_ok=True)
+        
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
         _output_dir = Path(self.dataset.output_dir)
 
@@ -176,19 +178,19 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         if candidate_scripts:
             if self._best_pipeline:
                 script_body = self._best_pipeline.test.replace(_output_dir.as_posix(), ".")
-                with open(path / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(self.output_dir / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
                 script_body = self._best_pipeline.train.replace(_output_dir.as_posix(), ".")
-                with open(path / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(self.output_dir / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
                 script_body = self._best_pipeline.predict.replace(_output_dir.as_posix(), ".")
-                with open(path / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(self.output_dir / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
                 with open(
-                    path / (add_prefix("final_script", self.config.project_name) + ".out.json"),
+                    self.output_dir / (add_prefix("final_script", self.config.project_name) + ".out.json"),
                     "w",
                     encoding="utf-8",
                 ) as f:
@@ -198,7 +200,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 raise RuntimeError("All candidate scripts failed. Final script is not saved.")
 
             # copy libs
-            lib_path = path / "lib"
+            lib_path = self.output_dir / "lib"
             lib_path.mkdir(exist_ok=True)
 
             eps = entry_points(group="sapientml.export_modules")
@@ -211,35 +213,36 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 # If latter one, we have to modify the {tmpdir} to output_dir.
                 script_body = script.validation.replace(_output_dir.as_posix(), ".")
 
-                with open(path / f"{index}_script.py", "w", encoding="utf-8") as f:
+                with open(self.output_dir / f"{index}_script.py", "w", encoding="utf-8") as f:
                     f.write(script_body)
 
-        skeleton = self._best_pipeline.labels
-
-        debug_info = {}
+        self.debug_info = {}
         for i, candidate in enumerate(candidate_scripts, start=1):
             info = {"content": candidate[0].model_dump(), "run_info": candidate[1].__dict__}
-            debug_info[i] = info
+            self.debug_info[i] = info
 
         if self.config.debug:
-            with open(path / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8") as f:
-                json.dump(debug_info, f, cls=JSONEncoder, indent=4)
+            with open(self.output_dir / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8") as f:
+                json.dump(self.debug_info, f, cls=JSONEncoder, indent=4)
 
         if self.config.add_explanation:
-            explain(
-                visualization=True,
-                eda=True,
-                dataframe=self.dataset.training_dataframe,
-                script_path=(Path(output_dir) / add_prefix("final_script.py", self.config.project_name))
-                .absolute()
-                .as_posix(),
-                target_columns=self.task.target_columns,
-                problem_type=self.task.task_type,
-                ignore_columns=self.dataset.ignore_columns,
-                skeleton=skeleton,
-                explanation=self._best_pipeline.pipeline_json,
-                run_info=debug_info,
-                internal_execution=True,
-                timeout=self.config.timeout_for_test,
-                cancel=self.config.cancel,
-            )
+            self.add_explanation()
+
+    def add_explanation(self):
+        explain(
+            visualization=True,
+            eda=True,
+            dataframe=self.dataset.training_dataframe,
+            script_path=(self.output_dir / add_prefix("final_script.py", self.config.project_name))
+            .absolute()
+            .as_posix(),
+            target_columns=self.task.target_columns,
+            problem_type=self.task.task_type,
+            ignore_columns=self.task.ignore_columns,
+            skeleton=self._best_pipeline.labels,
+            explanation=self._best_pipeline.pipeline_json,
+            run_info=self.debug_info,
+            internal_execution=True,
+            timeout=self.config.timeout_for_test,
+            cancel=self.config.cancel,
+        )
