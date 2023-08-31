@@ -172,20 +172,18 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        _output_dir = Path(self.dataset.output_dir)
-
         candidate_scripts = self._candidate_scripts
         if candidate_scripts:
             if self._best_pipeline:
-                script_body = self._best_pipeline.test.replace(_output_dir.as_posix(), ".")
+                script_body = self._best_pipeline.test
                 with open(self.output_dir / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
-                script_body = self._best_pipeline.train.replace(_output_dir.as_posix(), ".")
+                script_body = self._best_pipeline.train
                 with open(self.output_dir / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
-                script_body = self._best_pipeline.predict.replace(_output_dir.as_posix(), ".")
+                script_body = self._best_pipeline.predict
                 with open(self.output_dir / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8") as f:
                     f.write(script_body)
 
@@ -209,10 +207,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                     copyfile(file, lib_path / Path(file).name)
 
             for index, (script, detail) in enumerate(candidate_scripts, start=1):
-                # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
-                # If latter one, we have to modify the {tmpdir} to output_dir.
-                script_body = script.validation.replace(_output_dir.as_posix(), ".")
-
+                script_body = script.validation
                 with open(self.output_dir / f"{index}_script.py", "w", encoding="utf-8") as f:
                     f.write(script_body)
 
