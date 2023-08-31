@@ -233,7 +233,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             .as_posix(),
             target_columns=self.task.target_columns,
             problem_type=self.task.task_type,
-            ignore_columns=self.task.ignore_columns,
+            ignore_columns=self.dataset.ignore_columns,
             skeleton=self._best_pipeline.labels,
             explanation=self._best_pipeline.pipeline_json,
             run_info=self.debug_info,
