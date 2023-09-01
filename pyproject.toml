@@ -2,15 +2,35 @@
 name = "sapientml-core"
 version = "0"
 description = "A SapientML plugin of SapientMLGenerator"
-authors = ["Kosaku Kimura <kimura.kosaku@fujitsu.com>"]
+authors = ["The SapientML Authors"]
+maintainers = [
+    "Kosaku Kimura <kimura.kosaku@fujitsu.com>",
+    "Akira Ura <ura.akira@fujitsu.com>",
+]
 license = "Apache-2.0"
-include = ["core/**/*.py", "templates/**/*.py.jinja"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-sapientml = "^0.1.4"
-sapientml-loaddata = "^0.1.4"
-sapientml-preprocess = "^0.1.2"
+python = ">=3.10,<3.13"
+sapientml = "*"
+sapientml-loaddata = "^0.3.4"
+sapientml-preprocess = "^0.3.2"
+scikit-learn = "1.1.3"
+scipy = "^1.11.1"
+jinja2 = "^3.1.2"
+xgboost = "^1.7.6"
+nltk = "^3.8.1"
+optuna = "^3.2.0"
+catboost = "^1.2"
+lightgbm = "^4.0.0"
+imbalanced-learn = "^0.11.0"
+numba = "^0.57.1"
+nbformat = "^5.9.2"
+nbconvert = "^7.7.4"
+seaborn = "^0.12.2"
+japanize-matplotlib = "^1.1.3"
+ipykernel = "^6.25.1"
+libcst = "^1.0.1"
+tqdm = "^4.66.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -26,8 +46,11 @@ pre-commit = "^3.3.3"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.plugins."pipeline_generator"]
-sapientml_core = "sapientml_core:SapientMLGenerator"
+[tool.poetry.plugins."sapientml.pipeline_generator"]
+sapientml = "sapientml_core:SapientMLGenerator"
+
+[tool.poetry.plugins."sapientml.config"]
+sapientml = "sapientml_core:SapientMLConfig"
 
 [tool.pysen]
 version = "0.10"
@@ -44,6 +67,8 @@ line_length = 120
 py_version = "py310"
 
 [tool.pysen.lint.source]
-includes = ["sapientml/", "tests/"]
-[pytest]
-addopts = "-p no:cacheprovider -s"
+includes = ["sapientml_core/", "tests/"]
+
+[tool.pytest.ini_options]
+addopts = "-s -x --cov=sapientml_core"
+testpaths = ["tests"]

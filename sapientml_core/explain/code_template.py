@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .generator import SapientMLGenerator
-from .params import SapientMLConfig
+import datetime
 
-__all__ = ["SapientMLGenerator", "SapientMLConfig"]
+
+class Code_Template:
+    def __init__(self):
+        self.str_reverse = {"NOW": str(datetime.datetime.now())}
+
+    def update(self, lines):
+        out = []
+        for line in lines:
+            for key in self.str_reverse:
+                line = line.replace(key, self.str_reverse[key])
+            out.append(line)
+        return out

@@ -1,0 +1,13 @@
+[run]
+omit =
+    */.env/*
+    */.venv/*
+    */.cache/*
+    */tmp/*
+    */mining/collector.py
+    */utilities/dataset_utility.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

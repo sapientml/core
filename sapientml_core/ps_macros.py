@@ -36,7 +36,6 @@ DATE_PRESENCE = "feature:str_date_presence"
 STR_OTHER = "feature:str_other"
 
 MISSING_PRESENCE = "feature:missing_values_presence"
-ALL_MISSING_PRESENCE = "feature:all_missing_values"
 DATE_PRESENCE = "feature:str_date_presence"
 
 NORMALIZED_MEAN = "feature:max_normalized_mean"

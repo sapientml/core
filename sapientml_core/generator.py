@@ -12,31 +12,128 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
+import ast
+import copy
+import json
+import os
+import re
+import subprocess
+import time
+from datetime import datetime
+from glob import glob
 from importlib.metadata import entry_points
-from typing import Tuple
-from sapientml.generator import PipelineGenerator, CodeBlockGenerator
-from sapientml.params import Config, Task, Dataset, Code
+from pathlib import Path
+from shutil import copyfile
+from typing import Tuple, Union
+
+from sapientml.executor import PipelineExecutor
+from sapientml.generator import CodeBlockGenerator, PipelineGenerator
+from sapientml.macros import metric_lower_is_better
+from sapientml.params import Code, Dataset, PipelineResult, RunningResult, Task
+from sapientml.util.json_util import JSONEncoder
 from sapientml.util.logging import setup_logger
+from tqdm import tqdm
 
-from . import ps_macros
+from . import internal_path
 from .adaptation.generation.template_based_adaptation import Adaptation
-from .params import Pipeline, summarize_dataset
+from .explain.main import process as explain
+from .params import SapientMLConfig, SimplePipeline, summarize_dataset
 from .seeding.predictor import predict
-
-model_dir_path_default = Path(__file__).parent / "models"
+from .training import project_corpus
 
 logger = setup_logger()
 
 
-class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
-    def __init__(self, config: Config):
-        CodeBlockGenerator.__init__(self, config)
-        eps = entry_points(group="code_block_generator")
-        self.loaddata = eps['loaddata'].load()(config)
-        self.preprocess = eps['preprocess'].load()(config)
+def add_prefix(filename, prefix):
+    if not prefix:
+        return filename
+    return f"{prefix}_{filename}"
 
-    def generate_pipeline(self, dataset: Dataset, task: Task) -> list[Code]:
+
+class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
+    def __init__(self, **kwargs):
+        self.config = SapientMLConfig(**kwargs)
+        self.config.postinit()
+        eps = entry_points(group="sapientml.code_block_generator")
+        self.loaddata = eps["loaddata"].load()(**kwargs)
+        self.preprocess = eps["preprocess"].load()(**kwargs)
+
+    def train(self, tag=None):
+        def exec(cmd):
+            logger.info(f"Executing {cmd}")
+            subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+        def wait_for(file_pattern, n_files=1):
+            logger.info(f"Waiting for {file_pattern}" + (f" * {n_files}" if n_files > 1 else ""))
+            latest = 0
+            with tqdm(total=n_files) as pbar:
+                pbar.update(latest)
+                while latest < n_files:
+                    time.sleep(2)
+                    k = len(glob(f"{internal_path.training_cache}/{file_pattern}"))
+                    if k > latest:
+                        pbar.update(k - latest)
+                        latest = k
+
+        corpus = project_corpus.ProjectCorpus()
+        projects = corpus.project_list
+
+        if tag:
+            internal_path.training_cache = internal_path.training_cache / tag
+
+        os.makedirs(internal_path.training_cache, exist_ok=True)
+
+        start = datetime.now()
+
+        logger.info(f"Start: {start}")
+
+        # Step-1
+        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
+        wait_for("static_info.json")
+        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
+        wait_for("dataset-snapshots/*/*.txt", len(projects))
+
+        # Step-2
+        for x in range(200):
+            exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
+        wait_for("exec_info/mutation_*.finished", 200)
+        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
+        wait_for("feature_analysis_summary.json")
+        exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
+
+        # Step-3
+        exec(f"PYTHONPATH=. python sapientml_core/training/meta_feature_extractor.py --tag={tag}")
+        wait_for("*_metafeatures_training.csv", 2)
+
+        # Step-4
+        exec(f"PYTHONPATH=. python sapientml_core/training/pp_model_trainer.py --tag={tag}")
+        exec(f"PYTHONPATH=. python sapientml_core/training/meta_model_trainer.py --tag={tag}")
+
+        wait_for("*.pkl", 3)
+
+        # Step-5
+        exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/dependent_api_extractor.py --tag={tag}")
+        wait_for("dependent_labels.json")
+        exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/determine_label_order.py --tag={tag}")
+        wait_for("label_order.json")
+
+        end = datetime.now()
+        logger.info(f"End: {end}")
+
+        diff_time = end - start
+        logger.info(f"Training time cost: {diff_time}")
+
+    def generate_pipeline(self, dataset: Dataset, task: Task):
+        self.dataset = dataset
+        self.task = task
+
+        logger.info("Generating pipelines...")
         dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
         code_block = loaddata_block + preprocess_block
@@ -49,28 +146,29 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             pipeline.train = code_block.train + pipeline.train
             pipeline.predict = code_block.predict + pipeline.predict
             result_pipelines.append(pipeline)
-        return result_pipelines
 
-    def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[Pipeline]]:
+        logger.info("Executing generated pipelines...")
+        executor = PipelineExecutor()
+        self.execution_results = executor.execute(
+            result_pipelines,
+            self.config.initial_timeout,
+            Path(dataset.output_dir),
+            self.config.cancel,
+        )
+
+        logger.info("Evaluating execution results of generated pipelines...")
+        lower_is_better = self.task.adaptation_metric in metric_lower_is_better
+        self.evaluate(self.execution_results, lower_is_better)
+
+        return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
+
+    def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[SimplePipeline]]:
         df = dataset.training_dataframe
+        # Generate the meta-features
+        logger.info("Generating meta features...")
         dataset_summary = summarize_dataset(df, task)  # type: ignore
         if dataset_summary.has_inf_value_targets:
             raise ValueError("Stopped generation because target columns have infinity value.")
-
-        # discard columns with analysis
-        # NOTE: The following code modify task.ignore_columns because ignore_columns is the same instance as task.ignore_columns.
-        # 1. columns marked as STR_OTHER
-        if ps_macros.STR_OTHER in dataset_summary.meta_features_pp:
-            undetermined_column_names = dataset_summary.meta_features_pp[ps_macros.STR_OTHER]
-            if isinstance(undetermined_column_names, list):
-                task.ignore_columns += undetermined_column_names
-        del dataset_summary.meta_features_pp[ps_macros.STR_OTHER]
-        # 2. columns with all null values
-        if ps_macros.ALL_MISSING_PRESENCE in dataset_summary.meta_features_pp:
-            column_names_with_all_missing_values = dataset_summary.meta_features_pp[ps_macros.ALL_MISSING_PRESENCE]
-            if isinstance(column_names_with_all_missing_values, list):
-                task.ignore_columns += column_names_with_all_missing_values
-        del dataset_summary.meta_features_pp[ps_macros.ALL_MISSING_PRESENCE]
 
         labels = predict(task, dataset_summary)
         adapt = Adaptation(
@@ -82,3 +180,146 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         pipelines = adapt.run_adaptation()
 
         return dataset, pipelines
+
+    def evaluate(self, execution_results: list[tuple[Code, RunningResult]], lower_is_better: bool = False) -> None:
+        self._best_pipeline = None
+        self._best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
+        candidate_scripts = []
+        for pipeline, result in execution_results:
+            if result.returncode == 0:
+                pipeline_score = self._parse_pipeline_output(result.output)
+            else:
+                pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
+            candidate_scripts.append((pipeline, pipeline_score))
+        self._candidate_scripts = candidate_scripts
+
+        # When an error occurs while running a pipeline, the score becomes None
+        error_pipelines = [pipeline for pipeline in candidate_scripts if pipeline[1].score is None]
+
+        # If none of them have the score, stop ranking them
+        if len(candidate_scripts) == len(error_pipelines):
+            return
+
+        # sort descending
+        succeeded_scripts = sorted(
+            [x for x in candidate_scripts if x[1].score is not None],
+            key=lambda x: x[1].score,
+            reverse=(not lower_is_better),
+        )
+        failed_scripts = [x for x in candidate_scripts if x[1].score is None]
+
+        ranked_candidate_scripts = succeeded_scripts + failed_scripts
+        best_pipeline_tuple = ranked_candidate_scripts[0]
+        if best_pipeline_tuple is None:
+            return
+
+        best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
+        if best_pipeline_tuple[1].best_params is not None:
+            best_pipeline.test = best_pipeline.test.replace(
+                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
+            )
+            best_pipeline.train = best_pipeline.train.replace(
+                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
+            )
+        self._best_pipeline = best_pipeline
+        self._best_pipeline_score = best_pipeline_tuple[1]
+
+    @staticmethod
+    def _parse_pipeline_output(output: str):
+        score = None
+        best_params = None
+        metric = None
+        output_lines = output.splitlines()
+        try:
+            for line in output_lines:
+                if re.match("best params: ", line):
+                    best_params = ast.literal_eval(re.findall("best params: (.+)", line)[0])
+                elif re.match("RESULT: ", line):
+                    parts = [x.strip() for x in line.split(":")]
+                    metric = parts[-2].strip().split(" ")[0]
+                    score = float(parts[-1])
+        except Exception:
+            pass
+        return PipelineResult(score=score, metric=metric, best_params=best_params)
+
+    def save(self, output_dir: Union[Path, str]):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        candidate_scripts = self._candidate_scripts
+        if candidate_scripts:
+            if self._best_pipeline:
+                script_body = self._best_pipeline.test
+                with open(
+                    self.output_dir / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
+                    f.write(script_body)
+
+                script_body = self._best_pipeline.train
+                with open(
+                    self.output_dir / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
+                    f.write(script_body)
+
+                script_body = self._best_pipeline.predict
+                with open(
+                    self.output_dir / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
+                    f.write(script_body)
+
+                with open(
+                    self.output_dir / (add_prefix("final_script", self.config.project_name) + ".out.json"),
+                    "w",
+                    encoding="utf-8",
+                ) as f:
+                    json.dump(self._best_pipeline_score.__dict__, f, cls=JSONEncoder, indent=4)
+            else:
+                logger.warning("All candidate scripts failed. Final script is not saved.")
+                raise RuntimeError("All candidate scripts failed. Final script is not saved.")
+
+            # copy libs
+            lib_path = self.output_dir / "lib"
+            lib_path.mkdir(exist_ok=True)
+
+            eps = entry_points(group="sapientml.export_modules")
+            for ep in eps:
+                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                    copyfile(file, lib_path / Path(file).name)
+
+            for index, (script, detail) in enumerate(candidate_scripts, start=1):
+                script_body = script.validation
+                with open(self.output_dir / f"{index}_script.py", "w", encoding="utf-8") as f:
+                    f.write(script_body)
+
+        self.debug_info = {}
+        for i, candidate in enumerate(candidate_scripts, start=1):
+            info = {"content": candidate[0].model_dump(), "run_info": candidate[1].__dict__}
+            self.debug_info[i] = info
+
+        if self.config.debug:
+            with open(
+                self.output_dir / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8"
+            ) as f:
+                json.dump(self.debug_info, f, cls=JSONEncoder, indent=4)
+
+        if self.config.add_explanation:
+            self.add_explanation()
+
+    def add_explanation(self):
+        explain(
+            visualization=True,
+            eda=True,
+            dataframe=self.dataset.training_dataframe,
+            script_path=(self.output_dir / add_prefix("final_script.py", self.config.project_name))
+            .absolute()
+            .as_posix(),
+            target_columns=self.task.target_columns,
+            problem_type=self.task.task_type,
+            ignore_columns=self.dataset.ignore_columns,
+            skeleton=self._best_pipeline.labels,
+            explanation=self._best_pipeline.pipeline_json,
+            run_info=self.debug_info,
+            internal_execution=True,
+            timeout=self.config.timeout_for_test,
+            cancel=self.config.cancel,
+        )

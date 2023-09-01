@@ -45,7 +45,7 @@ default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_wei
 {% elif model_name == 'XGBRegressor' %}
 default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_weight': 1, 'n_estimators': 100, 'reg_alpha': 0.1, 'reg_lambda': 0.1, 'subsample': 1}
 {% elif model_name == 'CatBoostClassifier' or model_name == 'CatBoostRegressor' %}
-default_hyperparameters = {'boosting_type': 'Plain', 'depth': 6, 'bootstrap_type': 'MVS'}
+default_hyperparameters = {'boosting_type': 'Plain', 'depth': 6, 'bootstrap_type': 'MVS', 'silent': True}
 {% else %}
 default_hyperparameters = {}
 {% endif %}

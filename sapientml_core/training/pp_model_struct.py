@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .generator import SapientMLGenerator
-from .params import SapientMLConfig
 
-__all__ = ["SapientMLGenerator", "SapientMLConfig"]
+class Model:
+    def __init__(self, relevant_features, model):
+        self.relevant_features = relevant_features
+        self.model = model

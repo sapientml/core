@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .generator import SapientMLGenerator
-from .params import SapientMLConfig
+from dataclasses import dataclass
 
-__all__ = ["SapientMLGenerator", "SapientMLConfig"]
+
+@dataclass
+class ProjectInfo:
+    pipeline_path: str  # full path
+    dataset_path: str  # full path
+    file_name: str  # only name of the pipeline
+    project_name: str
+    notebook_name: str  # only name of the pipeline without extension
+    accuracy: float
+    csv_name: str
+    target_column_name: str
+    metric: str

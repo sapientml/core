@@ -14,15 +14,15 @@
 
 import re
 from collections import defaultdict
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
-from pydantic import BaseModel, Field, validator
-from sapientml.params import Config, Task
-from sapientml.result import Code
+from pydantic import BaseModel, Field, field_validator
+from sapientml.params import Code, Config, Task
 
+from . import ps_macros
 from .meta_features import (
     MetaFeatures,
     generate_column_meta_features,
@@ -30,10 +30,103 @@ from .meta_features import (
     generate_pp_meta_features,
 )
 
-PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
+PipelineSkeleton = (
+    dict  # dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
+)
 
 MAX_NUM_OF_COLUMNS = 10000000
+MAX_SEED = 2**32 - 1
 MAX_COLUMN_NAME_LENGTH = 1000
+MAX_HPO_N_TRIALS = 100000
+MAX_HPO_TIMEOUT = 500000
+MAX_N_MODELS = 30
+INITIAL_TIMEOUT = 600
+
+
+class SapientMLConfig(Config):
+    n_models: int = 3
+    seed_for_model: int = 42
+    id_columns_for_prediction: Optional[list[str]] = None
+    use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
+    use_hyperparameters: bool = False
+    impute_all: bool = True
+    hyperparameter_tuning: bool = False
+    hyperparameter_tuning_n_trials: int = 10
+    hyperparameter_tuning_timeout: int = 0
+    hyperparameter_tuning_random_state: int = 1023
+    predict_option: Literal["default", "probability"] = "default"
+    permutation_importance: bool = True
+    add_explanation: bool = False
+
+    def postinit(self):
+        if self.id_columns_for_prediction is None:
+            self.id_columns_for_prediction = []
+
+        if self.initial_timeout is None:
+            if self.hyperparameter_tuning:
+                self.initial_timeout = 0
+            else:
+                self.initial_timeout = INITIAL_TIMEOUT
+            if self.hyperparameter_tuning_timeout is None:
+                self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
+        elif self.hyperparameter_tuning_timeout is None:
+            if self.hyperparameter_tuning:
+                self.hyperparameter_tuning_timeout = self.initial_timeout
+            else:
+                self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
+
+    @field_validator("n_models")
+    def check_n_models(cls, v):
+        if v <= 0 or MAX_N_MODELS < v:
+            raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
+        return v
+
+    @field_validator(
+        "id_columns_for_prediction",
+        "use_word_list",
+    )
+    def check_num_of_column_names(cls, v):
+        if v is None:
+            return v
+        if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
+            raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
+        return v
+
+    @field_validator(
+        "id_columns_for_prediction",
+        "use_word_list",
+    )
+    def check_column_name_length(cls, v):
+        if v is None:
+            return v
+        for _v in v.keys() if isinstance(v, dict) else v:
+            if len(_v) >= MAX_COLUMN_NAME_LENGTH:
+                raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
+        return v
+
+    @field_validator("seed_for_model")
+    def check_seed(cls, v):
+        if v < 0 or MAX_SEED < v:
+            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
+        return v
+
+    @field_validator("hyperparameter_tuning_n_trials")
+    def check_hyperparameter_tuning_n_trials(cls, v):
+        if v < 1 or MAX_HPO_N_TRIALS < v:
+            raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
+        return v
+
+    @field_validator("hyperparameter_tuning_timeout")
+    def check_hyperparameter_tuning_timeout(cls, v):
+        if v < 0 or MAX_HPO_TIMEOUT < v:
+            raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
+        return v
+
+    @field_validator("hyperparameter_tuning_random_state")
+    def check_hyperparameter_tuning_random_state(cls, v):
+        if v < 0 or MAX_SEED < v:
+            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
+        return v
 
 
 class Column(BaseModel):
@@ -41,13 +134,13 @@ class Column(BaseModel):
     meta_features: Optional[MetaFeatures]
     has_negative_value: bool
 
-    @validator("dtype")
+    @field_validator("dtype")
     def check_dtype(cls, v):
         if len(v) > 100:
             raise ValueError(f"'{v}' is invalid as a dtype")
         return v
 
-    @validator("meta_features")
+    @field_validator("meta_features")
     def check_meta_features(cls, v):
         if v is None:
             return v
@@ -79,8 +172,9 @@ class DatasetSummary(BaseModel):
     has_inf_value_targets: bool
     cols_almost_missing_string: Optional[list[str]] = None
     cols_almost_missing_numeric: Optional[list[str]] = None
+    cols_str_other: Optional[list[str]] = None
 
-    @validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_num_of_columns(cls, v):
         if v is None:
             return v
@@ -88,7 +182,7 @@ class DatasetSummary(BaseModel):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
-    @validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric")
+    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_column_name_length(cls, v):
         if v is None:
             return v
@@ -97,7 +191,7 @@ class DatasetSummary(BaseModel):
                 raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("meta_features_pp", "meta_features_m")
+    @field_validator("meta_features_pp", "meta_features_m")
     def check_meta_features(cls, v):
         for k, _v in v.items():
             if not re.match(r"feature:[a-z_0-9]+", k):
@@ -132,19 +226,24 @@ class ModelLabel(BaseModel):
         return str(self)
 
 
-class Pipeline(Code):
+class SimplePipeline(Code):
+    # pipeline json
+    pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
+
+    labels: Optional[PipelineSkeleton] = None
+    model: Optional[ModelLabel] = None
+
+
+class Pipeline(SimplePipeline):
     task: Task
     dataset_summary: DatasetSummary
-    config: Config
+    config: SapientMLConfig
     adaptation_metric: Optional[str] = None
     all_columns_datatypes: dict = Field(default_factory=dict)
-    model: Optional[ModelLabel] = None
     inverse_target: bool = False
     sparse_matrix: bool = False  # Whether the data is converted to sparse matrix in the pipeline
     train_column_names: list[str] = Field(default_factory=list)
     test_column_names: list[str] = Field(default_factory=list)
-    train_ignore_columns: list[str] = Field(default_factory=list)
-    test_ignore_columns: list[str] = Field(default_factory=list)
 
     # To handle following case;
     #   metrics : Accuracy
@@ -154,16 +253,6 @@ class Pipeline(Code):
 
     id_columns_for_prediction: list[str] = Field(default_factory=list)
     output_dir_path: str = ""
-
-    # pipeline json
-    pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
-
-    labels: Optional[PipelineSkeleton] = None
-
-
-class CoreResult(BaseModel):
-    pipelines: list[Pipeline]
-    labels: PipelineSkeleton
 
 
 def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
@@ -191,10 +280,7 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
 
     columns = dict()
     for column_name in df_train.columns:
-        if column_name not in task.ignore_columns:
-            meta_features = generate_column_meta_features(df_train[[column_name]])
-        else:  # in case ignore_columns (columns.keys() be called by Adaptation class)
-            meta_features = None
+        meta_features = generate_column_meta_features(df_train[[column_name]])
 
         columns[column_name] = Column(
             dtype=str(df_train[column_name].dtype),
@@ -206,6 +292,9 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
 
     # Generate the meta-features
     meta_features_pp = generate_pp_meta_features(df_train, task.target_columns)
+    if ps_macros.STR_OTHER in meta_features_pp:
+        cols_str_other = meta_features_pp[ps_macros.STR_OTHER]
+        del meta_features_pp[ps_macros.STR_OTHER]
 
     is_clf_task = 1 if task.task_type == "classification" else 0
     meta_features_m = generate_model_meta_features(df_train, task.target_columns, is_clf_task)
@@ -218,4 +307,5 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
         has_inf_value_targets=has_inf_value_targets,
         cols_almost_missing_string=cols_almost_missing_string,
         cols_almost_missing_numeric=cols_almost_missing_numeric,
+        cols_str_other=cols_str_other,
     )

@@ -14,7 +14,6 @@
 
 import copy
 import json
-import logging
 import os
 from collections import defaultdict
 from pathlib import Path
@@ -22,12 +21,13 @@ from typing import Optional
 
 from sapientml import macros
 from sapientml.params import Config, Task
+from sapientml.util.logging import setup_logger
 
-from ...params import DatasetSummary, ModelLabel, Pipeline, PipelineSkeleton
+from ...params import DatasetSummary, ModelLabel, Pipeline, PipelineSkeleton, SapientMLConfig, SimplePipeline
 from .pipeline_template import PipelineTemplate, is_allowed_to_apply_to_target
 from .preprocessing_label import PreprocessingLabel
 
-logger = logging.getLogger("sapientml")
+logger = setup_logger()
 
 preprocessing_threshold = 0.5
 
@@ -61,7 +61,7 @@ class Adaptation:
         self.config = config
         self.adaptation_metric: Optional[str] = self._get_adaptation_metric_label()
 
-        # Load all the Offline Data
+        # Load all the training Data
         with open(Path(os.path.dirname(__file__)) / "../artifacts/label_order.json", "r", encoding="utf-8") as f:
             label_order = json.load(f)
 
@@ -71,7 +71,7 @@ class Adaptation:
             pipeline=Pipeline(
                 task=self.task,
                 dataset_summary=self.dataset_summary,
-                config=self.config,
+                config=SapientMLConfig(**self.config.model_dump()),
             )
         )
 
@@ -93,7 +93,7 @@ class Adaptation:
             )
         )
 
-        n_models = self.task.n_models
+        n_models = self.config.n_models
         if n_models < 1:
             raise ValueError("Please set 'n_models' to a number greater than or equal to 1.")
         model_labels = dict(list(model_labels.items())[0:n_models])
@@ -264,7 +264,7 @@ class Adaptation:
                 continue
 
             rel_cols = component.get_relevant_columns(
-                self.dataset_summary, self.task.target_columns, self.task.ignore_columns
+                self.dataset_summary, self.task.target_columns, self.dataset_summary.cols_str_other
             )
 
             if (
@@ -278,7 +278,9 @@ class Adaptation:
                 ]
                 # remove boolean and datetime columns, since Simple Imputer cannot handle boolean and datetime dtype
                 rel_cols = sorted(list(set(rel_cols) - set(bool_cols) - set(datetime_cols)))
-                rel_cols = sorted(list(set(rel_cols) - set(self.task.ignore_columns) - set(self.task.target_columns)))
+                rel_cols = sorted(
+                    list(set(rel_cols) - set(self.dataset_summary.cols_str_other) - set(self.task.target_columns))
+                )
 
             # handle special case for log transformation if target feature is in relevant columns
             if (
@@ -355,7 +357,7 @@ class Adaptation:
 
         return pipeline_list
 
-    def run_adaptation(self) -> list[Pipeline]:
+    def run_adaptation(self) -> list[SimplePipeline]:
         # SapientML default run
         self._setup_pipeline_basics()
         preprocessing, model = self._get_labels_from_skeleton_predictor()
@@ -365,4 +367,4 @@ class Adaptation:
             pipeline.generate()
             pipeline.pipeline.labels = self.labels
 
-        return [pipeline.pipeline for pipeline in pipeline_list]
+        return [SimplePipeline(**pipeline.pipeline.model_dump()) for pipeline in pipeline_list]
