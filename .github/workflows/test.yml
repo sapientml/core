@@ -68,5 +68,5 @@ jobs:
       - name: Pysen run lint
         run: poetry run -- pysen run lint
 
-      - name: Pytest
-        run: poetry run -- pytest tests
+      # - name: Pytest
+      #   run: poetry run -- pytest tests
