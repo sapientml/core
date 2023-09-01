@@ -83,14 +83,13 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         logger.info("Evaluating execution results of generated pipelines...")
         lower_is_better = self.task.adaptation_metric in metric_lower_is_better
         self.evaluate(self.execution_results, lower_is_better)
-        logger.info("Done.")
 
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
     def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[SimplePipeline]]:
         df = dataset.training_dataframe
         # Generate the meta-features
-        logger.info("Generating meta features ...")
+        logger.info("Generating meta features...")
         dataset_summary = summarize_dataset(df, task)  # type: ignore
         if dataset_summary.has_inf_value_targets:
             raise ValueError("Stopped generation because target columns have infinity value.")
