@@ -31,7 +31,7 @@ from sapientml.util.logging import setup_logger
 
 from .adaptation.generation.template_based_adaptation import Adaptation
 from .explain.main import process as explain
-from .params import SimplePipeline, SapientMLConfig, summarize_dataset
+from .params import SapientMLConfig, SimplePipeline, summarize_dataset
 from .seeding.predictor import predict
 
 model_dir_path_default = Path(__file__).parent / "models"
@@ -168,7 +168,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return PipelineResult(score=score, metric=metric, best_params=best_params)
 
     def save(self, output_dir: Union[Path, str]):
-        
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -176,15 +175,21 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         if candidate_scripts:
             if self._best_pipeline:
                 script_body = self._best_pipeline.test
-                with open(self.output_dir / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(
+                    self.output_dir / add_prefix("final_script.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
                     f.write(script_body)
 
                 script_body = self._best_pipeline.train
-                with open(self.output_dir / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(
+                    self.output_dir / add_prefix("final_train.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
                     f.write(script_body)
 
                 script_body = self._best_pipeline.predict
-                with open(self.output_dir / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8") as f:
+                with open(
+                    self.output_dir / add_prefix("final_predict.py", self.config.project_name), "w", encoding="utf-8"
+                ) as f:
                     f.write(script_body)
 
                 with open(
@@ -217,7 +222,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             self.debug_info[i] = info
 
         if self.config.debug:
-            with open(self.output_dir / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8") as f:
+            with open(
+                self.output_dir / add_prefix("run_info.json", self.config.project_name), "w", encoding="utf-8"
+            ) as f:
                 json.dump(self.debug_info, f, cls=JSONEncoder, indent=4)
 
         if self.config.add_explanation:

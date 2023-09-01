@@ -23,7 +23,7 @@ from sapientml import macros
 from sapientml.params import Config, Task
 from sapientml.util.logging import setup_logger
 
-from ...params import DatasetSummary, ModelLabel, Pipeline, SimplePipeline, PipelineSkeleton, SapientMLConfig
+from ...params import DatasetSummary, ModelLabel, Pipeline, PipelineSkeleton, SapientMLConfig, SimplePipeline
 from .pipeline_template import PipelineTemplate, is_allowed_to_apply_to_target
 from .preprocessing_label import PreprocessingLabel
 
