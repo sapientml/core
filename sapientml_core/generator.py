@@ -105,17 +105,17 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         # Step-2
         procs = []
-        for x in range(12):
-            proc = exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 12 {x} {tag}")
+        for x in range(200):
+            proc = exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
             procs.append(proc)
 
-        wait_for("exec_info/mutation_*.finished", 12)
+        wait_for("exec_info/mutation_*.finished", 200)
 
         for p in procs:
             if p.poll() is None:
                 logger.info("Kill alive processes")
                 p.terminate()
-                logger.info("Finished")
+                logger.info("Done, exit status:{}".format(proc.poll()))
 
         exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
         wait_for("feature_analysis_summary.json")
