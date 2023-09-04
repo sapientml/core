@@ -23,14 +23,29 @@ from sapientml_core.training import meta_feature_selector
 from sklearn.tree import DecisionTreeClassifier
 
 
-# Model optimization
 def train_p_model(X, y):
+    """Build a decision tree classifier from the training set (X, y).
+
+    Parameters
+    ----------
+    X : MatrixLike = np.ndarray | pd.DataFrame | spmatrix   |
+        ArrayLike = numpy.typing.ArrayLike
+        The training input samples.
+    y : MatrixLike = np.ndarray | pd.DataFrame | spmatrix   |
+        ArrayLike = numpy.typing.ArrayLike
+        The target values (class labels) as integers or strings
+
+    Returns
+    -------
+    model : DecisionTreeClassifier
+        Fitted estimator.
+    """
     model = DecisionTreeClassifier(class_weight="balanced", max_depth=3)
     model.fit(X, y)
     return model
 
 
-def _train_preprocessors(train_data, cross_validation, feature_selection):
+def _train_preprocessors(train_data, feature_selection):
     print("Training skeleton predictor for preprocessors...")
     data = train_data
     data.drop(
@@ -86,13 +101,18 @@ def _prepare_model_training_data(raw_meta_feature_train):
     return final_meta_features
 
 
-def main(cross_validation=False):
+def main():
+    """This main function preprocesses the learning data and saves fitted estimator for the DecisionTreeClassifier.
+
+    Description of feature_selection : "select_manually" | "customized"
+        Specify how features are selected.
+    """
     training_data_path = internal_path.training_cache / "pp_metafeatures_training.csv"
     # "select_manually" | "customized"
     feature_selection = "customized"
     raw_meta_feature_train = pd.read_csv(training_data_path)
     meta_feature_train = _prepare_model_training_data(raw_meta_feature_train)
-    pp_models = _train_preprocessors(meta_feature_train, cross_validation, feature_selection)
+    pp_models = _train_preprocessors(meta_feature_train, feature_selection)
     # Save model
     with open(internal_path.training_cache / "pp_models.pkl", "wb") as f:
         pickle.dump(pp_models, f)

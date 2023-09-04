@@ -59,7 +59,18 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.preprocess = eps["preprocess"].load()(**kwargs)
 
     def train(self, tag=None):
-        def exec(cmd):
+        """Run for local training.
+
+        Parameters
+        ----------
+        tag : str | None
+            The tag of souce code.
+            If tag is set, the traning results will be saved into <core/sapientml_core/.cache/tag/>.
+            Else if tag is not set, the traning results will be saved into <core/sapientml_core/.cache/>.
+
+        """
+
+        def _exec(cmd):
             logger.info(f"Executing {cmd}")
             proc = subprocess.Popen(
                 cmd,
@@ -73,7 +84,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             logger.error("STDERR:{}".format(stderr))
             return proc
 
-        def wait_for(file_pattern, n_files=1):
+        def _wait_for(file_pattern, n_files=1):
             logger.info(f"Waiting for {file_pattern}" + (f" * {n_files}" if n_files > 1 else ""))
             latest = 0
             with tqdm(total=n_files) as pbar:
@@ -98,18 +109,18 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         logger.info(f"Start: {start}")
 
         # Step-1
-        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
-        wait_for("static_info.json")
-        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
-        wait_for("dataset-snapshots/*/*.txt", len(projects))
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
+        _wait_for("static_info.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
+        _wait_for("dataset-snapshots/*/*.txt", len(projects))
 
         # Step-2
         procs = []
         for x in range(200):
-            proc = exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
+            proc = _exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
             procs.append(proc)
 
-        wait_for("exec_info/mutation_*.finished", 200)
+        _wait_for("exec_info/mutation_*.finished", 200)
 
         for p in procs:
             if p.poll() is None:
@@ -117,25 +128,25 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 p.terminate()
                 logger.info("Done, exit status:{}".format(proc.poll()))
 
-        exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
-        wait_for("feature_analysis_summary.json")
-        exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
+        _wait_for("feature_analysis_summary.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
 
         # Step-3
-        exec(f"PYTHONPATH=. python sapientml_core/training/meta_feature_extractor.py --tag={tag}")
-        wait_for("*_metafeatures_training.csv", 2)
+        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_feature_extractor.py --tag={tag}")
+        _wait_for("*_metafeatures_training.csv", 2)
 
         # Step-4
-        exec(f"PYTHONPATH=. python sapientml_core/training/pp_model_trainer.py --tag={tag}")
-        exec(f"PYTHONPATH=. python sapientml_core/training/meta_model_trainer.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/pp_model_trainer.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_model_trainer.py --tag={tag}")
 
-        wait_for("*.pkl", 3)
+        _wait_for("*.pkl", 3)
 
         # Step-5
-        exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/dependent_api_extractor.py --tag={tag}")
-        wait_for("dependent_labels.json")
-        exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/determine_label_order.py --tag={tag}")
-        wait_for("label_order.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/dependent_api_extractor.py --tag={tag}")
+        _wait_for("dependent_labels.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/determine_label_order.py --tag={tag}")
+        _wait_for("label_order.json")
 
         end = datetime.now()
         logger.info(f"End: {end}")

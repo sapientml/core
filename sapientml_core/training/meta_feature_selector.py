@@ -19,6 +19,20 @@ from sklearn.tree import DecisionTreeClassifier
 
 
 def select_k_best_features(X, y):
+    """Select the top k explanatory variables.
+
+    Parameters
+    ----------
+    X : MatrixLike = np.ndarray | pd.DataFrame | spmatrix
+        The training input samples.
+    y : ArrayLike = numpy.typing.ArrayLike
+        The target values
+
+    Returns
+    -------
+    list
+        Returns a list of the top k selected column names.
+    """
     from sklearn.feature_selection import SelectKBest, mutual_info_regression
 
     # Select top 2 features based on mutual info regression
@@ -28,6 +42,21 @@ def select_k_best_features(X, y):
 
 
 def select_by_rfe(X, y):
+    """Extract the top N(=n_features_to_select) feature values of importance by RFE(Recursive Feature Elimination).
+
+    Parameters
+    ----------
+    X : MatrixLike = np.ndarray | pd.DataFrame | spmatrix   |
+        ArrayLike = numpy.typing.ArrayLike
+        The training input samples.
+    y : ArrayLike = numpy.typing.ArrayLike
+        The target values.
+
+    Returns
+    -------
+    list
+        Returns a list of selected column names.
+    """
     from sklearn.feature_selection import RFE
 
     # #Selecting the Best important features according to Logistic Regression
@@ -37,6 +66,20 @@ def select_by_rfe(X, y):
 
 
 def select_from_model(X, y):
+    """Select features based on importance weights.
+
+    Parameters
+    ----------
+    X : MatrixLike = np.ndarray | pd.DataFrame | spmatrix
+        The training input samples.
+    y : None | ArrayLike = numpy.typing.ArrayLike
+        The target values(integers that correspond to classes in classification, real numbers in regression).
+
+    Returns
+    -------
+    list
+        Returns a list of selected column names.
+    """
     from sklearn.feature_selection import SelectFromModel
 
     # #Selecting the Best important features according to Logistic Regression using SelectFromModel
@@ -46,6 +89,20 @@ def select_from_model(X, y):
 
 
 def select_sequentially(X, y):
+    """Select feature quantity in order and select feature quantity by greedy method.
+
+    Parameters
+    ----------
+    X : MatrixLike = np.ndarray | pd.DataFrame | spmatrix
+        Training vectors
+    y : None | ArrayLike = numpy.typing.ArrayLike
+        Target values. This parameter may be ignored for unsupervised learning.
+
+    Returns
+    -------
+    list
+        Returns a list of selected column names.
+    """
     from sklearn.feature_selection import SequentialFeatureSelector
 
     # Selecting the Best important features according to Logistic Regression
@@ -57,6 +114,17 @@ def select_sequentially(X, y):
 
 
 def select_based_on_correlation(data):
+    """Create correlation maps for learning data.
+
+    Parameters
+    ----------
+    data : dataframe
+        Training data
+
+    Returns
+    -------
+    correlation_map : defaultdict(list)
+    """
     from collections import defaultdict
 
     corr = data.corr(numeric_only=True)
@@ -82,6 +150,16 @@ def select_based_on_correlation(data):
 
 
 def select_features(label):
+    """Return manually selected feature labels.
+
+    Parameters
+    ----------
+    label : str
+
+    Returns
+    -------
+    selection_model[label] : list
+    """
     selection_model = {
         ps_macros.FILL: [ps_macros.MISSING_PRESENCE],
         ps_macros.DROP: [ps_macros.MISSING_PRESENCE],

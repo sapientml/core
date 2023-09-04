@@ -34,6 +34,13 @@ logger = setup_logger()
 
 # Get the stored features summary
 def get_feature_usage_summary():
+    """Open and load feature_analysis_summary.json file.
+
+    Returns
+    -------
+    current_summary : dict
+        Loaded summary file
+    """
     try:
         with open(internal_path.training_cache / "feature_analysis_summary.json", "r", encoding="utf-8") as f:
             current_summary = json.load(f)
@@ -42,8 +49,23 @@ def get_feature_usage_summary():
     return current_summary
 
 
-# Get the features that are used in the pipeline
 def get_column_usage_summary_in_pipeline(pipeline_path, feature_usage_summary):
+    """Extract used_cols in pipeline.
+
+    Parameters
+    ----------
+    pipeline_path :
+        pipeline path
+    feature_usage_summary : dict
+        Summary data
+
+    Returns
+    -------
+    None
+        If pipeline_path not in feature_usage_summary.
+    used_columns : pd.Series
+        Extractetd columns
+    """
     if pipeline_path in feature_usage_summary:
         pipeline_summary = feature_usage_summary[pipeline_path]
     else:
@@ -58,6 +80,20 @@ def get_column_usage_summary_in_pipeline(pipeline_path, feature_usage_summary):
 
 
 def collect_training_meta_feature(mode):
+    """Read csv and Generate the meta-features.
+
+    Parameters
+    ----------
+    mode : str
+        "clean" or "as-is"
+
+    Returns
+    -------
+    final_pp_meta_features : pd.Dataframe
+        Dataframe of pp_meta_features and labels
+    final_model_meta_feature_df : pd.Dataframe
+        Dataframe of model_meta_feature and models
+    """
     pp_meta_features = []
     model_meta_features = []
     feature_usage_summary = get_feature_usage_summary()
@@ -152,9 +188,14 @@ def collect_training_meta_feature(mode):
 
 
 def main():
-    # clean | as-is
-    # as-is mode: compute meta-features based on all the meta-features in the dataset
-    # clean mode: only use the meta-features that are used in the pipeline
+    """
+    This main function calls the subfunctions and outputs the result to csv.
+
+    Description of mode : "clean" | "as-is"
+        as-is mode: compute meta-features based on all the meta-features in the dataset
+        clean mode: only use the meta-features that are used in the pipeline
+
+    """
     mode = "clean"
     final_pp_meta_features_df, final_model_meta_feature_df = collect_training_meta_feature(mode)
     pp_meta_features_path = internal_path.training_cache / "pp_metafeatures_training.csv"

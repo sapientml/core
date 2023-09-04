@@ -36,6 +36,17 @@ pd.set_option(
 
 
 def evaluate_on_training_data(probas, Y, weights, class_names, top_K=3):
+    """evaluate_on_training_data.
+
+    Parameters
+    ----------
+    probas : np.ndarray
+    Y : pandas.Series
+    weights : pandas.Series
+    class_names : np.ndarray
+    top_K : int, default 3
+
+    """
     Y = np.array(Y)
 
     top_1_pred = probas.argmax(axis=1)
@@ -168,6 +179,14 @@ def _prepare_model_training_data_augmented(
 
 
 def test_prediction(m_models, test_df_path):
+    """Predict the model with test data.
+
+    Parameters
+    ----------
+    m_models : tuple
+    test_df_path : PosixPath
+
+    """
     test_df = pd.read_csv(test_df_path)
 
     meta_features = test_df[[x for x in test_df.columns if x.startswith("feature:")]]
@@ -181,6 +200,19 @@ def test_prediction(m_models, test_df_path):
 
 
 def training(training_data_path, model_dir_path_default):
+    """Train the model and save them as pickle file.
+
+    Parameters
+    ----------
+    training_data_path : PosixPath
+    model_dir_path_default : PosixPath
+
+    Returns
+    -------
+    clf_1 : LogisticRegression
+    clf_2 : SVC
+
+    """
     meta_features = pd.read_csv(training_data_path)
     take_only_best_notebook_for_dataset = True
     accuracy_threshold = 0.5
@@ -215,6 +247,20 @@ def training(training_data_path, model_dir_path_default):
 
 
 def train_meta_models(X, weights, y):
+    """Train the model using LogisticRegression and SVC.
+
+    Parameters
+    ----------
+    X : DataFrame
+    weights : pandas.Series
+    y : pandas.Series
+
+    Returns
+    -------
+    clf_1 : LogisticRegression
+    clf_2 : SVC
+
+    """
     clf_1 = LogisticRegression(max_iter=100, random_state=42)
     clf_2 = SVC(kernel="rbf", probability=True, random_state=42)
     clf_1.fit(X, y, sample_weight=weights)
@@ -224,6 +270,12 @@ def train_meta_models(X, weights, y):
 
 
 def main():
+    """This is a main function.
+
+    This script trains the meta-models, i.e., skeleton predictor -- for both
+    preprocess components and model components.
+
+    """
     training_data_path = internal_path.training_cache / "model_metafeatures_training.csv"
     test_data_path = internal_path.model_path / "model_metafeatures_test.csv"
 
