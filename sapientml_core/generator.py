@@ -61,13 +61,17 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     def train(self, tag=None):
         def exec(cmd):
             logger.info(f"Executing {cmd}")
-            subprocess.Popen(
+            proc = subprocess.Popen(
                 cmd,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
             )
+            stdout, stderr = proc.communicate()
+            logger.debug("STDOUT: {}".format(stdout))
+            logger.error("STDERR:{}".format(stderr))
+            return proc
 
         def wait_for(file_pattern, n_files=1):
             logger.info(f"Waiting for {file_pattern}" + (f" * {n_files}" if n_files > 1 else ""))
@@ -100,9 +104,19 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         wait_for("dataset-snapshots/*/*.txt", len(projects))
 
         # Step-2
-        for x in range(200):
-            exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
-        wait_for("exec_info/mutation_*.finished", 200)
+        procs = []
+        for x in range(12):
+            proc = exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 12 {x} {tag}")
+            procs.append(proc)
+
+        wait_for("exec_info/mutation_*.finished", 12)
+
+        for p in procs:
+            if p.poll() is None:
+                logger.info("Kill alive processes")
+                p.terminate()
+                logger.info("Finished")
+
         exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
         wait_for("feature_analysis_summary.json")
         exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
