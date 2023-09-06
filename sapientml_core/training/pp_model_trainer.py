@@ -17,10 +17,13 @@ import pickle
 from collections import OrderedDict, defaultdict
 
 import pandas as pd
+from sapientml.util.logging import setup_logger
 from sapientml_core import internal_path
 from sapientml_core.design import search_space
 from sapientml_core.training import meta_feature_selector
 from sklearn.tree import DecisionTreeClassifier
+
+logger = setup_logger()
 
 
 def train_p_model(X, y):
@@ -46,7 +49,7 @@ def train_p_model(X, y):
 
 
 def _train_preprocessors(train_data, feature_selection):
-    print("Training skeleton predictor for preprocessors...")
+    logger.info("Training skeleton predictor for preprocessors...")
     data = train_data
     data.drop(
         data.filter(regex="(TEMPLATE|IGNORE|EVAL:|RPEPROCESS:|MODEL:|Unnamed:)").columns,
@@ -67,7 +70,7 @@ def _train_preprocessors(train_data, feature_selection):
 
     for _, detail_labels in second_to_full_labels.items():
         for label in detail_labels:
-            print(label)
+            logger.debug(label)
             main_df = data.copy()
             # Feature Selection On
             y = main_df[label]
@@ -75,13 +78,13 @@ def _train_preprocessors(train_data, feature_selection):
 
             if feature_selection == "select_manually":
                 selected_features = meta_feature_selector.select_features(label)
-                print("Selected Features:", selected_features)
+                logger.debug("Selected Features:", selected_features)
                 X = main_df[selected_features]
             elif feature_selection == "customized":
                 selected_features = selected_features_map[label]
                 if len(selected_features) == 0:
                     selected_features = meta_feature_selector.select_sequentially(X, y)
-                print("Selected Features:", selected_features)
+                logger.debug("Selected Features:", selected_features)
                 X = main_df[selected_features]
 
             pp_model = train_p_model(X, y)

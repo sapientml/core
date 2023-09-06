@@ -20,12 +20,15 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
+from sapientml.util.logging import setup_logger
 from sapientml_core import internal_path
 from sapientml_core.design.label_util import map_label_to_name, name_to_label_mapping
 from sapientml_core.training.augmentation.mutation_results import MutationResult
 from sapientml_core.training.project_corpus import ProjectCorpus
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+
+logger = setup_logger()
 
 pd.set_option(
     "display.max_rows",
@@ -58,8 +61,8 @@ def evaluate_on_training_data(probas, Y, weights, class_names, top_K=3):
     top_K_pred = probas.argsort(axis=1)[:, ::-1][:, :top_K]
     top_K_tot = np.sum([x * y for x, y in zip((class_names[top_K_pred] == Y.reshape(-1, 1)).sum(axis=1), weights)])
 
-    print(f"Top-1 Acc: {top_1_tot / tot_w * 100.:.3f} %")
-    print(f"Top-{top_K} Acc: {top_K_tot / tot_w * 100.:.3f} %")
+    logger.info(f"Top-1 Acc: {top_1_tot / tot_w * 100.:.3f} %")
+    logger.info(f"Top-{top_K} Acc: {top_K_tot / tot_w * 100.:.3f} %")
 
 
 def _predict_models(m_model, task_type, test_meta_features_batch):
@@ -90,8 +93,8 @@ def _predict_models(m_model, task_type, test_meta_features_batch):
                     break
 
         top_3_prediction_actual_label_batch.append(top_3_prediction_one_subject)
-    print(all_appeared_models)
-    print("Unique Models:", len(all_appeared_models))
+    logger.info(all_appeared_models)
+    logger.info("Unique Models:", len(all_appeared_models))
     return top_3_prediction_actual_label_batch
 
 
@@ -101,9 +104,9 @@ def print_out_of_scope_models(dataframe, label_to_name):
     for _, row in dataframe.iterrows():
         if row["target"] not in label_to_name:
             unused_models.append(row["target"])
-            print(i, row["file_name"], row["target"])
+            logger.debug(i, row["file_name"], row["target"])
             i += 1
-    print(dict(Counter(unused_models)))
+    logger.debug(dict(Counter(unused_models)))
 
 
 def _prepare_model_training_data_augmented(
@@ -173,8 +176,8 @@ def _prepare_model_training_data_augmented(
     X = X.fillna(0)
     weights = augmented_df["accuracy"]
     y = augmented_df["normalized_target"]
-    print("Number of Training Samples:", X.shape)
-    print(Counter(y))
+    logger.info("Number of Training Samples:", X.shape)
+    logger.info(Counter(y))
     return X, y, weights
 
 
@@ -223,7 +226,7 @@ def training(training_data_path, model_dir_path_default):
     clf_1, clf_2 = train_meta_models(X, weights, y)
     model_feature_weights = {}
     for i, coef in enumerate(clf_1.coef_):
-        print(clf_1.classes_[i])
+        logger.debug(clf_1.classes_[i])
         normalized_co_ef = np.std(X, 0) * coef
         mf_weight_pairs = []
         for j, n_co_ef in enumerate(normalized_co_ef):
@@ -241,7 +244,7 @@ def training(training_data_path, model_dir_path_default):
         with open(model_dir_path_default / "mp_model_2.pkl", "wb") as f2:
             pickle.dump(clf_1, f1)
             pickle.dump(clf_2, f2)
-    print("model weights saved to:", internal_path.training_cache)
+    logger.info("model weights saved to:", internal_path.training_cache)
 
     return clf_1, clf_2
 
