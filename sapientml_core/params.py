@@ -126,18 +126,7 @@ class SapientMLConfig(Config):
                 self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
 
     @field_validator("n_models")
-    def check_n_models(cls, v):
-        """
-        Raise valueError if n_models is outside the range of 1 to MAX_N_MODELS
-
-        Parameters
-        ----------
-        v : int
-
-        Returns
-        ----------
-        v : int
-        """
+    def _check_n_models(cls, v):
         if v <= 0 or MAX_N_MODELS < v:
             raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
         return v
@@ -146,18 +135,7 @@ class SapientMLConfig(Config):
         "id_columns_for_prediction",
         "use_word_list",
     )
-    def check_num_of_column_names(cls, v):
-        """
-        Raise valueError if the length of v is greater than or equal to MAX_NUM_OF_COLUMNS.
-
-        Parameters
-        ----------
-        v : list | dict
-
-        Returns
-        ----------
-        v : list | dict
-        """
+    def _check_num_of_column_names(cls, v):
         if v is None:
             return v
         if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
@@ -168,18 +146,7 @@ class SapientMLConfig(Config):
         "id_columns_for_prediction",
         "use_word_list",
     )
-    def check_column_name_length(cls, v):
-        """
-        Raise valueError if the length of v is greater than or equal to MAX_COLUMN_NAME_LENGTH.
-
-        Parameters
-        ----------
-        v : list | dict
-
-        Returns
-        ----------
-        v : list | dict
-        """
+    def _check_column_name_length(cls, v):
         if v is None:
             return v
         for _v in v.keys() if isinstance(v, dict) else v:
@@ -188,69 +155,25 @@ class SapientMLConfig(Config):
         return v
 
     @field_validator("seed_for_model")
-    def check_seed(cls, v):
-        """
-        Raise valueError if v is outside the range of 0 to MAX_SEED.
-
-        Parameters
-        ----------
-        v : int
-
-        Returns
-        ----------
-        v : int
-        """
+    def _check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
     @field_validator("hyperparameter_tuning_n_trials")
-    def check_hyperparameter_tuning_n_trials(cls, v):
-        """
-        Raise valueError if v is outside the range of 1 to MAX_HPO_N_TRIALS.
-
-        Parameters
-        ----------
-        v : int
-
-        Returns
-        ----------
-        v : int
-        """
+    def _check_hyperparameter_tuning_n_trials(cls, v):
         if v < 1 or MAX_HPO_N_TRIALS < v:
             raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
         return v
 
     @field_validator("hyperparameter_tuning_timeout")
-    def check_hyperparameter_tuning_timeout(cls, v):
-        """
-        Raise valueError if v is outside the range of 0 to MAX_HPO_TIMEOUT.
-
-        Parameters
-        ----------
-        v : int
-
-        Returns
-        ----------
-        v : int
-        """
+    def _check_hyperparameter_tuning_timeout(cls, v):
         if v < 0 or MAX_HPO_TIMEOUT < v:
             raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
         return v
 
     @field_validator("hyperparameter_tuning_random_state")
-    def check_hyperparameter_tuning_random_state(cls, v):
-        """
-        Raise valueError if v is outside the range of 0 to MAX_SEED.
-
-        Parameters
-        ----------
-        v : int
-
-        Returns
-        ----------
-        v : int
-        """
+    def _check_hyperparameter_tuning_random_state(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
