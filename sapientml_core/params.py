@@ -44,6 +44,42 @@ INITIAL_TIMEOUT = 600
 
 
 class SapientMLConfig(Config):
+    """
+    Validate the parameters.
+
+    Attributes
+    ----------
+    n_models: int, default 3
+        Number of output models to file.
+    seed_for_model: int, default 42
+        Random seed for models such as RandomForestClassifier.
+    id_columns_for_prediction: Optional[list[str]], default None
+        Name of the dataframe columns that outputs the prediction result.
+    use_word_list: Optional[Union[list[str], dict[str, list[str]]]], default None
+        List of words to be used as features when generating explanatory variables from text.
+        If dict type is specified, key must be a column name and value must be a list of words.
+    use_hyperparameters: bool, default False
+        Specify whether or not hyperparameters are used.
+    impute_all: bool, default True
+        On/Off Flag used for preprocessing.
+    hyperparameter_tuning: bool, default False
+        On/Off of hyperparameter tuning.
+    hyperparameter_tuning_n_trials: int, default 10
+        The number of trials of hyperparameter tuning.
+    hyperparameter_tuning_timeout: int, default 0
+        Time limit for hyperparameter tuning in each generated script.
+        hyperparameter_tuning_timeout is ignored when hyperparameter_tuning is False.
+    hyperparameter_tuning_random_state: int, default 1023
+        Random seed for hyperparameter tuning.
+    predict_option: Literal["default", "probability"], default "default"
+        Specify predict method (default: predict(), probability: predict_proba().)
+    permutation_importance: bool, default True
+        On/Off of permutation_importance.
+    add_explanation: bool, default False
+        If True, execute the add_explanation() function in generator.py
+
+    """
+
     n_models: int = 3
     seed_for_model: int = 42
     id_columns_for_prediction: Optional[list[str]] = None
@@ -59,6 +95,20 @@ class SapientMLConfig(Config):
     add_explanation: bool = False
 
     def postinit(self):
+        """Set initial_timeout and hyperparameter_tuning_timeout.
+
+        For initial_timeout,
+        if hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
+
+        For hyperparameter_tuning_timeout,
+        if both initial_timeout and hyperparameter_tuning_timeout are set as None, set hyperparameter_tuning_timeout as INITIAL_TIMEOUT.
+
+        If initial_timeout is set and hyperparameter_tuning is True,
+        and hyperparameter_tuning_timeout is None :
+            Set the hyperparameter_tuning_timeout to unlimited.(hyperparameter_tuning_timeout = self.initial_timeout.)
+            Since initial_timeout always precedes hyperparameter_tuning_timeout,
+            it can be expressed that there is no time limit for hyperparameters during actual execution.
+        """
         if self.id_columns_for_prediction is None:
             self.id_columns_for_prediction = []
 
@@ -76,7 +126,7 @@ class SapientMLConfig(Config):
                 self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
 
     @field_validator("n_models")
-    def check_n_models(cls, v):
+    def _check_n_models(cls, v):
         if v <= 0 or MAX_N_MODELS < v:
             raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
         return v
@@ -85,7 +135,7 @@ class SapientMLConfig(Config):
         "id_columns_for_prediction",
         "use_word_list",
     )
-    def check_num_of_column_names(cls, v):
+    def _check_num_of_column_names(cls, v):
         if v is None:
             return v
         if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
@@ -96,7 +146,7 @@ class SapientMLConfig(Config):
         "id_columns_for_prediction",
         "use_word_list",
     )
-    def check_column_name_length(cls, v):
+    def _check_column_name_length(cls, v):
         if v is None:
             return v
         for _v in v.keys() if isinstance(v, dict) else v:
@@ -105,25 +155,25 @@ class SapientMLConfig(Config):
         return v
 
     @field_validator("seed_for_model")
-    def check_seed(cls, v):
+    def _check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
     @field_validator("hyperparameter_tuning_n_trials")
-    def check_hyperparameter_tuning_n_trials(cls, v):
+    def _check_hyperparameter_tuning_n_trials(cls, v):
         if v < 1 or MAX_HPO_N_TRIALS < v:
             raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
         return v
 
     @field_validator("hyperparameter_tuning_timeout")
-    def check_hyperparameter_tuning_timeout(cls, v):
+    def _check_hyperparameter_tuning_timeout(cls, v):
         if v < 0 or MAX_HPO_TIMEOUT < v:
             raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
         return v
 
     @field_validator("hyperparameter_tuning_random_state")
-    def check_hyperparameter_tuning_random_state(cls, v):
+    def _check_hyperparameter_tuning_random_state(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
