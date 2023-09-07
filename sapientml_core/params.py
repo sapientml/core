@@ -47,7 +47,7 @@ class SapientMLConfig(Config):
     """
     Validate the parameters.
 
-    Parameters
+    Attributes
     ----------
     n_models: int, default 3
         Number of output models to file.
