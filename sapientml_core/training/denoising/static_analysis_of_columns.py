@@ -98,9 +98,7 @@ def main(test_mode=False):
         try:
             dataset = file_util.read_csv(
                 Path(project.dataset_path),
-                project.project_name,
-                Path(corpus.clean_notebook_dir_path),
-                Path(corpus.dataset_dir_path),
+                Path(project.pipeline_path),
             )
         except Exception:
             raise

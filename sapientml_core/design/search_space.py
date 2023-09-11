@@ -57,7 +57,7 @@ label_mapping = {
     ps_macros.LOG: log_transform,
 }
 
-project_related_metadata = ["file_name", "project_name", "notebook_name", "csv_name", "accuracy", "target_column_name"]
+project_related_metadata = ["file_name", "notebook_name", "csv_name", "accuracy", "target_column_name"]
 
 meta_feature_list = [
     ps_macros.CATG_PRESENCE,

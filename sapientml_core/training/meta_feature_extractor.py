@@ -79,6 +79,22 @@ def get_column_usage_summary_in_pipeline(pipeline_path, feature_usage_summary):
     return used_columns
 
 
+def get_dataset_folder_name(file_path):
+    notebook_info_path = file_path.replace(".py", ".info.json")
+    dataset_folder_name = ""
+    try:
+        with open(notebook_info_path, "r", encoding="utf-8") as notebook_info_file:
+            notebook_info = json.load(notebook_info_file)
+            if isinstance(notebook_info, list):
+                notebook_info = notebook_info[1]
+
+            if isinstance(notebook_info, dict):
+                dataset_folder_name = notebook_info["dataset_folder"]
+    except Exception:
+        print("Could not read JSON info file: {}".format(notebook_info_path))
+    return dataset_folder_name
+
+
 def collect_training_meta_feature(mode):
     """Read csv and Generate the meta-features.
 
@@ -110,16 +126,17 @@ def collect_training_meta_feature(mode):
         pipeline_path = project.pipeline_path
         file_name = projects[i].file_name
 
+        dataset_folder_name = get_dataset_folder_name(pipeline_path)
+        project.csv_name = dataset_folder_name + "_" + project.csv_name
+
         dataset_path = project.dataset_path
         logger.debug(
             "EXTRACTING META-FEATURES:", i + 1, "out of ", total_number_target_pipelines, "PIPELINE:", pipeline_path
         )
         try:
             df = file_util.read_csv(
-                Path(dataset_path),
-                project.project_name,
-                Path(corpus.clean_notebook_dir_path),
-                Path(corpus.dataset_dir_path),
+                Path(project.dataset_path),
+                Path(project.pipeline_path),
             )
             if mode != "as-is":
                 import copy

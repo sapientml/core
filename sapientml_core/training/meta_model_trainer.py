@@ -166,7 +166,7 @@ def _prepare_model_training_data_augmented(
         augmented_df.to_csv(internal_path.training_cache / "model_metafeatures_augmented.csv", index=False)
 
     if take_only_best_notebook_for_dataset:
-        idx = augmented_df.groupby(["project_name"])["accuracy"].transform(max) == augmented_df["accuracy"]
+        idx = augmented_df.groupby(["csv_name"])["accuracy"].transform(max) == augmented_df["accuracy"]
         augmented_df = augmented_df[idx]
 
     if accuracy_threshold is not None:

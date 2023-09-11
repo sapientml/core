@@ -692,7 +692,6 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     # Add the file name and the notebook name
     meta_feature_dict["file_name"] = project.file_name
     meta_feature_dict["notebook_name"] = project.notebook_name
-    meta_feature_dict["project_name"] = project.project_name
     meta_feature_dict["accuracy"] = project.accuracy
     meta_feature_dict["csv_name"] = project.csv_name
 
@@ -700,7 +699,6 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     meta_feature_dict.move_to_end("accuracy", last=False)
     meta_feature_dict.move_to_end("csv_name", last=False)
     meta_feature_dict.move_to_end("notebook_name", last=False)
-    meta_feature_dict.move_to_end("project_name", last=False)
     meta_feature_dict.move_to_end("file_name", last=False)
 
     return meta_feature_dict
@@ -1032,7 +1030,6 @@ def compute_pp_meta_features(df, proj_name, project, target_column_name):
     # Add the file name and the notebook name
     meta_feature_dict["file_name"] = project.file_name
     meta_feature_dict["notebook_name"] = project.notebook_name
-    meta_feature_dict["project_name"] = project.project_name
     meta_feature_dict["accuracy"] = project.accuracy
     meta_feature_dict["csv_name"] = project.csv_name
 
@@ -1040,7 +1037,6 @@ def compute_pp_meta_features(df, proj_name, project, target_column_name):
     meta_feature_dict.move_to_end("accuracy", last=False)
     meta_feature_dict.move_to_end("csv_name", last=False)
     meta_feature_dict.move_to_end("notebook_name", last=False)
-    meta_feature_dict.move_to_end("project_name", last=False)
     meta_feature_dict.move_to_end("file_name", last=False)
 
     return meta_feature_dict

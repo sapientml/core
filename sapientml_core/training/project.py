@@ -20,7 +20,6 @@ class ProjectInfo:
     pipeline_path: str  # full path
     dataset_path: str  # full path
     file_name: str  # only name of the pipeline
-    project_name: str
     notebook_name: str  # only name of the pipeline without extension
     accuracy: float
     csv_name: str

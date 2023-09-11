@@ -45,13 +45,13 @@ def load_json(file_name):
     return content
 
 
-def read_csv(csv_path, proj_name, notebooks_dir, dataset_dir):
+def read_csv(csv_path, notebook_path):
     def read(path, **kwargs):
         if str(path).endswith(".csv"):
             return pd.read_csv(path, **kwargs)
         return pd.read_table(path, **kwargs)
 
-    encoding = get_dataset_encoding(proj_name, notebooks_dir, dataset_dir)
+    encoding = get_dataset_encoding(notebook_path)
     dataset = read(csv_path, encoding=encoding)
     num_of_features = dataset.shape[1] - 1
     if num_of_features == 0:
@@ -63,25 +63,21 @@ def read_csv(csv_path, proj_name, notebooks_dir, dataset_dir):
     return dataset
 
 
-def get_dataset_encoding(proj_name, notebooks_dir, dataset_dir):
-    notebook_files = os.listdir(notebooks_dir / proj_name)
-    for notebook_file in notebook_files:
-        notebook_path = notebooks_dir / proj_name / notebook_file
-        if os.path.isdir(notebook_path):
-            continue
-        if not str(notebook_path).endswith(".py"):
-            continue
-        _, encoding = get_dataset_file(notebook_path, proj_name, dataset_dir)
-        if encoding:
-            return encoding
+def get_dataset_encoding(notebook_path):
+    if os.path.isdir(notebook_path):
+        return None
+    if not str(notebook_path).endswith(".py"):
+        return None
+    encoding = get_dataset_file(notebook_path)
+    if encoding:
+        return encoding
     return None
 
 
-def get_dataset_file(notebook_path, proj_name, dataset_dir):
+def get_dataset_file(notebook_path):
     f = open(notebook_path, "r", encoding="utf-8")
     lines = f.readlines()
     f.close()
-    csv_file_name = os.listdir(dataset_dir / proj_name)[0]  # assume only one csv file
     encoding = None
     for index in range(len(lines)):
         if ".read_csv(" in lines[index]:
@@ -91,5 +87,5 @@ def get_dataset_file(notebook_path, proj_name, dataset_dir):
                 encoding = lines[index].split("encoding = ")[1].split(")")[0].split(",")[0][1:-1]
             else:
                 encoding = None
-            return csv_file_name, encoding
-    return csv_file_name, encoding
+            return encoding
+    return encoding

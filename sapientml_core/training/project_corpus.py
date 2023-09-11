@@ -47,29 +47,6 @@ class ProjectCorpus:
             notebook_info_path = notebook_path.with_suffix(".info.json")
             notebook_name = notebook_path.stem
             logger.debug(f"Extracting Project Info for {notebook_name}")
-
-            # Read the dataset
-            notebook_dir = notebook_info_path.parent
-            proj_name = notebook_dir.name
-
-            project_fqn = proj_name + "/" + notebook_name + ".py"
-
-            dataset_paths = [
-                p for p in (Path(self.dataset_dir_path) / proj_name).glob("*") if re.search(r"/*\.(csv|tsv)", str(p))
-            ]
-            if len(dataset_paths) == 0:
-                logger.warning("Could not find CSV/TSV file under {}/{}".format(self.dataset_dir_path, proj_name))
-                continue
-
-            dataset_path = dataset_paths[0]
-            dataset_name = dataset_path.stem
-            if len(dataset_paths) > 1:
-                logger.warning(
-                    "Found multiple CSV/TSV files under {}/{}. Using {}...".format(
-                        self.clean_notebook_dir_path, proj_name, dataset_name
-                    )
-                )
-
             # Read the target column information
             try:
                 with open(notebook_info_path, "r", encoding="utf-8") as notebook_info_file:
@@ -83,6 +60,7 @@ class ProjectCorpus:
 
             if isinstance(notebook_info, dict):
                 target_column_name = notebook_info["target_column_name"]
+                dataset_folder_name = notebook_info["dataset_folder"]
                 accuracy = notebook_info["accuracy"]
                 metric = "accuracy"
                 if accuracy == "N/A":
@@ -102,11 +80,32 @@ class ProjectCorpus:
             elif isinstance(notebook_info, list):
                 if target_column_name[0] == "UNKNOWN":
                     continue
+            # Read the dataset
+            project_fqn = notebook_name + ".py"
+            dataset_paths = [
+                p
+                for p in (Path(self.dataset_dir_path) / dataset_folder_name).glob("*")
+                if re.search(r"/*\.(csv|tsv)", str(p))
+            ]
+            if len(dataset_paths) == 0:
+                logger.warning(
+                    "Could not find CSV/TSV file under {}/{}".format(self.dataset_dir_path, dataset_folder_name)
+                )
+                continue
+
+            dataset_path = dataset_paths[0]
+            dataset_name = dataset_path.stem
+            if len(dataset_paths) > 1:
+                logger.warning(
+                    "Found multiple CSV/TSV files under {}. Using {}...".format(
+                        self.clean_notebook_dir_path, dataset_name
+                    )
+                )
+
             project_info = ProjectInfo(
                 str(notebook_path),
                 str(dataset_path),
                 project_fqn,
-                proj_name,
                 notebook_name,
                 accuracy,
                 dataset_name,

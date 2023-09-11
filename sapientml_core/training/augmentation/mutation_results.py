@@ -48,7 +48,7 @@ class MutationResult:
 
         for i in tqdm(range(0, len(self.project_list))):
             project = self.project_list[i]
-            project_exec_dir = execution_root_dir / project.project_name / project.notebook_name
+            project_exec_dir = execution_root_dir / project.notebook_name
             project_key = project.file_name
             for model in models:
                 result_file_path = project_exec_dir / model / "stdout.txt"

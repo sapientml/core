@@ -44,7 +44,6 @@ logger = setup_logger()
 
 
 def execute(
-    project_name,
     pipeline_name_without_extension,
     modelname,
     script_path,
@@ -56,8 +55,6 @@ def execute(
 
     Parameters
     ----------
-    project_name : str
-        It returns a string variable
     pipeline_name_without_extension : str
         It returns a string variable
     modelname : str
@@ -72,7 +69,7 @@ def execute(
         True and otherwise False
 
     """
-    run_output_dir = internal_path.execution_cache_dir / project_name / pipeline_name_without_extension / modelname
+    run_output_dir = internal_path.execution_cache_dir / pipeline_name_without_extension / modelname
     if not os.path.exists(run_output_dir):
         os.makedirs(run_output_dir)
 
@@ -117,7 +114,7 @@ def execute(
         f.write(str(ttime - stime))
     if subproc.returncode != 0:
         logger.warning(
-            f"!!! Error encountered @ {project_name}/{pipeline_name_without_extension}/{modelname}: returncode = {subproc.returncode}"
+            f"!!! Error encountered @ {pipeline_name_without_extension}/{modelname}: returncode = {subproc.returncode}"
         )
 
     else:
@@ -138,13 +135,12 @@ def run(args):
     now_t : str
 
     """
-    j, now_t, project_name, pipeline_name_without_extension = args
+    j, now_t, pipeline_name_without_extension = args
     execute(
-        project_name,
         pipeline_name_without_extension,
         now_t,
-        internal_path.execution_cache_dir / project_name / pipeline_name_without_extension / now_t / "script.py",
-        internal_path.clean_dir / project_name,
+        internal_path.execution_cache_dir / pipeline_name_without_extension / now_t / "script.py",
+        internal_path.clean_dir,
         SKIP_GOOD_RUN,
     )
     return j, now_t
@@ -160,14 +156,13 @@ def generate_mutated_accuracy(project):
 
     """
     pipeline_name_without_extension = project.notebook_name
-    project_name = project.project_name
 
     with open(project.pipeline_path, "r", encoding="utf-8") as f:
         original_script = f.read()
 
     original_script = original_script.replace("../../dataset", str(internal_path.corpus_path / "dataset"))
 
-    script_path = internal_path.execution_cache_dir / project_name / pipeline_name_without_extension / "original"
+    script_path = internal_path.execution_cache_dir / pipeline_name_without_extension / "original"
     if not os.path.exists(script_path):
         os.makedirs(script_path)
     script_path = script_path / "script.py"
@@ -176,11 +171,10 @@ def generate_mutated_accuracy(project):
 
     # Running Original Pipeline
     execute(
-        project_name,
         pipeline_name_without_extension,
         "original",
         script_path,
-        internal_path.clean_dir / project_name,
+        internal_path.clean_dir,
         SKIP_GOOD_RUN,
     )
 
@@ -188,7 +182,7 @@ def generate_mutated_accuracy(project):
     try:
         origin_type, muted_types = mutator.model_mutation(
             script_path,
-            internal_path.execution_cache_dir / project_name / pipeline_name_without_extension,
+            internal_path.execution_cache_dir / pipeline_name_without_extension,
             REGEN_MUTATION,
             GEN_DF_DUMPER,
         )
@@ -199,51 +193,32 @@ def generate_mutated_accuracy(project):
         exec_trace_files = ["stdout.txt", "stderr.txt", "time.txt", "returncode.txt"]
         if SKIP_EXECED_ORIGINAL and all(
             [
-                os.path.exists(
-                    internal_path.execution_cache_dir
-                    / project_name
-                    / pipeline_name_without_extension
-                    / "original"
-                    / item
-                )
+                os.path.exists(internal_path.execution_cache_dir / pipeline_name_without_extension / "original" / item)
                 for item in exec_trace_files
             ]
         ):
             # detected that the original is already executed and allow to skip
             for file in exec_trace_files:
                 shutil.copy(
-                    internal_path.execution_cache_dir
-                    / project_name
-                    / pipeline_name_without_extension
-                    / "original"
-                    / file,
-                    internal_path.execution_cache_dir
-                    / project_name
-                    / pipeline_name_without_extension
-                    / origin_type
-                    / file,
+                    internal_path.execution_cache_dir / pipeline_name_without_extension / "original" / file,
+                    internal_path.execution_cache_dir / pipeline_name_without_extension / origin_type / file,
                 )
             pass
         else:
             # run original
             script_path = (
-                internal_path.execution_cache_dir
-                / project_name
-                / pipeline_name_without_extension
-                / origin_type
-                / "script.py"
+                internal_path.execution_cache_dir / pipeline_name_without_extension / origin_type / "script.py"
             )
             if os.path.exists(script_path):
                 execute(
-                    project_name,
                     pipeline_name_without_extension,
                     origin_type,
                     script_path,
-                    internal_path.clean_dir / project_name,
+                    internal_path.clean_dir,
                     SKIP_GOOD_RUN,
                 )
 
-        muted_types = [(j, now_t, project_name, pipeline_name_without_extension) for j, now_t in enumerate(muted_types)]
+        muted_types = [(j, now_t, pipeline_name_without_extension) for j, now_t in enumerate(muted_types)]
 
         # then run muted types
         with Pool(cpu_count() // 4 or 1) as p:

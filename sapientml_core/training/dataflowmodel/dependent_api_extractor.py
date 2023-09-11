@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import json
 import pathlib
 from collections import defaultdict
 from typing import Optional
@@ -247,11 +248,27 @@ def find_column_to_apis(file_path, dataset_path):
     source_tree = ast.construct_tree(file_path)
     data = pd.read_csv(dataset_path, encoding="ISO-8859-1")
     parts = file_path.split("/")
-    relative_file_path = parts[-2] + "/" + parts[-1]
+    relative_file_path = parts[-1]
     collector = DependentApiCollector(relative_file_path, data.columns)
     wrapper = cst.metadata.MetadataWrapper(source_tree)
     wrapper.visit(collector)
     return collector.column2apis
+
+
+def get_dataset_folder_name(file_path):
+    notebook_info_path = file_path.with_suffix(".info.json")
+    dataset_folder_name = ""
+    try:
+        with open(notebook_info_path, "r", encoding="utf-8") as notebook_info_file:
+            notebook_info = json.load(notebook_info_file)
+            if isinstance(notebook_info, list):
+                notebook_info = notebook_info[1]
+
+            if isinstance(notebook_info, dict):
+                dataset_folder_name = notebook_info["dataset_folder"]
+    except Exception:
+        print("Could not read JSON info file: {}".format(notebook_info_path))
+    return dataset_folder_name
 
 
 def get_dataset_path(file_path):
@@ -268,7 +285,8 @@ def get_dataset_path(file_path):
         It contains path of the target_csv_file from pathlib.PosixPath class
 
     """
-    parent = file_path.parent
+    dataset_folder_name = get_dataset_folder_name(file_path)
+    parent = file_path.parent / dataset_folder_name
     csv_file_lists = pathlib.Path(str(parent).replace(internal_path.clean_notebooks_dir_name, "dataset")).rglob("*.csv")
     target_csv_file = None
     for csv_file in csv_file_lists:
@@ -308,8 +326,6 @@ def main():
             traceback.print_exc()
 
     sorted_map = {k: v for k, v in sorted(final_dependency_list.items(), key=lambda item: item[1], reverse=True)}
-
-    import json
 
     with open(internal_path.training_cache / "dependent_labels.json", "w", encoding="utf-8") as outfile:
         json.dump(sorted_map, outfile, indent=4)

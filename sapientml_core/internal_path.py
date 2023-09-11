@@ -21,4 +21,4 @@ execution_cache_dir = training_cache / "exec_info"
 analysis_dir = training_cache / "analysis"
 clean_notebooks_dir_name = "clean-notebooks"
 clean_dir = corpus_path / clean_notebooks_dir_name
-project_labels_path = corpus_path / "annotated-notebooks" / "annotated-notebooks-1162.csv"
+project_labels_path = corpus_path / "annotated-notebooks" / "annotated-notebooks-1140.csv"
