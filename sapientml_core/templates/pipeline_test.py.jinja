@@ -55,7 +55,7 @@ best_params = study.best_params
 {% if 'evaluation' in pipeline_json %}
 
 #EVALUATION
-if set(_TARGET_COLUMNS).issubset(__test_dataset.columns.tolist()):
+if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
 {{ pipeline_json['evaluation']['code_test'] }}
 {% endif %}
 {% if 'output_prediction' in pipeline_json %}
