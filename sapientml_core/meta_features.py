@@ -20,10 +20,13 @@ import numpy
 import pandas as pd
 import scipy
 import scipy.stats
+from sapientml.util.logging import setup_logger
 from sklearn.preprocessing import StandardScaler
 
 from . import ps_macros
 from .design import search_space
+
+logger = setup_logger()
 
 MetaFeatures = dict[str, Union[float, int, str, list[str], None]]
 
@@ -684,8 +687,8 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_model_meta_features(df, target_column_name)
     except Exception as e:
-        print("Could not generate model meta-features for {}".format(proj_name))
-        print("Exception: {}".format(e))
+        logger.warning("Could not generate model meta-features for {}".format(proj_name))
+        logger.warning("Exception: {}".format(e))
         # raise
         return None
 
@@ -1023,8 +1026,8 @@ def compute_pp_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_pp_meta_features(df, target_column_name)
     except Exception as e:
-        print("Could not generate pp meta-features for {}".format(proj_name))
-        print("Exception: {}".format(e))
+        logger.warning("Could not generate pp meta-features for {}".format(proj_name))
+        logger.warning("Exception: {}".format(e))
         return None
 
     # Add the file name and the notebook name
@@ -1050,8 +1053,8 @@ def generate_pp_meta_features(
     try:
         pp_meta_feature_dict = _collect_pp_meta_features(dataframe, target_columns)
     except Exception as e:
-        print("Could not generate meta-features.")
-        print("Exception: {}".format(e))
+        logger.error("Could not generate meta-features.")
+        logger.error("Exception: {}".format(e))
         raise
     interesting_features = search_space.meta_feature_list + [ps_macros.STR_OTHER]
     return {k: v for k, v in pp_meta_feature_dict.items() if k in interesting_features}
@@ -1065,8 +1068,8 @@ def generate_model_meta_features(
     try:
         meta_feature_dict = _collect_model_meta_features(user_training, target_column_name)
     except Exception as e:
-        print("Could not generate meta-features for")
-        print("Exception: {}".format(e))
+        logger.error("Could not generate meta-features for")
+        logger.error("Exception: {}".format(e))
         raise
 
     # Write the train data under 'features' directory

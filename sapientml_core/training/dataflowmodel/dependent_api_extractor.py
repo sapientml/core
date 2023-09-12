@@ -267,7 +267,7 @@ def get_dataset_folder_name(file_path):
             if isinstance(notebook_info, dict):
                 dataset_folder_name = notebook_info["dataset_folder"]
     except Exception:
-        print("Could not read JSON info file: {}".format(notebook_info_path))
+        logger.warning("Could not read JSON info file: {}".format(notebook_info_path))
     return dataset_folder_name
 
 
