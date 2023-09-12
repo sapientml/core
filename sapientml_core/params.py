@@ -95,20 +95,6 @@ class SapientMLConfig(Config):
     add_explanation: bool = False
 
     def postinit(self):
-        """Set initial_timeout and hyperparameter_tuning_timeout.
-
-        For initial_timeout,
-        if hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
-
-        For hyperparameter_tuning_timeout,
-        if both initial_timeout and hyperparameter_tuning_timeout are set as None, set hyperparameter_tuning_timeout as INITIAL_TIMEOUT.
-
-        If initial_timeout is set and hyperparameter_tuning is True,
-        and hyperparameter_tuning_timeout is None :
-            Set the hyperparameter_tuning_timeout to unlimited.(hyperparameter_tuning_timeout = self.initial_timeout.)
-            Since initial_timeout always precedes hyperparameter_tuning_timeout,
-            it can be expressed that there is no time limit for hyperparameters during actual execution.
-        """
         if self.id_columns_for_prediction is None:
             self.id_columns_for_prediction = []
 
