@@ -43,20 +43,20 @@ class AST_Update:
             self.logger = setup_logger()
 
         self.FUNCION_MAPPING = {
-            "_STRING_COLS_WITH_MISSING_VALUES": "__cat_missing_data__",
-            "_NUMERIC_COLS_WITH_MISSING_VALUES": "__num_missing_data__",
-            "_NUMERIC_COLS_TO_SCALE =": "__num_to_scale__",
+            "STRING_COLS_WITH_MISSING_VALUES": "__cat_missing_data__",
+            "NUMERIC_COLS_WITH_MISSING_VALUES": "__num_missing_data__",
+            "NUMERIC_COLS_TO_SCALE =": "__num_to_scale__",
             "# OUTPUT PREDICTION": "__set_prediction__",
-            "_TARGET_COLUMNS =": "__set_target__",
-            "__model =": "__model__",
-            "_ohe = OrdinalEncoder": "__OrdinalEncoder_exp__",
+            "TARGET_COLUMNS =": "__set_target__",
+            "model =": "__model__",
+            "ordinal_encoder = OrdinalEncoder": "__OrdinalEncoder_exp__",
             "irrelevant_columns =": "__drop_Irrelevant__",
             "def process_text": "__process_text_exp__",
-            "__tfidfvectorizer =": "__tfidfvectorizer_exp__",
-            "__y_pred = __model.predict_proba": "__predict_proba_exp__",
+            "tfidfvectorizer =": "__tfidfvectorizer_exp__",
+            "y_pred = model.predict_proba": "__predict_proba_exp__",
             "smote = SMOTE()": "__smote__exp__",
-            "__standard_scaler = StandardScaler()": "__standard_scaler__exp__",
-            "__simple_imputer = SimpleImputer(": "__simple_imputer__exp__",
+            "standard_scaler = StandardScaler()": "__standard_scaler__exp__",
+            "simple_imputer = SimpleImputer(": "__simple_imputer__exp__",
             # The followings all mean "after #LOAD DATA block"
             "# TRAIN-TEST SPLIT": "__test_dataset_prediction_columns__exp__",
             "# HANDLE MIXED TYPE": "__test_dataset_prediction_columns__exp__",
@@ -113,7 +113,7 @@ class AST_Update:
                 "markdown",
             )
         )
-        if "__model = CatBoostRegressor" in loc:
+        if "model = CatBoostRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -124,7 +124,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = RandomForestClassifier" in loc:
+        elif "model = RandomForestClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -136,7 +136,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = CatBoostClassifier" in loc:
+        elif "model = CatBoostClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -147,7 +147,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LGBMRegressor" in loc:
+        elif "model = LGBMRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -158,7 +158,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = XGBClassifier" in loc:
+        elif "model = XGBClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -169,7 +169,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LogisticRegression" in loc:
+        elif "model = LogisticRegression" in loc:
             added_codes.append(
                 (
                     [
@@ -181,7 +181,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = ExtraTreesRegressor" in loc:
+        elif "model = ExtraTreesRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -197,7 +197,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = LinearRegression" in loc:
+        elif "model = LinearRegression" in loc:
             added_codes.append(
                 (
                     [
@@ -208,7 +208,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = DecisionTreeClassifier" in loc:
+        elif "model = DecisionTreeClassifier" in loc:
             added_codes.append(
                 (
                     [
@@ -221,7 +221,7 @@ class AST_Update:
                     "markdown",
                 )
             )
-        elif "__model = XGBRegressor" in loc:
+        elif "model = XGBRegressor" in loc:
             added_codes.append(
                 (
                     [
@@ -305,7 +305,7 @@ class AST_Update:
 
     def __process_text_exp__(self, loc, prev):
         added_codes = []
-        if "_TEXT_COLUMNS" in prev:
+        if "TEXT_COLUMNS" in prev:
             tree = ast.parse(prev)
             keys = [v.value for v in tree.body[0].value.elts]
             recs = ", ".join(keys)
@@ -365,7 +365,7 @@ class AST_Update:
     def __OrdinalEncoder_exp__(self, loc, prev):
         added_codes = []
         try:
-            if "_CATEGORICAL_COLS" in prev:
+            if "CATEGORICAL_COLS" in prev:
                 tree = ast.parse(prev)
                 keys = [v.value for v in tree.body[0].value.elts]
                 recs = ", ".join(keys)

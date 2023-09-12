@@ -1,7 +1,7 @@
 # DETACH TARGET
-_TARGET_COLUMNS = {{ pipeline.task.target_columns }}
-if set(_TARGET_COLUMNS).issubset(__test_dataset.columns.tolist()):
-    __feature_test = __test_dataset.drop(_TARGET_COLUMNS, axis=1)
-    __target_test = __test_dataset[_TARGET_COLUMNS].copy()
+TARGET_COLUMNS = {{ pipeline.task.target_columns }}
+if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
+    feature_test = test_dataset.drop(TARGET_COLUMNS, axis=1)
+    target_test = test_dataset[TARGET_COLUMNS].copy()
 else:
-    __feature_test = __test_dataset
+    feature_test = test_dataset

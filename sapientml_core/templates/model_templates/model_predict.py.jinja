@@ -3,15 +3,15 @@ import numpy as np
 {% set xgbclassifier = "XGBClassifier" %}
 
 with open('model.pkl', 'rb') as f:
-    __model = pickle.load(f)
+    model = pickle.load(f)
 
-__y_pred = __model.predict(__feature_test)
+y_pred = model.predict(feature_test)
 {% if flag_predict_proba and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
-__y_pred = __model.classes_[np.argmax(__y_pred, axis=1)].reshape(-1, 1)
+y_pred = model.classes_[np.argmax(y_pred, axis=1)].reshape(-1, 1)
 {% endif %}
 {% if model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
 with open('target_LabelEncoder.pkl', 'rb') as f:
-    _le = pickle.load(f)
+    label_encoder = pickle.load(f)
 
-__y_pred = _le.inverse_transform(__y_pred).reshape(-1, 1)
+y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}

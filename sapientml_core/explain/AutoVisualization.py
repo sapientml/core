@@ -138,7 +138,7 @@ class AutoVisualization_Class:
                 "_COLS_FOR_HEATMAP = %s" % str(heatmap_list),
                 "plt.figure(figsize=(20,20))",
                 'plt.title("Pearson Correlation HeatMap of Features")',
-                "sns.heatmap(__train_dataset[_COLS_FOR_HEATMAP].corr(numeric_only=True),annot=True)",
+                "sns.heatmap(train_dataset[_COLS_FOR_HEATMAP].corr(numeric_only=True),annot=True)",
             ]
 
             self.code_json["heatmap"] = codes
@@ -210,7 +210,7 @@ class AutoVisualization_Class:
                     % (numvars_n_row, numvars_n_col, 16, numvars_n_row * 4),
                     "axes = axes.ravel()",
                     "for index,col in enumerate(" + str(numvars_list) + "):",
-                    "\tsns.histplot(__train_dataset[col],ax=axes[index])",
+                    "\tsns.histplot(train_dataset[col],ax=axes[index])",
                     '\taxes[index].tick_params(axis="x", rotation=90)',
                     '\taxes[index].set_title("Distribution of %s" %col )',
                     "\tif len(axes[index].get_xticks()) > 20:",
@@ -237,7 +237,7 @@ class AutoVisualization_Class:
             codes.extend(
                 [
                     "fig = plt.figure(figsize=(4,4))",
-                    'sns.histplot(x = __train_dataset["' + str(numvars_list[0]) + '"])',
+                    'sns.histplot(x = train_dataset["' + str(numvars_list[0]) + '"])',
                     "plt.xticks(rotation=90)",
                     "plt.locator_params(nbins=20)",
                     'plt.title("Distribution of %s")' % str(numvars_list[0]),
@@ -253,7 +253,7 @@ class AutoVisualization_Class:
                     % (catvars_n_row, catvars_n_col, 16, catvars_n_row * 4),
                     "axes = axes.ravel()",
                     "for index,col in enumerate(" + str(catvars_list) + "):",
-                    '\tsns.countplot(x = __train_dataset[col].fillna("").astype(str), ax=axes[index], order=sorted(__train_dataset[col].fillna("").astype(str).unique()))',
+                    '\tsns.countplot(x = train_dataset[col].fillna("").astype(str), ax=axes[index], order=sorted(train_dataset[col].fillna("").astype(str).unique()))',
                     '\taxes[index].tick_params(axis="x", rotation=90)',
                     '\taxes[index].set_title("Distribution of %s" %col )',
                     "\tif len(axes[index].get_xticks()) > 20:",
@@ -280,9 +280,9 @@ class AutoVisualization_Class:
             codes.extend(
                 [
                     "fig = plt.figure(figsize=(4,4))",
-                    'sns.countplot(x = __train_dataset["'
+                    'sns.countplot(x = train_dataset["'
                     + str(catvars_list[0])
-                    + '"].fillna("").astype(str), order=sorted(__train_dataset["'
+                    + '"].fillna("").astype(str), order=sorted(train_dataset["'
                     + str(catvars_list[0])
                     + '"].fillna("").astype(str).unique()))',
                     "plt.xticks(rotation=90)",
@@ -306,7 +306,7 @@ class AutoVisualization_Class:
             if problem_type == "regression":
                 codes.extend(
                     [
-                        "\tsns.histplot(x = __train_dataset[col],ax=axes[index])",
+                        "\tsns.histplot(x = train_dataset[col],ax=axes[index])",
                         '\taxes[index].tick_params(axis="x", rotation=90)',
                         '\taxes[index].set_title("Distribution for Target Column of %s" %col )',
                     ]
@@ -316,7 +316,7 @@ class AutoVisualization_Class:
                 #       So, this route can't be tested.
                 codes.extend(
                     [
-                        '\tsns.countplot(x = __train_dataset[col].fillna("").astype(str), ax=axes[index], order=sorted(__train_dataset[col].fillna("").astype(str).unique()))',
+                        '\tsns.countplot(x = train_dataset[col].fillna("").astype(str), ax=axes[index], order=sorted(train_dataset[col].fillna("").astype(str).unique()))',
                         '\taxes[index].tick_params(axis="x", rotation=90)',
                         '\taxes[index].set_title("Distribution for Target Column of %s" %col )',
                     ]
@@ -346,15 +346,15 @@ class AutoVisualization_Class:
             if problem_type == "regression":
                 codes.extend(
                     [
-                        'sns.histplot(x = __train_dataset["' + str(targetvars_list[0]) + '"])',
+                        'sns.histplot(x = train_dataset["' + str(targetvars_list[0]) + '"])',
                     ]
                 )
             else:
                 codes.extend(
                     [
-                        'sns.countplot(x = __train_dataset["'
+                        'sns.countplot(x = train_dataset["'
                         + str(targetvars_list[0])
-                        + '"].fillna("").astype(str), order=sorted(__train_dataset["'
+                        + '"].fillna("").astype(str), order=sorted(train_dataset["'
                         + str(targetvars_list[0])
                         + '"].fillna("").astype(str).unique()))',
                     ]

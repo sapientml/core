@@ -3,9 +3,9 @@ import string
 
 import nltk
 
-_TEXT_COLUMNS = {{ columns }}
+TEXT_COLUMNS = {{ columns }}
 def process_text(__dataset):
-    for _col in _TEXT_COLUMNS:
+    for _col in TEXT_COLUMNS:
         process_text = [t.lower() for t in __dataset[_col]]
 
         # strip all punctuation

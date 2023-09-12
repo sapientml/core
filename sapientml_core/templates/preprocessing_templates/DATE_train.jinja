@@ -1,5 +1,5 @@
-_DATE_COLUMNS = {{ columns }}
-for _col in _DATE_COLUMNS:
+DATE_COLUMNS = {{ columns }}
+for _col in DATE_COLUMNS:
     train_date_col = pd.to_datetime({{ train_dataset }}[_col], errors='coerce')
     {{ train_dataset }}[_col + "_year"] = train_date_col.dt.year.fillna(-1)
     {{ train_dataset }}[_col + "_month"] = train_date_col.dt.month.fillna(-1)
