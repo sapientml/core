@@ -1,8 +1,8 @@
 # DISCARD IRRELEVANT COLUMNS
 irrelevant_columns = {{ irrelevant_columns }}
 {% if train %}
-__train_dataset = __train_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
+train_dataset = train_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
 {% endif %}
 {% if test %}
-__test_dataset = __test_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
+test_dataset = test_dataset.drop(irrelevant_columns, axis=1, errors="ignore")
 {% endif %}

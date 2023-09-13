@@ -14,9 +14,13 @@
 
 import ast
 import copy
-import glob
 import json
+import os
 import re
+import subprocess
+import time
+from datetime import datetime
+from glob import glob
 from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
@@ -28,13 +32,14 @@ from sapientml.macros import metric_lower_is_better
 from sapientml.params import Code, Dataset, PipelineResult, RunningResult, Task
 from sapientml.util.json_util import JSONEncoder
 from sapientml.util.logging import setup_logger
+from tqdm import tqdm
 
+from . import internal_path
 from .adaptation.generation.template_based_adaptation import Adaptation
 from .explain.main import process as explain
 from .params import SapientMLConfig, SimplePipeline, summarize_dataset
 from .seeding.predictor import predict
-
-model_dir_path_default = Path(__file__).parent / "models"
+from .training import project_corpus
 
 logger = setup_logger()
 
@@ -53,12 +58,113 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.loaddata = eps["loaddata"].load()(**kwargs)
         self.preprocess = eps["preprocess"].load()(**kwargs)
 
+    def train(self, tag=None, num_parallelization=200):
+        """Run for local training.
+
+        Parameters
+        ----------
+        tag : str | None
+            The tag of souce code.
+            If tag is set, the traning results will be saved into <core/sapientml_core/.cache/tag/>.
+            Else if tag is not set, the traning results will be saved into <core/sapientml_core/.cache/>.
+        num_parallelization : int | 200
+            Number of parallelization.
+            Default value is 200.
+        """
+
+        def _exec(cmd):
+            logger.info(f"Executing {cmd}")
+            proc = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            logger.debug("STDOUT: {}".format(stdout))
+            logger.error("STDERR:{}".format(stderr))
+            return proc
+
+        def _wait_for(file_pattern, n_files=1):
+            logger.info(f"Waiting for {file_pattern}" + (f" * {n_files}" if n_files > 1 else ""))
+            latest = 0
+            with tqdm(total=n_files) as pbar:
+                pbar.update(latest)
+                while latest < n_files:
+                    time.sleep(2)
+                    k = len(glob(f"{internal_path.training_cache}/{file_pattern}"))
+                    if k > latest:
+                        pbar.update(k - latest)
+                        latest = k
+
+        corpus = project_corpus.ProjectCorpus()
+        projects = corpus.project_list
+
+        if tag:
+            internal_path.training_cache = internal_path.training_cache / tag
+
+        os.makedirs(internal_path.training_cache, exist_ok=True)
+
+        start = datetime.now()
+
+        logger.info(f"Start: {start}")
+
+        # Step-1
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
+        _wait_for("static_info.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
+        _wait_for("dataset-snapshots/*.txt", len(projects))
+
+        # Step-2
+        procs = []
+        for x in range(num_parallelization):
+            proc = _exec(
+                f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py {num_parallelization} {x} {tag}"
+            )
+            procs.append(proc)
+
+        _wait_for("exec_info/mutation_*.finished", num_parallelization)
+
+        for p in procs:
+            if p.poll() is None:
+                logger.info("Kill alive processes")
+                p.terminate()
+                logger.info("Done, exit status:{}".format(proc.poll()))
+
+        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
+        _wait_for("feature_analysis_summary.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
+
+        # Step-3
+        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_feature_extractor.py --tag={tag}")
+        _wait_for("*_metafeatures_training.csv", 2)
+
+        # Step-4
+        _exec(f"PYTHONPATH=. python sapientml_core/training/pp_model_trainer.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_model_trainer.py --tag={tag}")
+
+        _wait_for("*.pkl", 3)
+
+        # Step-5
+        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/dependent_api_extractor.py --tag={tag}")
+        _wait_for("dependent_labels.json")
+        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/determine_label_order.py --tag={tag}")
+        _wait_for("label_order.json")
+
+        end = datetime.now()
+        logger.info(f"End: {end}")
+
+        diff_time = end - start
+        logger.info(f"Training time cost: {diff_time}")
+
     def generate_pipeline(self, dataset: Dataset, task: Task):
         self.dataset = dataset
         self.task = task
 
         logger.info("Generating pipelines...")
         dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
+        dataset.check_dataframes(task.target_columns)
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
         code_block = loaddata_block + preprocess_block
         dataset, sapientml_results = self.generate_code(dataset, task)
@@ -207,7 +313,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
             eps = entry_points(group="sapientml.export_modules")
             for ep in eps:
-                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                for file in glob(f"{ep.load().__path__[0]}/*.py"):
                     copyfile(file, lib_path / Path(file).name)
 
             for index, (script, detail) in enumerate(candidate_scripts, start=1):
