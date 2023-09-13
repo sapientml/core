@@ -57,7 +57,7 @@ def _train_preprocessors(train_data, feature_selection):
         inplace=True,
     )
     data["project_target"] = (
-        data["project_name"] + "_" + data["target_column_name"].apply(lambda line: "_".join(sorted(eval(line))))
+        data["csv_name"] + "_" + data["target_column_name"].apply(lambda line: "_".join(sorted(eval(line))))
     )
     all_labels = [v for v in data.columns if v.startswith(("PREPROCESS:"))]
     second_to_full_labels = defaultdict(list)
@@ -98,8 +98,11 @@ def _prepare_model_training_data(raw_meta_feature_train):
     final_meta_features = raw_meta_feature_train[search_space.project_related_metadata + search_space.meta_feature_list]
     final_meta_features.fillna(0, inplace=True)
     for semantic_label, columns in search_space.label_mapping.items():
-        final_meta_features[semantic_label] = raw_meta_feature_train[columns].sum(axis=1)
-        final_meta_features[semantic_label] = final_meta_features[semantic_label].apply(lambda x: 1 if x > 0 else 0)
+        try:
+            final_meta_features[semantic_label] = raw_meta_feature_train[columns].sum(axis=1)
+            final_meta_features[semantic_label] = final_meta_features[semantic_label].apply(lambda x: 1 if x > 0 else 0)
+        except KeyError as e:
+            logger.warning(e)
 
     return final_meta_features
 

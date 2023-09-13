@@ -122,8 +122,8 @@ with open("{new_script_path.replace('.py', '.json')}", 'w', encoding='utf-8') as
 
         # debug
         if isinstance(target, ast.Subscript):
-            print(node.lineno)
-            print(ast.dump(node.targets[0]))
+            logger.debug(node.lineno)
+            logger.debug(ast.dump(node.targets[0]))
 
         target = target.id
         var_out = set([item.id for item in var_out if isinstance(item, ast.Name)])

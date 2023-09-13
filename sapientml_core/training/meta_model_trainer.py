@@ -94,7 +94,7 @@ def _predict_models(m_model, task_type, test_meta_features_batch):
 
         top_3_prediction_actual_label_batch.append(top_3_prediction_one_subject)
     logger.info(all_appeared_models)
-    logger.info("Unique Models:", len(all_appeared_models))
+    logger.info(f"Unique Models:{len(all_appeared_models)}")
     return top_3_prediction_actual_label_batch
 
 
@@ -166,7 +166,7 @@ def _prepare_model_training_data_augmented(
         augmented_df.to_csv(internal_path.training_cache / "model_metafeatures_augmented.csv", index=False)
 
     if take_only_best_notebook_for_dataset:
-        idx = augmented_df.groupby(["project_name"])["accuracy"].transform(max) == augmented_df["accuracy"]
+        idx = augmented_df.groupby(["csv_name"])["accuracy"].transform(max) == augmented_df["accuracy"]
         augmented_df = augmented_df[idx]
 
     if accuracy_threshold is not None:
@@ -176,7 +176,7 @@ def _prepare_model_training_data_augmented(
     X = X.fillna(0)
     weights = augmented_df["accuracy"]
     y = augmented_df["normalized_target"]
-    logger.info("Number of Training Samples:", X.shape)
+    logger.info(f"Number of Training Samples:{X.shape}")
     logger.info(Counter(y))
     return X, y, weights
 
@@ -244,7 +244,7 @@ def training(training_data_path, model_dir_path_default):
         with open(model_dir_path_default / "mp_model_2.pkl", "wb") as f2:
             pickle.dump(clf_1, f1)
             pickle.dump(clf_2, f2)
-    logger.info("model weights saved to:", internal_path.training_cache)
+    logger.info(f"model weights saved to:{internal_path.training_cache}")
 
     return clf_1, clf_2
 

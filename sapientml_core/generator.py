@@ -58,7 +58,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.loaddata = eps["loaddata"].load()(**kwargs)
         self.preprocess = eps["preprocess"].load()(**kwargs)
 
-    def train(self, tag=None):
+    def train(self, tag=None, num_parallelization=200):
         """Run for local training.
 
         Parameters
@@ -67,7 +67,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             The tag of souce code.
             If tag is set, the traning results will be saved into <core/sapientml_core/.cache/tag/>.
             Else if tag is not set, the traning results will be saved into <core/sapientml_core/.cache/>.
-
+        num_parallelization : int | 200
+            Number of parallelization.
+            Default value is 200.
         """
 
         def _exec(cmd):
@@ -112,15 +114,17 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
         _wait_for("static_info.json")
         _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
-        _wait_for("dataset-snapshots/*/*.txt", len(projects))
+        _wait_for("dataset-snapshots/*.txt", len(projects))
 
         # Step-2
         procs = []
-        for x in range(200):
-            proc = _exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py 200 {x} {tag}")
+        for x in range(num_parallelization):
+            proc = _exec(
+                f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py {num_parallelization} {x} {tag}"
+            )
             procs.append(proc)
 
-        _wait_for("exec_info/mutation_*.finished", 200)
+        _wait_for("exec_info/mutation_*.finished", num_parallelization)
 
         for p in procs:
             if p.poll() is None:
