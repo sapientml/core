@@ -313,7 +313,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
             eps = entry_points(group="sapientml.export_modules")
             for ep in eps:
-                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                for file in glob(f"{ep.load().__path__[0]}/*.py"):
                     copyfile(file, lib_path / Path(file).name)
 
             for index, (script, detail) in enumerate(candidate_scripts, start=1):
