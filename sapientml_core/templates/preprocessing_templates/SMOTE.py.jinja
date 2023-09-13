@@ -2,10 +2,10 @@ from imblearn.over_sampling import SMOTE
 
 smote = SMOTE()
 {% if pipeline.sparse_matrix %}
-__feature_columns = __feature_train.columns
-__feature_train = __feature_train.sparse.to_coo()
-__feature_train, __target_train = smote.fit_resample(__feature_train, __target_train)
-__feature_train =  pd.DataFrame.sparse.from_spmatrix(__feature_train, columns=__feature_columns)
+feature_columns = feature_train.columns
+feature_train = feature_train.sparse.to_coo()
+feature_train, target_train = smote.fit_resample(feature_train, target_train)
+feature_train =  pd.DataFrame.sparse.from_spmatrix(feature_train, columns=feature_columns)
 {% else %}
-__feature_train, __target_train = smote.fit_resample(__feature_train, __target_train)
+feature_train, target_train = smote.fit_resample(feature_train, target_train)
 {% endif %}

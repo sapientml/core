@@ -164,6 +164,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         logger.info("Generating pipelines...")
         dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
+        dataset.check_dataframes(task.target_columns)
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
         code_block = loaddata_block + preprocess_block
         dataset, sapientml_results = self.generate_code(dataset, task)

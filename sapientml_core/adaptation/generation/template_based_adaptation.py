@@ -308,22 +308,22 @@ class Adaptation:
                 self.pipeline.add_processing_components(
                     component,
                     type="preprocessing_after_target_separation",
-                    training_dataframe="__feature_train",
-                    test_dataframe="__feature_test",
+                    training_dataframe="feature_train",
+                    test_dataframe="feature_test",
                 )
             elif component.label_name in self.PREPROCESSING_AFTER_TRAIN_TEST_SPLIT:
                 self.pipeline.add_processing_components(
                     component,
                     type="preprocessing_after_train_test_split",
-                    training_dataframe="__feature_train",
-                    test_dataframe="__feature_test",
+                    training_dataframe="feature_train",
+                    test_dataframe="feature_test",
                 )
             else:
                 self.pipeline.add_processing_components(
                     component,
                     type="preprocessing_before_target_separation",
-                    training_dataframe="__train_dataset",
-                    test_dataframe="__test_dataset",
+                    training_dataframe="train_dataset",
+                    test_dataframe="test_dataset",
                 )
 
             # The information is used, for example when Scaler is used and Tfidf is not used.
