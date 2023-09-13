@@ -20,10 +20,13 @@ import numpy
 import pandas as pd
 import scipy
 import scipy.stats
+from sapientml.util.logging import setup_logger
 from sklearn.preprocessing import StandardScaler
 
 from . import ps_macros
 from .design import search_space
+
+logger = setup_logger()
 
 MetaFeatures = dict[str, Union[float, int, str, list[str], None]]
 
@@ -157,7 +160,7 @@ def test_feature_preprocess(raw_df: pd.DataFrame, is_clf_task: Literal[0, 1]):
     return real_feature_preprocess(raw_df)
 
 
-# Generate the model mata features for online and offline processing
+# Generate the model mata features for training processing
 def _collect_model_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
     if isinstance(target_column_name, str):
         target_column_name = [target_column_name]
@@ -293,10 +296,10 @@ def collect_labels(annotated_notebooks_path):
     # One-hot encode the labels
     feature_map_list = []
     for file_name, group in groups:
-        labels = group["new_label"].tolist()
-
+        labels = group["new_label"].to_list()
+        name = list(file_name)
         feature_map = {}
-        feature_map["file_name"] = str(file_name)
+        feature_map["file_name"] = str(name[0])
         for label in labels:
             feature_map[label] = 1
         feature_map_list.append(feature_map)
@@ -679,20 +682,19 @@ def _get_missing_values_named_columns(dataset):
     return int(feature)
 
 
-# Generate the model meta_feature for offline processing
+# Generate the model meta_feature for training processing
 def compute_model_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_model_meta_features(df, target_column_name)
     except Exception as e:
-        print("Could not generate model meta-features for {}".format(proj_name))
-        print("Exception: {}".format(e))
+        logger.warning("Could not generate model meta-features for {}".format(proj_name))
+        logger.warning("Exception: {}".format(e))
         # raise
         return None
 
     # Add the file name and the notebook name
     meta_feature_dict["file_name"] = project.file_name
     meta_feature_dict["notebook_name"] = project.notebook_name
-    meta_feature_dict["project_name"] = project.project_name
     meta_feature_dict["accuracy"] = project.accuracy
     meta_feature_dict["csv_name"] = project.csv_name
 
@@ -700,13 +702,12 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     meta_feature_dict.move_to_end("accuracy", last=False)
     meta_feature_dict.move_to_end("csv_name", last=False)
     meta_feature_dict.move_to_end("notebook_name", last=False)
-    meta_feature_dict.move_to_end("project_name", last=False)
     meta_feature_dict.move_to_end("file_name", last=False)
 
     return meta_feature_dict
 
 
-# Generate the pp mata features for online and offline processing
+# Generate the pp mata features for training processing
 def _collect_pp_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
     if isinstance(target_column_name, str):
         target_column_name = [target_column_name]
@@ -1020,19 +1021,18 @@ def _is_text_column_pp(c, preprocess):
     return cells_satisfy_space and not is_category
 
 
-# Generate the PP meta_feature for offline processing
+# Generate the PP meta_feature for training processing
 def compute_pp_meta_features(df, proj_name, project, target_column_name):
     try:
         meta_feature_dict = _collect_pp_meta_features(df, target_column_name)
     except Exception as e:
-        print("Could not generate pp meta-features for {}".format(proj_name))
-        print("Exception: {}".format(e))
+        logger.warning("Could not generate pp meta-features for {}".format(proj_name))
+        logger.warning("Exception: {}".format(e))
         return None
 
     # Add the file name and the notebook name
     meta_feature_dict["file_name"] = project.file_name
     meta_feature_dict["notebook_name"] = project.notebook_name
-    meta_feature_dict["project_name"] = project.project_name
     meta_feature_dict["accuracy"] = project.accuracy
     meta_feature_dict["csv_name"] = project.csv_name
 
@@ -1040,7 +1040,6 @@ def compute_pp_meta_features(df, proj_name, project, target_column_name):
     meta_feature_dict.move_to_end("accuracy", last=False)
     meta_feature_dict.move_to_end("csv_name", last=False)
     meta_feature_dict.move_to_end("notebook_name", last=False)
-    meta_feature_dict.move_to_end("project_name", last=False)
     meta_feature_dict.move_to_end("file_name", last=False)
 
     return meta_feature_dict
@@ -1054,8 +1053,8 @@ def generate_pp_meta_features(
     try:
         pp_meta_feature_dict = _collect_pp_meta_features(dataframe, target_columns)
     except Exception as e:
-        print("Could not generate meta-features.")
-        print("Exception: {}".format(e))
+        logger.error("Could not generate meta-features.")
+        logger.error("Exception: {}".format(e))
         raise
     interesting_features = search_space.meta_feature_list + [ps_macros.STR_OTHER]
     return {k: v for k, v in pp_meta_feature_dict.items() if k in interesting_features}
@@ -1069,8 +1068,8 @@ def generate_model_meta_features(
     try:
         meta_feature_dict = _collect_model_meta_features(user_training, target_column_name)
     except Exception as e:
-        print("Could not generate meta-features for")
-        print("Exception: {}".format(e))
+        logger.error("Could not generate meta-features for")
+        logger.error("Exception: {}".format(e))
         raise
 
     # Write the train data under 'features' directory
