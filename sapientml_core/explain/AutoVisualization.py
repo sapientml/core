@@ -28,6 +28,21 @@ INHIBITED_SYMBOL_PATTERN = re.compile(r"[\{\}\[\]\",:<'\\]+")
 
 
 def check_cols_has_symbols(columns: list) -> list[str]:
+    """check_cols_has_symbols method.
+
+    Checking if column names have any symbols or not.
+
+    Parameters
+    ----------
+    columns : list
+        list of column names.
+
+    Returns
+    -------
+    cols_has_symbols : list[str]
+        list of symbols matching the INHIBITED_SYMBOL_PATTERN.
+
+    """
     cols_has_symbols = []
     for col in columns:
         if INHIBITED_SYMBOL_PATTERN.search(col):
@@ -36,10 +51,27 @@ def check_cols_has_symbols(columns: list) -> list[str]:
 
 
 def remove_symbols(column_name: str) -> str:
+    """remove_symbols method.
+
+    Removing symbols from column names.
+
+    Parameters
+    ----------
+    column_name : str
+        Name of the column..
+
+    Returns
+    -------
+    str
+        replacing empty strings with the symbols matching the INHIBITED_SYMBOL_PATTERN.
+
+    """
     return INHIBITED_SYMBOL_PATTERN.sub("", column_name)
 
 
 class AutoVisualization_Class:
+    """AutoVisualization_Class."""
+
     def __init__(self):
         self.code_json = defaultdict(list)
 
@@ -51,7 +83,21 @@ class AutoVisualization_Class:
         ignore_columns: Optional[list[str]] = None,
     ):
         """
-        The main processing class for visualizations
+        The main processing class for visualizations.
+
+        Parameters
+        ----------
+        target_columns : list[str]
+            Names of target columns.
+        problem_type : Literal["regression", "classification"]
+            Type of problem either regression or classification
+        ignore_columns : list[str], optional
+            Column names which must not be used and must be dropped.
+
+        Returns
+        -------
+        generates visualization code.
+
         """
         problem_type = problem_type.lower()
 
@@ -121,8 +167,21 @@ class AutoVisualization_Class:
         return self.code_json
 
     def draw_heatmap(self, problem_type, numvars_list=None, catvars_list=None, targetvars_list=None):
-        """
-        generate codes for feature heatmap
+        """draw_heatmap method.
+
+        generate codes for feature heatmap.
+
+        Parameters
+        ----------
+        problem_type : Literal["regression", "classification"]
+            Type of problem either regression or classification
+        numvars_list : List, default None
+            list of numerical columns
+        catvars_list : List, default None
+            list of categorical columns
+        targetvars_list : List, default None
+            list of target columns.
+
         """
         total_numvars = len(numvars_list)
         total_catvars = len(catvars_list)
@@ -145,7 +204,21 @@ class AutoVisualization_Class:
 
     def draw_distplot(self, problem_type, numvars_list=None, catvars_list=None, targetvars_list=None):
         """
-        generate codes for data distribution plots
+        draw_distplot method.
+
+        generate codes for data distribution plots.
+
+        Parameters
+        ----------
+        problem_type : Literal["regression", "classification"]
+            Type of problem either regression or classification
+        numvars_list : List | None, default None
+            list of numerical columns.
+        catvars_list : List | None, default None
+            list of categorical columns.
+        targetvars_list : List | None, default None
+            list of target columns.
+
         """
         total_numvars = len(numvars_list)
         total_catvars = len(catvars_list)
@@ -372,8 +445,29 @@ class AutoVisualization_Class:
 
     def classify_columns_coarse_granularity(self, df_preds, ignore_columns, target_columns, verbose=3):
         """
-        simple classification function for columns
-        only to classify the columns into numerical, category and text columns
+        classify_columns_coarse_granularity method.
+
+        simple classification function for columns.
+        only to classify the columns into numerical, category and text columns.
+
+        Parameters
+        ----------
+        df_preds : pd.DataFrame
+            input dataframe
+        ignore_columns : list[str], optional
+            Column names which must not be used and must be dropped.
+        target_columns : list[str]
+            Names of target columns.
+
+        Results
+        -------
+        numvars_list : List
+            list of numerical columns
+        catvars_list : List
+            list of categorical columns
+        textvars_list : List
+            list of text columns.
+
         """
         # categorical column threshold
         cat_threshold = 0.05

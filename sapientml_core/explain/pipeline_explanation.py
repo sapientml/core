@@ -18,6 +18,17 @@ import pandas as pd
 
 
 class Pipeline_Explanation:
+    """Pipeline_Explanation class.
+
+    Attributes
+    ----------
+    Feature_exp_map : dict
+        explanation of features.
+    operators : dict
+        dictionary of operator symbols with their corresponding names.
+
+    """
+
     Feature_exp_map = {
         "feature:missing_values_presence": "There are missing values among the columns with a score of **{actual_value}** which is {operator} **{threshold}**.",
         "feature:max_normalized_stddev": "The maximum of standard deviation of the normalized data (among the columns) is **{actual_value}** which is {operator} **{threshold}**.",
@@ -107,11 +118,39 @@ class Pipeline_Explanation:
     }
 
     def __init__(self, skeleton: dict, explanation: dict, run_info: Optional[dict] = None):
+        """__init__ method.
+
+        Parameters
+        ----------
+        skeleton : dict
+            Probabilty score and other details of preprocess and model components.
+        explanation : dict
+            pipeline explanation information.
+        run_info : dict, optional
+            execution results, logs and other information.
+
+        """
         self.skeleton = skeleton
         self.explanation = explanation
         self.run_time = run_info
 
     def get_feature_explanation(self, action, cols, probability):
+        """get_feature_explanation method.
+
+        Parameters
+        ----------
+        action : str
+            Name of the preprocess component.
+        cols : List[str]
+            list of the column names.
+        probability : float
+            Number used to determine the confidence level.
+
+        Returns
+        -------
+        str
+
+        """
         explain = []
         counter = 0
         explain.append(
@@ -135,6 +174,19 @@ class Pipeline_Explanation:
 
     @staticmethod
     def get_model_exp(model):
+        """get_model_exp method.
+
+        Parameters
+        ----------
+        model : str
+            Model Name.
+
+         Returns
+         -------
+         str
+             explanation of the model.
+
+        """
         model_expl = ""
         if model:
             if model.startswith("MODEL"):
@@ -144,6 +196,14 @@ class Pipeline_Explanation:
         return model_expl
 
     def process(self):
+        """process method.
+
+        Returns
+        -------
+        explains : List[dict]
+            Detailed explanation about best model.
+
+        """
         explains = []
         ds = []
         for section in self.explanation:

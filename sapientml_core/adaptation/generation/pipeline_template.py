@@ -80,16 +80,51 @@ NO_TUNABLE_PARAMS_MODELS = [
 
 
 def load_json(file_name):
+    """load json file.
+
+    Parameters
+    ----------
+    file_name : str
+
+    Returns
+    -------
+    content : str
+
+    """
     with open(file_name, "r", encoding="utf-8") as input_file:
         content = json.load(input_file)
     return content
 
 
 def is_allowed_to_apply_to_target(label_name: str) -> bool:
+    """is_allowed_to_apply_to_target.
+
+    Parameters
+    ----------
+    label_name : str
+
+    Returns
+    -------
+    bool
+
+    """
     return "PREPROCESS:Scaling:log" in label_name
 
 
 class PipelineTemplate(BaseModel):
+    """A class to represent a Predicate.
+
+    This class provides the core data structure for pipeline.
+    It creates the code snippet for each ML component,
+    creates all the glue code snippets and assemble all the components together.
+
+    Parameters
+    ----------
+    pipeline : Pipeline
+       Object of pipeline class.
+
+    """
+
     pipeline: Pipeline
 
     def _render(self, tpl, *args, **kwargs):
@@ -97,6 +132,8 @@ class PipelineTemplate(BaseModel):
         return "\n".join([line for line in code.split("\n") if len(line) > 0])
 
     def generate(self):
+        """generate pipeline."""
+
         pipeline = self.pipeline
         if pipeline.model is None:
             return
@@ -204,6 +241,17 @@ class PipelineTemplate(BaseModel):
         )
 
     def add_processing_components(self, component, type, training_dataframe, test_dataframe):
+        """add_processing_components.
+
+        Parameters
+        ----------
+        component : pd.pandas
+        type : str
+           component type
+        training_dataframe : str
+        test_dataframe : str
+
+        """
         snippets = self.generate_snippet(component, training_dataframe, test_dataframe)
         snippets_train = self.generate_snippet(component, training_dataframe, test_dataframe, "train")
         snippets_predict = self.generate_snippet(component, training_dataframe, test_dataframe, "predict")
@@ -219,6 +267,22 @@ class PipelineTemplate(BaseModel):
             self.pipeline.pipeline_json[type][component.label_name] = component_json
 
     def generate_snippet(self, component, training_dataframe, test_dataframe, train_predict_flag=""):
+        """generate_snippet.
+
+        Parameters
+        ----------
+        component : PreprocessingLabel
+           Object of the preprocessinglabel class.
+        training_dataframe : str
+        test_dataframe : str
+        train_predict_flag : str
+           flag of train and predict.
+
+        Returns
+        -------
+        adapted_snippets : list
+
+        """
         adapted_snippets = list()
 
         pipeline = self.pipeline
@@ -307,6 +371,8 @@ class PipelineTemplate(BaseModel):
         return adapted_snippets
 
     def populate_hyperparameter_tuning(self):
+        """populate_hyperparameter_tuning."""
+
         pipeline = self.pipeline
         if pipeline.model is None:
             return
@@ -354,6 +420,14 @@ class PipelineTemplate(BaseModel):
         pipeline.pipeline_json["hyperparameter_optimization"]["code"] = snippet
 
     def populate_model(self):
+        """populate_model.
+
+        Returns
+        -------
+        snippet : str
+           code snippet
+
+        """
         pipeline = self.pipeline
         if pipeline.model is None:
             return
@@ -459,6 +533,18 @@ class PipelineTemplate(BaseModel):
         return snippet
 
     def create_preprocessing_component_explanation(self, component):
+        """create_preprocessing_component_explanation.
+
+        Parameters
+        ----------
+        component : PreprocessingLabel
+            Object of the preprocessinglabel class.
+
+        Returns
+        -------
+        component_json, explanation : dict ,str
+
+        """
         component_description_dict = load_json(
             str(
                 Path(os.path.dirname(__file__))
@@ -550,6 +636,19 @@ class PipelineTemplate(BaseModel):
         return component_json, explanation
 
     def create_model_component_explanation(self, component, model_component_json):
+        """create_model_component_explanation.
+
+        Parameters
+        ----------
+        component : ModelLabel
+           Object of the modellabel class.
+        model_component_json : dict
+
+        Returns
+        -------
+        explanation : str
+
+        """
         tpl = env.get_template("explainability_templates/model_explanation.py.jinja")
         explanation = self._render(
             tpl, target_component_name=component.label_name, relevant_meta_feature_list=component.meta_features
@@ -563,6 +662,8 @@ class PipelineTemplate(BaseModel):
         return explanation
 
     def save_pipeline_json(self):
+        """Save pipeline json data."""
+
         # json_string = json.dumps(self.pipeline_json)
         # with open(self.output_dir_path + 'pipeline_json.json', 'w') as outfile:
         #     json.dump(json_string, outfile)

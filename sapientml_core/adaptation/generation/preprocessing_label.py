@@ -17,7 +17,26 @@ from .predicate import Predicate
 
 
 class PreprocessingLabel:
+    """A class to represent the preprocessinglabel.
+
+    This script identifies the relevant columns in the dataset
+    for each feature engineering components.
+
+    """
+
     def __init__(self, label_name, meta_features, predicates):
+        """Constructs all the necessary attributes for the preprocessinglabel object.
+
+        Parameters
+        ----------
+        label_name : str
+           Component name.
+        meta_features : list
+           Meta features selected.
+        predicates : list
+           predicates details.
+
+        """
         self.label_name = label_name
         self.meta_features = meta_features
         self.predicate_objects = list()
@@ -56,6 +75,21 @@ class PreprocessingLabel:
             return Operator.NOT_EQUAL_TO
 
     def get_relevant_columns(self, dataset_summary, target, ignore_columns):
+        """get_relevant_columns.
+
+        Parameters
+        ----------
+        dataset_summary : DatasetSummary
+           Object of the datasetsummary class.
+        target : list
+        ignore_columns : list
+
+        Returns
+        -------
+        rel_columns_list : list
+            Return the relavant column list.
+
+        """
         rel_columns_list = []
 
         # approach 1: conjunction: a column is relavant if and only if all of the predicates applicable to that component are true

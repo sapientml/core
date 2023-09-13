@@ -16,16 +16,50 @@ from ...enums import Operator
 
 
 class Predicate:
+    """A class to represent the predicate.
+
+    This class represents the data structure for loading a decision tree
+    condition/predicate and provides a function that can evaluate whether
+    the predicate is true for a particular column.
+
+    """
+
     feature_name = ""
     _operator = ""
     _comparison_value = ""
 
     def __init__(self, feature_name, operator, comparison_value):
+        """Constructs all the necessary attributes for the predicate object.
+
+        Parameters
+        ----------
+        feature_name : str
+           Meta feature name
+        operator : Operator
+        comparison_value : np.float
+
+        """
         self.feature_name = feature_name
         self._operator = operator
         self._comparison_value = comparison_value
 
     def evaluate_predicate(self, meta_features):
+        """Evaluate whether the predicate is true for a particular column.
+
+        Parameters
+        ----------
+        meta_features : dict
+
+        Returns
+        -------
+        result : bool
+
+        Raises
+        ------
+        Exception
+            False
+
+        """
         try:
             actual_value = meta_features[self.feature_name]
             if actual_value == -1 or actual_value == 0:
