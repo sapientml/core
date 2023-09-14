@@ -64,6 +64,25 @@ name_to_label_mapping = {
 
 
 class Predicate:
+    """Return Parameters in one sentence.
+
+    Parameters
+    ----------
+    feature_name : str
+        Feature_name of the input dataframe.
+    value : str
+        Value of the input dataframe.
+    threshold : str
+        Threshold of the input dataframe.
+    op : str
+        Threshold sign. Evaluation of the value against the threshold.
+
+    Returns
+    ----------
+    str
+
+    """
+
     def __init__(self, feature_name, value, threshold, op):
         self.feature_name = feature_name
         self.value = value
@@ -78,6 +97,18 @@ class Predicate:
 
 
 def get_decision_path(clf, X):
+    """Return a threshold evaluation of the feature value.
+
+    Parameters
+    ----------
+    X : pd.DataFrame
+        Input dataFrame.
+
+    Returns
+    ----------
+    rules : list
+        Threshold evaluation of feature values.
+    """
     feature = clf.tree_.feature
     threshold = clf.tree_.threshold
 
@@ -201,10 +232,34 @@ def _predict_models(
 
 
 def dict_to_df(d) -> pd.DataFrame:
+    """Convert dict to DataFrame.
+
+    Parameters
+    ----------
+    d : dict
+        Input dict.
+
+    Returns
+    ----------
+    pd.DataFrame
+        Conversion result.
+
+    """
     return pd.DataFrame.from_dict({0: d}, orient="index", columns=d.keys())
 
 
 def predict(task: Task, dataset_summary: DatasetSummary) -> PipelineSkeleton:
+    """Perform preprocessing and model prediction internal functions.
+
+    Parameters
+    ----------
+    task : Task
+    dataset_summary: DatasetSummary
+
+    Returns
+    ----------
+    all_labels : PipelineSkeleton
+    """
     task_type = task.task_type
     p_meta_feature_test = dict_to_df(dataset_summary.meta_features_pp)
     m_meta_feature_test = dict_to_df(dataset_summary.meta_features_m)

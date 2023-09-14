@@ -40,6 +40,42 @@ def process(
     timeout: int = 0,
     cancel: Optional[CancellationToken] = None,
 ):
+    """process function.
+
+    Parameters
+    ----------
+    visualization : bool
+        True and otherwise False
+    eda : bool
+        True and otherwise False
+    dataframe : pd.DataFrame
+        dataframe input
+    script_path : str
+        Path of the script.
+    target_columns : list[str]
+        Names of target columns.
+    problem_type : Literal["regression", "classification"]
+        Type of problem either regression or classification
+    ignore_columns : list[str], optional
+        Column names which must not be used and must be dropped.
+    skeleton : dict, optional
+        Probabilty score and other details of preprocess and model components.
+    explanation : dict, optional
+        pipelines explanation
+    run_info : dict, optional
+        execution results, logs and other information.
+    internal_execution : bool
+        True and otherwise Flase
+    timeout : int
+        integer value for timeout
+    cancel : CancellationToken, optional
+
+    Returns
+    -------
+    output_files : List[str]
+        list of .ipynb files.
+
+    """
     output_files = None
 
     if visualization:

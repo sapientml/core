@@ -138,6 +138,16 @@ def _is_realbool_dtype(column):
 
 
 def real_feature_preprocess(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize features and transform features.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    Returns
+    ----------
+    df : pd.DataFrame
+    """
     nf = "feature:num_of_features"
     for col in normalize_features:
         if nf in df.columns:
@@ -154,6 +164,18 @@ def real_feature_preprocess(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def test_feature_preprocess(raw_df: pd.DataFrame, is_clf_task: Literal[0, 1]):
+    """Test feature preprocess.
+
+    Parameters
+    ----------
+    raw_df : pd.DataFrame
+    is_clf_task: Literal[0, 1]
+        Is classification task or not
+
+    Returns
+    ----------
+    pd.DataFrame
+    """
     raw_df = raw_df.drop(axis=1, columns=["target_column_name"]).reset_index(drop=True)
     clf_row = [is_clf_task]
     raw_df["feature:is_cls"] = clf_row
@@ -289,6 +311,17 @@ def _collect_model_meta_features(data_df: pd.DataFrame, target_column_name: Unio
 
 
 def collect_labels(annotated_notebooks_path):
+    """Collect labels.
+
+    Parameters
+    ----------
+    annotated_notebooks_path : str
+        The path of annotated_notebooks in corpus
+
+    Returns
+    ----------
+    df : pd.DataFrame
+    """
     # Read the annotated notebooks and group by file name
     data = pd.read_csv(annotated_notebooks_path, encoding="utf-8")
     groups = data[["file_name", "new_label"]].groupby(["file_name"])
@@ -684,6 +717,22 @@ def _get_missing_values_named_columns(dataset):
 
 # Generate the model meta_feature for training processing
 def compute_model_meta_features(df, proj_name, project, target_column_name):
+    """Generate the model meta_feature for training processing.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    proj_name : str
+    project : training.project.ProjectInfo
+    target_column_name : str
+
+    Returns
+    ----------
+    None
+        When an exception occurs.
+    meta_feature_dict : OrderedDict[str, float | int | str | list[str] | None]
+
+    """
     try:
         meta_feature_dict = _collect_model_meta_features(df, target_column_name)
     except Exception as e:
@@ -1023,6 +1072,22 @@ def _is_text_column_pp(c, preprocess):
 
 # Generate the PP meta_feature for training processing
 def compute_pp_meta_features(df, proj_name, project, target_column_name):
+    """Generate the PP meta_feature for training processing.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    proj_name : str
+    project : training.project.ProjectInfo
+    target_column_name : str
+
+    Returns
+    ----------
+    None
+        When an Exception occurs.
+    meta_feature_dict : OrderedDict[str, float | int | str | list[str] | None]
+
+    """
     try:
         meta_feature_dict = _collect_pp_meta_features(df, target_column_name)
     except Exception as e:
@@ -1050,6 +1115,17 @@ def generate_pp_meta_features(
     dataframe: pd.DataFrame,
     target_columns: Union[str, list[str]],
 ):
+    """Generate the PP meta_feature for online processing.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+    target_columns : Union[str, list[str]]
+
+    Returns
+    ----------
+    MetaFeatures = dict[str, float | int | str | list[str] | None]
+    """
     try:
         pp_meta_feature_dict = _collect_pp_meta_features(dataframe, target_columns)
     except Exception as e:
@@ -1064,6 +1140,21 @@ def generate_pp_meta_features(
 def generate_model_meta_features(
     user_training: pd.DataFrame, target_column_name: Union[str, list[str]], is_clf_task: Literal[0, 1]
 ) -> MetaFeatures:
+    """Generate the model meta_feature for online processing.
+
+    Parameters
+    ----------
+    user_training : pd.DataFrame
+    target_column_name: Union[str, list[str]]
+    is_clf_task: Literal[0, 1]
+        Is classification task or not
+
+    Returns
+    ----------
+    MetaFeatures = dict[str, float | int | str | list[str] | None]
+
+    """
+
     # Generate the meta-features
     try:
         meta_feature_dict = _collect_model_meta_features(user_training, target_column_name)
@@ -1079,4 +1170,15 @@ def generate_model_meta_features(
 
 
 def generate_column_meta_features(df_column: pd.DataFrame):
+    """Generate meta_features from df_column.
+
+    Parameters
+    ----------
+    df_column: pd.DataFram
+
+    Returns
+    ----------
+    OrderedDict[str, float | int | str | list[str] | None]
+
+    """
     return _collect_column_meta_features(df_column)

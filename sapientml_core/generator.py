@@ -45,12 +45,31 @@ logger = setup_logger()
 
 
 def add_prefix(filename, prefix):
+    """Add prefix to filename if prefix exists.
+
+    Parameters
+    ----------
+    filename : str
+        Filename.
+    prefix : str
+        Prefix(project_name).
+
+    Returns
+    ----------
+    str
+        If prefix exists, return f"{prefix}_{filename}",
+        If prefix does not exist, return only filename.
+    """
     if not prefix:
         return filename
     return f"{prefix}_{filename}"
 
 
 class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
+    """
+    Own the main functions for generating the pipeline.
+    """
+
     def __init__(self, **kwargs):
         self.config = SapientMLConfig(**kwargs)
         self.config.postinit()
@@ -159,6 +178,23 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         logger.info(f"Training time cost: {diff_time}")
 
     def generate_pipeline(self, dataset: Dataset, task: Task):
+        """Generate pipeline, Execute, Evaluate execution results.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset class.
+        task : Task
+            Task class.
+
+        Returns
+        ----------
+        (self._best_pipeline, self._best_pipeline_score) : Tuple(list | None, PipelineResult)
+            Best pipeline.
+            The score of the best pipeline.
+        self._candidate_scripts : list
+            Candidate scripts.
+        """
         self.dataset = dataset
         self.task = task
 
@@ -193,6 +229,22 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
     def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[SimplePipeline]]:
+        """Generate the meta-features and run adaptation.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset class.
+        task : Task
+            Task class.
+
+        Returns
+        ----------
+        dataset : Dataset
+            Dataset class.
+        pipelines : list[SimplePipeline]
+            Results of run adaptation.
+        """
         df = dataset.training_dataframe
         # Generate the meta-features
         logger.info("Generating meta features...")
@@ -212,6 +264,20 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return dataset, pipelines
 
     def evaluate(self, execution_results: list[tuple[Code, RunningResult]], lower_is_better: bool = False) -> None:
+        """Evaluate execution results of generated pipelines.
+
+        Parameters
+        ----------
+        execution_results : list[tuple[Code, RunningResult]]
+            Execution results.
+        lower_is_better : bool, default False
+            Specify reverse=(not lower_is_better) for the argument of the sorted method.
+
+        Returns
+        ----------
+        None
+
+        """
         self._best_pipeline = None
         self._best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
         candidate_scripts = []
@@ -273,6 +339,13 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return PipelineResult(score=score, metric=metric, best_params=best_params)
 
     def save(self, output_dir: Union[Path, str]):
+        """Save the script to output_dir.
+
+        Parameters
+        ----------
+        output_dir : Union[Path, str]
+            Output directory path.
+        """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -336,6 +409,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             self.add_explanation()
 
     def add_explanation(self):
+        """Call the explain function."""
         explain(
             visualization=True,
             eda=True,

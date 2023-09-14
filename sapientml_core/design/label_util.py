@@ -1,6 +1,16 @@
-"""
-SapientML assigns some internal labels for each ML component. This file has the information of those labels.
-"""
+# Copyright 2023 The SapientML Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 name_to_label_mapping = {
@@ -43,6 +53,14 @@ name_to_label_mapping = {
 
 
 def map_label_to_name():
+    """
+    Assign several internal labels to each ML component.
+
+    Returns
+    ----------
+    label_to_name : dict[str, str]
+        Assigned result.
+    """
     label_to_name = {"MODEL:Classifier:LGBMClassifier:lgbm": "lightgbm", "MODEL:Regressor:train:xgboost": "xgboost"}
     for k, v in name_to_label_mapping.items():
         for k1, v1 in v.items():

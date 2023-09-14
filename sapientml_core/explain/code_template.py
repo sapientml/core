@@ -16,10 +16,25 @@ import datetime
 
 
 class Code_Template:
+    """Code Template class."""
+
     def __init__(self):
         self.str_reverse = {"NOW": str(datetime.datetime.now())}
 
     def update(self, lines):
+        """update method.
+
+        Parameters
+        ----------
+        lines : list[str]
+            A line in block code from jupyter content template.
+
+        Returns
+        -------
+        out : list[str]
+            Updated line in block code from jupyter content template.
+
+        """
         out = []
         for line in lines:
             for key in self.str_reverse:

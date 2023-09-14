@@ -1,10 +1,16 @@
-"""
-To design the search space of SapientML, we group semantically similar low-level APIs into a high level group and assign
-a group label. For example pandas.fillna and sklearn.SimpleImputer both are used to fill out missing values in the dataframe.
-
-This semantic grouping helps SapientML keep the search space simple and discover more accurate relationships between
-various ML components and meta-features of the dataset during training of skeleton predictor.
-"""
+# Copyright 2023 The SapientML Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 drop_label_list = [

@@ -19,13 +19,39 @@ from scipy import stats
 
 
 class Dataset:
+    """Dataset class."""
+
     def __init__(self, dataframe: pd.DataFrame, target_columns: list[str]):
+        """__init__ method.
+
+        Parameters
+        ----------
+        dataframe : pd.DataFrame
+            dataframe input
+        target_columns : list[str]
+            Names of target columns.
+
+        """
         self.data = dataframe
         self.target = target_columns
 
 
 class EDA(Dataset):
+    """EDA class."""
+
     def __init__(self, dataframe: pd.DataFrame, target_columns: list[str], ref="Dataset", log_level=1, logger=None):
+        """__init__ method.
+
+        Parameters
+        ----------
+        dataframe : pd.DataFrame
+            dataframe input
+        target_columns : list[str]
+            Names of target columns.
+        ref : Dataset
+            Dataset class reference.
+
+        """
         self.logger = logger
         if logger is None:
             self.logger = setup_logger()
@@ -45,6 +71,11 @@ class EDA(Dataset):
         return lines
 
     def check_skewness(self):
+        """check_skewness method.
+
+        skewness is a measure of the asymmetry of the probability distribution of a real-valued random variable about its mean.
+
+        """
         ref = self.ref
         skews = []
         for col in self.df.data:
@@ -78,6 +109,11 @@ class EDA(Dataset):
             )
 
     def add_general_block(self):
+        """add_general_block method.
+
+        Adding markdown cells in jupyter notebook.
+
+        """
         ref = self.ref
         if self.df.data is not None:
             n_rows = self.df.data.shape[0]
@@ -143,6 +179,27 @@ class EDA(Dataset):
                                 )
 
     def cat_process(self, threshold=0.01, IQR_activation: bool = True, z_activation: bool = True):
+        """cat_process method.
+
+        Parameters
+        ----------
+        threshold : float
+        IQR_activation : bool
+            An interquartile range is a measure of statistical dispersion
+            IQR = Q3 - Q1 (75th percentile - 25th percentile)
+            True and otherwise False.
+        z_activation : bool
+            z-score is used to find the outliers.
+            True and otherwise False.
+
+        Returns
+        -------
+        hashmaps : dict
+            A pivoted dataframe.
+        df_desc : pd.DataFrame.
+            describing a dataframe.
+
+        """
         hashmaps = {}
         desc = []
         ratio = float(threshold / 100)
@@ -211,6 +268,20 @@ class EDA(Dataset):
         return hashmaps, df_desc
 
     def check_consistency(self, convert=False):
+        """check_consistency method.
+
+        Parameters
+        ----------
+        convert : bool
+            convert bool string to numerical val.
+            False and otherwise True.
+
+        Returns
+        -------
+        pd.DataFrame
+            converted dataframe if all the keys dtype is object.
+
+        """
         for key in self.df.data:
             if self.df.data[key].dtype == "object":
                 self.df.data[key] = self.__convert_object(self.df.data[key], convert, key)

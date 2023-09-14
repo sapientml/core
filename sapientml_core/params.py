@@ -95,6 +95,20 @@ class SapientMLConfig(Config):
     add_explanation: bool = False
 
     def postinit(self):
+        """Set initial_timeout and hyperparameter_tuning_timeout.
+
+        For initial_timeout,
+        if hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
+
+        For hyperparameter_tuning_timeout,
+        if both initial_timeout and hyperparameter_tuning_timeout are set as None, set hyperparameter_tuning_timeout as INITIAL_TIMEOUT.
+
+        If initial_timeout is set and hyperparameter_tuning is True,
+        and hyperparameter_tuning_timeout is None :
+            Set the hyperparameter_tuning_timeout to unlimited.(hyperparameter_tuning_timeout = self.initial_timeout.)
+            Since initial_timeout always precedes hyperparameter_tuning_timeout,
+            it can be expressed that there is no time limit for hyperparameters during actual execution.
+        """
         if self.id_columns_for_prediction is None:
             self.id_columns_for_prediction = []
 
@@ -166,6 +180,19 @@ class SapientMLConfig(Config):
 
 
 class Column(BaseModel):
+    """
+    Validate the field values of the class.
+
+    Attributes
+    ----------
+    dtype : str
+        Data type of a column of features.
+    meta_features : MetaFeatures | None
+        meta features of training data.
+    has_negative_value : bool
+        Whether meta_features has a negative value.
+    """
+
     dtype: str
     meta_features: Optional[MetaFeatures]
     has_negative_value: bool
@@ -201,6 +228,29 @@ class Column(BaseModel):
 
 
 class DatasetSummary(BaseModel):
+    """DatasetSummary class.
+
+    Attributes
+    ----------
+    columns : dict[str, Column]
+        Dictionary of meta features.
+        - dict[column_name:str : [dtype:str , meta_features:MetaFeatures | None , has_negative_value:bool]]
+    meta_features_pp : MetaFeatures
+        The PP meta_feature for online processing.
+    meta_features_m : MetaFeatures
+        The model meta_feature for online processing.
+    has_multi_class_targets : bool
+        Whether has multi class targets.
+    has_inf_value_targets : bool
+        Whether has inf value targets.
+    cols_almost_missing_string : list[str] | None, default None
+        List of cols almost missing string.
+    cols_almost_missing_numeric : list[str] | None, default None
+        List of cols almost missing numeric.
+    cols_str_other : list[str] | None, default None
+
+    """
+
     columns: dict[str, Column]
     meta_features_pp: MetaFeatures
     meta_features_m: MetaFeatures
@@ -250,6 +300,20 @@ class DatasetSummary(BaseModel):
 
 
 class ModelLabel(BaseModel):
+    """ModelLabel class.
+
+    Attributes
+    ----------
+    label_name: str
+        Label name.
+    predict_proba : bool, default False
+        Whether to predict probability.
+    hyperparameters : Any | None, default None
+        Hyperparameters.
+    meta_features : list[Any], default Field(default_factory=list)
+        List of Meta features.
+    """
+
     label_name: str
     predict_proba: bool = False
     hyperparameters: Optional[Any] = None
@@ -263,6 +327,18 @@ class ModelLabel(BaseModel):
 
 
 class SimplePipeline(Code):
+    """SimplePipeline class.
+
+    Attributes
+    ----------
+    pipeline_json : dict, dafault Field(default_factory=lambda: defaultdict(dict))
+        Dictionary of pipeline.
+    labels : PipelineSkeleton | None , dafault None
+        PipelineSkeleton class.
+    model : ModelLabel | None , dafault None
+        ModelLabel class.
+    """
+
     # pipeline json
     pipeline_json: dict = Field(default_factory=lambda: defaultdict(dict))
 
@@ -271,6 +347,41 @@ class SimplePipeline(Code):
 
 
 class Pipeline(SimplePipeline):
+    """Pipeline class.
+
+    Attributes
+    ----------
+    task : Task
+        Object of the Task class.
+    dataset_summary : DatasetSummary
+        Object of the DatasetSummary Class.
+    config : SapientMLConfig
+        Object of the SapientMLConfig.
+    adaptation_metric : str | None, default None
+        Adaptation metric.
+    all_columns_datatypes : dict, default Field(default_factory=dict)
+        Dictionary of all column data types.
+    inverse_target : bool, default False
+        Inverse target or not.
+    sparse_matrix : bool, default False
+        Whether the data is converted to sparse matrix in the pipeline.
+    train_column_names : list[str], default Field(default_factory=list)
+        Column name of training.
+    test_column_names : list[str], default Field(default_factory=list)
+        Column name of testing.
+    is_multi_class_multi_targets : bool, default False
+        Whether is multi-class and multi-target.
+        - To handle following case;
+            - metrics : Accuracy
+            - task    : multi-class and multi-targets
+        - because sklearn.accuracy_score doesn't support multi-class.
+
+    id_columns_for_prediction : list[str], default Field(default_factory=list)
+        ID columns for prediction.
+    output_dir_path : str, default ""
+        Output directory path.
+    """
+
     task: Task
     dataset_summary: DatasetSummary
     config: SapientMLConfig
@@ -292,12 +403,17 @@ class Pipeline(SimplePipeline):
 
 
 def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
-    """
-    Args:
-        - df_train      : Input dataset
-        - task          : Task
+    """Summarize dataset.
 
-    Returns:
+    Parameters
+    ----------
+        df_train : pd.DataFrame
+            Input dataset.
+        task : Task
+            Object of the Task class.
+
+    Returns
+    ----------
         DatasetSummary
     """
     is_multi_classes: list[bool] = []

@@ -35,6 +35,8 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 
 class AST_Update:
+    """AST_Update class."""
+
     def __init__(self, visualization_code=None, logger=None, local_path=None):
         self.visualization_code = visualization_code
         self.logger = logger
@@ -79,6 +81,16 @@ class AST_Update:
         self.last_status = {}
 
     def process(self, loc, prev):
+        """process method.
+
+        Parameters
+        ----------
+        loc : str
+            A line in block code from jupyter content template.
+        prev : str
+            A line in block code from jupyter content template.
+
+        """
         for func in self.FUNCION_MAPPING:
             # run loc against all function calls
             # if there is a match, the it will be executed
@@ -538,6 +550,8 @@ class AST_Update:
 
 
 class ExecuteNotebookThread(Thread):
+    """ExecuteNotebookThread class."""
+
     def __init__(self, nb: NotebookNode, resources=None) -> None:
         self.ep = ExecutePreprocessor(timeout=6000, kernel_name="python3")
         self.nb = nb
@@ -546,20 +560,30 @@ class ExecuteNotebookThread(Thread):
         Thread.__init__(self)
 
     def run(self):
+        """run method."""
         try:
             self.ep.preprocess(self.nb, self.resources)
         except Exception as e:
             self.exception = e
 
     def trigger_interrupt_kernel(self):
+        """trigger_interrupt_kernel method."""
         assert self.ep.km
         self.ep.km.interrupt_kernel()
 
     def get_exception(self):
+        """get_exception method.
+        Returns
+        -------
+        It returns the respective exception that occured.
+
+        """
         return self.exception
 
 
 class Miner:
+    """Miner class."""
+
     def __init__(
         self,
         folder_path,
@@ -570,6 +594,26 @@ class Miner:
         explanation: Optional[dict] = None,
         run_info: Optional[dict] = None,
     ):
+        """__init__ method.
+
+        Parameters
+        ----------
+        folder_path : str
+            Path of the folder.
+        init_blocks : list[tuple]
+            EDA description of corresponding blocks.
+        visualization_code : AutoVisualization
+            generated visualization code
+        logger : None
+            Logging Information.
+        skeleton : dict, optional
+            Probabilty score and other details of preprocess and model components.
+        explanation : dict, optional
+            pipelines explanation
+        run_info : dict, optional
+            execution results, logs and other information.
+
+        """
         self.files = []
         self.content = []
         self.blocks = []
@@ -703,6 +747,19 @@ class Miner:
     def execute_notebook(
         nb: NotebookNode, resources=None, timeout: int = 0, cancel: Optional[CancellationToken] = None
     ):
+        """execute_notebook method.
+
+        Parameters
+        ----------
+        nb : NotebookNode
+            Jupyter Notebook
+        resources : None
+            Resources needed to run the notebook.
+        timeout : int
+            Integer value for timeout.
+        cancel : CancellationToken, optional
+
+        """
         ep_thread = ExecuteNotebookThread(nb, resources)
         ep_thread.start()
 
@@ -723,6 +780,22 @@ class Miner:
             raise exception
 
     def save_all(self, execution=False, timeout: int = 0, cancel: Optional[CancellationToken] = None):
+        """save_all method.
+
+        Parameters
+        ----------
+        execution : bool
+            False and otherwise True.
+        timeout : int
+            Integer value for timeout.
+        cancel : CancellationToken, optional
+
+        Returns
+        -------
+        output_files : list[str]
+            List of saved explained jupyter notebooks..
+
+        """
         output_files = []
         for rec in self.content:
             path = os.path.join(self.output_path, rec["filename"] + ".ipynb")
@@ -746,8 +819,22 @@ class Miner:
         return output_files
 
     def get_block(self, code):
-        """generate a set of blocks from LoCs
-        each block seprated through empty lines (\n)
+        """get_block method.
+
+        generate a set of blocks from LoCs
+        each block seperated through empty lines (\n)
+
+        Parameters
+        ----------
+        code : str
+            code from the python files.
+
+        Returns
+        -------
+        blocks : list[str]
+            set of blocks from LoCs.
+            each block seperated through empty lines (\n)
+
         """
         blocks = []
         current_block = []
@@ -771,6 +858,24 @@ class Miner:
     def add_template_block(
         self, blocks, visualization_code, content_template_path=os.path.join("templates", "jupyter_content.json")
     ):
+        """add_template_block method.
+
+        Parameters
+        ----------
+        blocks : list[str]
+            set of blocks from LoCs.
+            each block seperated through empty lines (\n)
+        visualization_code : AutoVisualization
+            generated visualization code.
+        content_template_path : Path
+            Path to the jupyter content templates.
+
+        Returns
+        -------
+        final_block : list[tuples]
+            Adding markdown cells before and after blocks in code from jupyter content template.
+
+        """
         ct = Code_Template()
         desc = AST_Update(visualization_code, local_path=self.local_path)
         final_block = []

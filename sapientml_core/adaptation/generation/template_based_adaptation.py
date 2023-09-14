@@ -33,6 +33,21 @@ preprocessing_threshold = 0.5
 
 
 class Adaptation:
+    """A class to represent the adaptation.
+
+    This class provides core functionalities for the adaptation module.
+    More specifically, it
+    i) identify relevant columns in the given dataset for each ML component where the component will be instantiated on.
+    ii) removes redundant ML components
+    iii) order them properly
+    iv) finally assemble all the components together.
+
+    Parameters
+    ----------
+    pipeline : pd.DataFrame
+
+    """
+
     pipeline: PipelineTemplate
 
     PREPROCESSING_AFTER_TARGET_SEPARATION = {
@@ -55,6 +70,20 @@ class Adaptation:
         dataset_summary: DatasetSummary,
         config: Config,
     ):
+        """Constructs all the necessary attributes for the adaptation object.
+
+        Parameters
+        ----------
+        labels : dict
+            Preprocess and model components details.
+        task : Task
+            Object of the task class.
+        dataset_summary : DatasetSummary
+            Object of the datasetsummary class.
+        config : Config
+            Object of the config class.
+
+        """
         self.labels = labels
         self.task = task
         self.dataset_summary = dataset_summary
@@ -358,6 +387,13 @@ class Adaptation:
         return pipeline_list
 
     def run_adaptation(self) -> list[SimplePipeline]:
+        """Create candidate pipelines.
+
+        Returns
+        -------
+        list[SimplePipeline]
+
+        """
         # SapientML default run
         self._setup_pipeline_basics()
         preprocessing, model = self._get_labels_from_skeleton_predictor()
