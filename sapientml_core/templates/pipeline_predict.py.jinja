@@ -1,9 +1,5 @@
 import pickle
 
-{% if 'store_prediction_columns' in pipeline_json %}
-
-{{ pipeline_json['store_prediction_columns']['code'] }}
-{% endif %}
 {% if 'discard_columns' in pipeline_json %}
 
 {{ pipeline_json['discard_columns']['code_predict'] }}
