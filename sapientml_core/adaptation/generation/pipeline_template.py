@@ -147,9 +147,6 @@ class PipelineTemplate(BaseModel):
             target2string = False
 
         # Use tpl.render but self._render because keep blank lines.
-        tpl = env.get_template("other_templates/store_prediction_columns.py.jinja")
-        pipeline.pipeline_json["store_prediction_columns"]["code"] = self._render(tpl, pipeline=pipeline)
-
         if len(pipeline.dataset_summary.cols_str_other) > 0:
             irrelevant_columns = pipeline.dataset_summary.cols_str_other
             tpl = env.get_template("other_templates/drop_columns.py.jinja")
