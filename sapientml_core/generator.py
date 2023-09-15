@@ -130,16 +130,20 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         logger.info(f"Start: {start}")
 
         # Step-1
-        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/static_analysis_of_columns.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/denoising/static_analysis_of_columns.py --tag={tag}"
+        )
         _wait_for("static_info.json")
-        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/dataset_snapshot_extractor.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/denoising/dataset_snapshot_extractor.py --tag={tag}"
+        )
         _wait_for("dataset-snapshots/*.txt", len(projects))
 
         # Step-2
         procs = []
         for x in range(num_parallelization):
             proc = _exec(
-                f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_runner.py {num_parallelization} {x} {tag}"
+                f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/augmentation/mutation_runner.py {num_parallelization} {x} {tag}"
             )
             procs.append(proc)
 
@@ -151,24 +155,32 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 p.terminate()
                 logger.info("Done, exit status:{}".format(proc.poll()))
 
-        _exec(f"PYTHONPATH=. python sapientml_core/training/denoising/determine_used_features.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/denoising/determine_used_features.py --tag={tag}"
+        )
         _wait_for("feature_analysis_summary.json")
-        _exec(f"PYTHONPATH=. python sapientml_core/training/augmentation/mutation_results.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/augmentation/mutation_results.py --tag={tag}"
+        )
 
         # Step-3
-        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_feature_extractor.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/meta_feature_extractor.py --tag={tag}")
         _wait_for("*_metafeatures_training.csv", 2)
 
         # Step-4
-        _exec(f"PYTHONPATH=. python sapientml_core/training/pp_model_trainer.py --tag={tag}")
-        _exec(f"PYTHONPATH=. python sapientml_core/training/meta_model_trainer.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/pp_model_trainer.py --tag={tag}")
+        _exec(f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/meta_model_trainer.py --tag={tag}")
 
         _wait_for("*.pkl", 3)
 
         # Step-5
-        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/dependent_api_extractor.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/dataflowmodel/dependent_api_extractor.py --tag={tag}"
+        )
         _wait_for("dependent_labels.json")
-        _exec(f"PYTHONPATH=. python sapientml_core/training/dataflowmodel/determine_label_order.py --tag={tag}")
+        _exec(
+            f"PYTHONPATH=. python {internal_path.sapientml_core_root}/training/dataflowmodel/determine_label_order.py --tag={tag}"
+        )
         _wait_for("label_order.json")
 
         end = datetime.now()
