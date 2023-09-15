@@ -717,7 +717,7 @@ def _get_missing_values_named_columns(dataset):
 
 # Generate the model meta_feature for training processing
 def compute_model_meta_features(df, proj_name, project, target_column_name):
-    """Generate the model meta_feature for training processing.
+    """Generate meta-features used to consider machine learning models for offline processing.
 
     Parameters
     ----------
@@ -1072,7 +1072,7 @@ def _is_text_column_pp(c, preprocess):
 
 # Generate the PP meta_feature for training processing
 def compute_pp_meta_features(df, proj_name, project, target_column_name):
-    """Generate the PP meta_feature for training processing.
+    """Generate meta-features used to consider preprocessing components off offline processing.
 
     Parameters
     ----------
@@ -1115,7 +1115,7 @@ def generate_pp_meta_features(
     dataframe: pd.DataFrame,
     target_columns: Union[str, list[str]],
 ):
-    """Generate the PP meta_feature for online processing.
+    """Generate meta-features used to consider preprocessing components for online processing.
 
     Parameters
     ----------
@@ -1140,7 +1140,7 @@ def generate_pp_meta_features(
 def generate_model_meta_features(
     user_training: pd.DataFrame, target_column_name: Union[str, list[str]], is_clf_task: Literal[0, 1]
 ) -> MetaFeatures:
-    """Generate the model meta_feature for online processing.
+    """Generate meta-features used to consider machine learning models for online processing.
 
     Parameters
     ----------

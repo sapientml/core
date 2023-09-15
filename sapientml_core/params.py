@@ -45,12 +45,12 @@ INITIAL_TIMEOUT = 600
 
 class SapientMLConfig(Config):
     """
-    Validate the parameters.
+    Configuration arguments for SapientMLGenerator.
 
     Attributes
     ----------
     n_models: int, default 3
-        Number of output models to file.
+        Number of output models to be tried.
     seed_for_model: int, default 42
         Random seed for models such as RandomForestClassifier.
     id_columns_for_prediction: Optional[list[str]], default None
@@ -58,25 +58,21 @@ class SapientMLConfig(Config):
     use_word_list: Optional[Union[list[str], dict[str, list[str]]]], default None
         List of words to be used as features when generating explanatory variables from text.
         If dict type is specified, key must be a column name and value must be a list of words.
-    use_hyperparameters: bool, default False
-        Specify whether or not hyperparameters are used.
-    impute_all: bool, default True
-        On/Off Flag used for preprocessing.
     hyperparameter_tuning: bool, default False
         On/Off of hyperparameter tuning.
     hyperparameter_tuning_n_trials: int, default 10
         The number of trials of hyperparameter tuning.
     hyperparameter_tuning_timeout: int, default 0
         Time limit for hyperparameter tuning in each generated script.
-        hyperparameter_tuning_timeout is ignored when hyperparameter_tuning is False.
+        Ignored when hyperparameter_tuning is False.
     hyperparameter_tuning_random_state: int, default 1023
         Random seed for hyperparameter tuning.
     predict_option: Literal["default", "probability"], default "default"
         Specify predict method (default: predict(), probability: predict_proba().)
     permutation_importance: bool, default True
-        On/Off of permutation_importance.
+        On/Off of outputting permutation importance calculation code.
     add_explanation: bool, default False
-        If True, execute the add_explanation() function in generator.py
+        If True, outputs ipynb files including EDA and explanation.
 
     """
 
@@ -84,8 +80,6 @@ class SapientMLConfig(Config):
     seed_for_model: int = 42
     id_columns_for_prediction: Optional[list[str]] = None
     use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
-    use_hyperparameters: bool = False
-    impute_all: bool = True
     hyperparameter_tuning: bool = False
     hyperparameter_tuning_n_trials: int = 10
     hyperparameter_tuning_timeout: int = 0
@@ -97,8 +91,7 @@ class SapientMLConfig(Config):
     def postinit(self):
         """Set initial_timeout and hyperparameter_tuning_timeout.
 
-        For initial_timeout,
-        if hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
+        If initial_timeout is set as None and hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
 
         For hyperparameter_tuning_timeout,
         if both initial_timeout and hyperparameter_tuning_timeout are set as None, set hyperparameter_tuning_timeout as INITIAL_TIMEOUT.
@@ -181,16 +174,16 @@ class SapientMLConfig(Config):
 
 class Column(BaseModel):
     """
-    Validate the field values of the class.
+    Describing meta-features of a column in the input dataset.
 
     Attributes
     ----------
     dtype : str
-        Data type of a column of features.
+        Data type of the column of features.
     meta_features : MetaFeatures | None
-        meta features of training data.
+        Meta features of the column.
     has_negative_value : bool
-        Whether meta_features has a negative value.
+        Whether the column has a negative value.
     """
 
     dtype: str
@@ -228,7 +221,7 @@ class Column(BaseModel):
 
 
 class DatasetSummary(BaseModel):
-    """DatasetSummary class.
+    """Describing meta-features of datasets.
 
     Attributes
     ----------
@@ -236,19 +229,19 @@ class DatasetSummary(BaseModel):
         Dictionary of meta features.
         - dict[column_name:str : [dtype:str , meta_features:MetaFeatures | None , has_negative_value:bool]]
     meta_features_pp : MetaFeatures
-        The PP meta_feature for online processing.
+        Meta-features used to consider preprocessing components.
     meta_features_m : MetaFeatures
-        The model meta_feature for online processing.
+        Meta-features used to consider machine learning models.
     has_multi_class_targets : bool
         Whether has multi class targets.
     has_inf_value_targets : bool
         Whether has inf value targets.
     cols_almost_missing_string : list[str] | None, default None
-        List of cols almost missing string.
+        List of string columns where almost all values are missing.
     cols_almost_missing_numeric : list[str] | None, default None
-        List of cols almost missing numeric.
+        List of numerical columns where almost all values are missing.
     cols_str_other : list[str] | None, default None
-
+        List of string columns which are neither categorical nor text columns.
     """
 
     columns: dict[str, Column]
@@ -300,7 +293,7 @@ class DatasetSummary(BaseModel):
 
 
 class ModelLabel(BaseModel):
-    """ModelLabel class.
+    """Describing a model name and information to embed it to the code.
 
     Attributes
     ----------
@@ -327,7 +320,7 @@ class ModelLabel(BaseModel):
 
 
 class SimplePipeline(Code):
-    """SimplePipeline class.
+    """Generated code with information during adaptation.
 
     Attributes
     ----------
@@ -347,7 +340,7 @@ class SimplePipeline(Code):
 
 
 class Pipeline(SimplePipeline):
-    """Pipeline class.
+    """Generated code with information used internally during adaptation.
 
     Attributes
     ----------
@@ -362,7 +355,7 @@ class Pipeline(SimplePipeline):
     all_columns_datatypes : dict, default Field(default_factory=dict)
         Dictionary of all column data types.
     inverse_target : bool, default False
-        Inverse target or not.
+        Whether expm1 is required for target columns because log1p is already applied to them.
     sparse_matrix : bool, default False
         Whether the data is converted to sparse matrix in the pipeline.
     train_column_names : list[str], default Field(default_factory=list)
@@ -374,8 +367,8 @@ class Pipeline(SimplePipeline):
         - To handle following case;
             - metrics : Accuracy
             - task    : multi-class and multi-targets
-        - because sklearn.accuracy_score doesn't support multi-class.
-
+        - because sklearn.accuracy_score doesn't support multi-class classification
+          involving multiple columns.
     id_columns_for_prediction : list[str], default Field(default_factory=list)
         ID columns for prediction.
     output_dir_path : str, default ""
