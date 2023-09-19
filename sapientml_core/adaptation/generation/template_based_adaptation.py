@@ -296,11 +296,7 @@ class Adaptation:
                 self.dataset_summary, self.task.target_columns, self.dataset_summary.cols_str_other
             )
 
-            if (
-                hasattr(self.config, "impute_all")
-                and self.config.impute_all is True
-                and "PREPROCESS:MissingValues:fillna" in component.label_name
-            ):
+            if "PREPROCESS:MissingValues:fillna" in component.label_name:
                 bool_cols = [column_name for column_name, column in columns.items() if "bool" in str(column.dtype)]
                 datetime_cols = [
                     column_name for column_name, column in columns.items() if "datetime" in str(column.dtype)
