@@ -24,29 +24,82 @@ import pandas as pd
 
 
 def get_time():
+    """Returns the current time.
+
+    Returns
+    ----------
+    readable : str
+        Current time in ISO format
+    """
     ts = calendar.timegm(time.gmtime())
     readable = datetime.datetime.fromtimestamp(ts).isoformat()
     return readable
 
 
 def read_file_in_a_list(file_name):
+    """Open a file and place it in a list line by line(read().splitlines()).
+
+    Parameters
+    ----------
+    file_name : FileDescriptorOrPath
+        File name.
+
+    Returns
+    ----------
+    lines : list[str]
+        List file contents line by line.
+    """
     with open(file_name, "r", encoding="utf-8") as f:
         lines = f.read().splitlines()
     return lines
 
 
 def read_file(file_name):
+    """Open file and read data with read().
+
+    Parameters
+    ----------
+    file_name : FileDescriptorOrPath
+        File name.
+
+    Returns
+    ----------
+    lines : str
+        The entire text file read.
+    """
     with open(file_name, "r", encoding="utf-8") as f:
         lines = f.read()
     return lines
 
 
 def write_content_to_file(file_name, content):
+    """write content to file.
+
+    Parameters
+    ----------
+    file_name : FileDescriptorOrPath
+        File name.
+    content : str
+        What to write to the file.
+    """
     with open(file_name, "w", encoding="utf-8") as out_file:
         out_file.write(content)
 
 
 def get_file_list(path, type):
+    """Get a list of files of a specified type in a directory.
+
+    Parameters
+    ----------
+    path : FileDescriptorOrPath
+        Directory path.
+    type : str
+        File extension.
+    Returns
+    ----------
+    files_with_given_type : list
+        List of retrieved files.
+    """
     os.chdir(path)
     files_with_given_type = []
     for file in glob.glob("*." + type):
@@ -55,12 +108,39 @@ def get_file_list(path, type):
 
 
 def load_json(file_name):
+    """Load json format file.
+
+    Parameters
+    ----------
+    file_name : FileDescriptorOrPath
+        File name.
+
+    Returns
+    ----------
+    content : Any
+        Loaded content.
+    """
     with open(file_name, "r", encoding="utf-8") as input_file:
         content = json.load(input_file)
     return content
 
 
 def read_csv(csv_path, notebook_path):
+    """Read a csv file.
+
+    Parameters
+    ----------
+    csv_path :  FilePath | ReadCsvBuffer[bytes] | ReadCsvBuffer[str]
+        Csv file Path.
+    notebook_path : pathlib.Path
+        Notebook Directory Path.
+
+    Returns
+    ----------
+    dataset : pd.DataFrame
+        Contents of the loaded csv.
+    """
+
     def read(path, **kwargs):
         if str(path).endswith(".csv"):
             return pd.read_csv(path, **kwargs)
@@ -79,6 +159,17 @@ def read_csv(csv_path, notebook_path):
 
 
 def get_dataset_encoding(notebook_path):
+    """Get dataset encoding.
+
+    Parameters
+    ----------
+    notebook_path : StrPath | None | BytesPath
+        Directory path of notebooks.
+
+    Returns
+    ----------
+    encoding : str | None
+    """
     if os.path.isdir(notebook_path):
         return None
     if not str(notebook_path).endswith(".py"):
@@ -90,6 +181,20 @@ def get_dataset_encoding(notebook_path):
 
 
 def get_dataset_file(notebook_path):
+    """Read notebook_path and get encoding.
+
+    Parameters
+    ----------
+    notebook_path : str
+        File name.
+
+    Returns
+    ----------
+    csv_file_name : str | bytes | None
+        File name of csv(dataset).
+    encoding : str | None
+        Encoding of notebook_path.
+    """
     f = open(notebook_path, "r", encoding="utf-8")
     lines = f.readlines()
     f.close()
