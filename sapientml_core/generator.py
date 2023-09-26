@@ -78,7 +78,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.preprocess = eps["preprocess"].load()(**kwargs)
 
     def train(self, tag=None, num_parallelization=200):
-        """Run for local training.
+        """Run meta-training.
 
         Parameters
         ----------
@@ -190,7 +190,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         logger.info(f"Training time cost: {diff_time}")
 
     def generate_pipeline(self, dataset: Dataset, task: Task):
-        """Generate pipeline, Execute, Evaluate execution results.
+        """Generate candidate scripts, execute them and select the best one.
 
         Parameters
         ----------
@@ -201,11 +201,11 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
         Returns
         ----------
-        (self._best_pipeline, self._best_pipeline_score) : Tuple(list | None, PipelineResult)
-            Best pipeline.
-            The score of the best pipeline.
-        self._candidate_scripts : list
-            Candidate scripts.
+        (best_pipeline, best_pipeline_score) : Tuple(list | None, PipelineResult)
+            best_pipeline: Best pipeline.
+            best_pipline_score: The score of the best pipeline.
+        candidate_scripts : list
+            Candidate scripts with scores.
         """
         self.dataset = dataset
         self.task = task
@@ -241,7 +241,8 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         return (self._best_pipeline, self._best_pipeline_score), self._candidate_scripts
 
     def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, list[SimplePipeline]]:
-        """Generate the meta-features and run adaptation.
+        """
+        Generate code including preprocessing and machine learning models using meta-features.
 
         Parameters
         ----------
@@ -255,7 +256,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         dataset : Dataset
             Dataset class.
         pipelines : list[SimplePipeline]
-            Results of run adaptation.
+            Generated code. Different pipelines contain different models.
         """
         df = dataset.training_dataframe
         # Generate the meta-features
@@ -281,7 +282,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         Parameters
         ----------
         execution_results : list[tuple[Code, RunningResult]]
-            Execution results.
+            Execution results containing executed code and resulted output texts.
         lower_is_better : bool, default False
             Specify reverse=(not lower_is_better) for the argument of the sorted method.
 
