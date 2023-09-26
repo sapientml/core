@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import warnings
 from collections import defaultdict
 from typing import Literal, Optional
@@ -23,50 +22,6 @@ from sapientml.util.logging import setup_logger
 
 warnings.filterwarnings("ignore")
 logger = setup_logger()
-
-INHIBITED_SYMBOL_PATTERN = re.compile(r"[\{\}\[\]\",:<'\\]+")
-
-
-def check_cols_has_symbols(columns: list) -> list[str]:
-    """check_cols_has_symbols method.
-
-    Checking if column names have any symbols or not.
-
-    Parameters
-    ----------
-    columns : list
-        list of column names.
-
-    Returns
-    -------
-    cols_has_symbols : list[str]
-        list of symbols matching the INHIBITED_SYMBOL_PATTERN.
-
-    """
-    cols_has_symbols = []
-    for col in columns:
-        if INHIBITED_SYMBOL_PATTERN.search(col):
-            cols_has_symbols.append(col)
-    return cols_has_symbols
-
-
-def remove_symbols(column_name: str) -> str:
-    """remove_symbols method.
-
-    Removing symbols from column names.
-
-    Parameters
-    ----------
-    column_name : str
-        Name of the column..
-
-    Returns
-    -------
-    str
-        replacing empty strings with the symbols matching the INHIBITED_SYMBOL_PATTERN.
-
-    """
-    return INHIBITED_SYMBOL_PATTERN.sub("", column_name)
 
 
 class AutoVisualization_Class:
@@ -125,27 +80,6 @@ class AutoVisualization_Class:
         numvars_list, catvars_list, textvars_list = self.classify_columns_coarse_granularity(
             df, ignore_columns, target_columns
         )
-
-        # Remove symbols from column names as in preprocessing
-        cols_has_symbols = []
-        cols_has_symbols = check_cols_has_symbols(numvars_list)
-        if cols_has_symbols:
-            numvars_list = [remove_symbols(col) if col in cols_has_symbols else col for col in numvars_list]
-
-        cols_has_symbols = []
-        cols_has_symbols = check_cols_has_symbols(catvars_list)
-        if cols_has_symbols:
-            catvars_list = [remove_symbols(col) if col in cols_has_symbols else col for col in catvars_list]
-
-        cols_has_symbols = []
-        cols_has_symbols = check_cols_has_symbols(textvars_list)
-        if cols_has_symbols:
-            textvars_list = [remove_symbols(col) if col in cols_has_symbols else col for col in textvars_list]
-
-        cols_has_symbols = []
-        cols_has_symbols = check_cols_has_symbols(target_columns)
-        if cols_has_symbols:
-            target_columns = [remove_symbols(col) if col in cols_has_symbols else col for col in target_columns]
 
         numvars_list = sorted(numvars_list)
         catvars_list = sorted(catvars_list)
