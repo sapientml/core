@@ -68,6 +68,9 @@ class AST_Update:
             "# STORE PREDICTION RELEVANT COLUMNS": "__test_dataset_prediction_columns__exp__",
             "# PREPROCESSING-1": "__test_dataset_prediction_columns__exp__",
             "# DETACH TARGET": "__test_dataset_prediction_columns__exp__",
+            "# Remove special symbols": "__test_dataset_prediction_columns__exp__",
+            "# DROP IGNORED COLUMNS": "__test_dataset_prediction_columns__exp__",
+            "# SET ID_COLUMNS TO DATAFRAME'S INDEX": "__test_dataset_prediction_columns__exp__",
         }
 
         # add functionname:Bool to show the function can be added as duplicate
