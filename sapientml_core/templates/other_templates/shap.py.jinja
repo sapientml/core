@@ -1,0 +1,10 @@
+# Shap
+import shap
+explainer = shap.Explainer(model)
+shap_values = explainer(feature_train)
+
+# summarize the effects of all the features
+shap.plots.beeswarm(shap_values)
+
+#bar plots
+shap.plots.bar(shap_values)

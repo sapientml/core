@@ -1,0 +1,6 @@
+{% if pipeline.task.task_type == 'classification' %}
+# Confusion Matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+cm = confusion_matrix(target_test, y_pred)
+ConfusionMatrixDisplay.from_predictions(target_test, y_pred)
+{% endif %}

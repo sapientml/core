@@ -177,6 +177,15 @@ class PipelineTemplate(BaseModel):
         code = self._render(tpl, pipeline=pipeline, target2string=target2string, macros=macros)
         pipeline.pipeline_json["evaluation"]["code_validation"] = code
         pipeline.pipeline_json["evaluation"]["code_test"] = textwrap.indent(code, "    ")
+
+        # Adding confusion_matrix
+        tpl = env.get_template("other_templates/confusion_matrix.py.jinja")
+        pipeline.pipeline_json["confusion_matrix"]["code"] = self._render(tpl, pipeline=pipeline)
+
+        # Adding Shap Visualization data
+        tpl = env.get_template("other_templates/shap.py.jinja")
+        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline)
+
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
         pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, macros=macros)
 
