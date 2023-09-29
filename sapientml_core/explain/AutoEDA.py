@@ -347,7 +347,9 @@ class EDA(Dataset):
 
         numeric = cell[pd.to_numeric(cell, errors="coerce").notnull()]
         #        alpha=cell[cell.str.isalpha()]
-        alpha = cell[(cell.str.isalpha()) | (cell.isna())]
+        # If cell is [True, nan], this is an object column, but str accessor raises an error.
+        # fillna is used to prevent the error.
+        alpha = cell[(cell.fillna("").str.isalpha()) | (cell.isna())]
 
         if len(alpha) == 0 and len(numeric) == len(cell):  # object but no alpha  # mixed of int/float
             return self.__convert_digit(cell, key) if convert else cell
