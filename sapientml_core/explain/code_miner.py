@@ -71,6 +71,8 @@ class AST_Update:
             "# Remove special symbols": "__test_dataset_prediction_columns__exp__",
             "# DROP IGNORED COLUMNS": "__test_dataset_prediction_columns__exp__",
             "# SET ID_COLUMNS TO DATAFRAME'S INDEX": "__test_dataset_prediction_columns__exp__",
+            "# Confusion Matrix": "__set_confusion_matrix__",
+            "# Shap": "__set_shap__",
         }
 
         # add functionname:Bool to show the function can be added as duplicate
@@ -249,6 +251,31 @@ class AST_Update:
                 )
             )
 
+        return added_codes
+
+    def __set_confusion_matrix__(self, loc, prev):
+        added_codes = []
+        added_codes.append(
+            (
+                [
+                    "## Confusion Matrix",
+                    "confusion_matrix shows how many predictions are correct and incorrect per class.",
+                ],
+                "markdown",
+            )
+        )
+        return added_codes
+
+    def __set_shap__(self, loc, prev):
+        added_codes = []
+        added_codes.append(
+            (
+                [
+                    "## Shap visualization for model prediction",
+                ],
+                "markdown",
+            )
+        )
         return added_codes
 
     def __set_prediction__(self, loc, prev):
