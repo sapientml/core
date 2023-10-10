@@ -42,7 +42,11 @@ class Objective(object):
             feature_test = pd.DataFrame(self.feature_test.toarray())
     
         if isinstance(self.target_test, pd.DataFrame):
+{% if 'inverse_target' in pipeline.pipeline_json %}
+            target_test = self.target_test.copy()
+{% else %}
             target_test = self.target_test
+{% endif %}
         elif isinstance(self.target_test, np.ndarray):
             target_test = pd.DataFrame(self.target_test)
         else:
@@ -90,6 +94,12 @@ class Objective(object):
         y_pred = model.predict_proba(feature_test)
 {% filter indent(width=8, first=True) %}
 {{ binary_classification_snippet }}
+{% endfilter %}
+{% endif %}
+
+{% if 'inverse_target' in pipeline.pipeline_json %}
+{% filter indent(width=8, first=True) %}
+{{ pipeline.pipeline_json['inverse_target_hpo']['code'] }}
 {% endfilter %}
 {% endif %}
         
