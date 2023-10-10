@@ -1,6 +1,7 @@
-models_for_shap = ['XGBClassifier', 'XGBRegressor', 'LGBMClassifier', 'LGBMRegressor', 'GradientBoostingClassifier', 'GradientBoostingRegressor']
 # Models are restricted because of execution time.
+models_for_shap = ['XGBClassifier', 'XGBRegressor', 'LGBMClassifier', 'LGBMRegressor', 'GradientBoostingClassifier', 'GradientBoostingRegressor']
 if model.__class__.__name__ in models_for_shap:
+    import shap
     feature_shap = feature_train.sample(1000) if feature_train.shape[0] > 1000 else feature_train
     explainer = shap.Explainer(model)
     shap_values = explainer(feature_shap)
