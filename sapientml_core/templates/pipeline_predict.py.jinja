@@ -48,7 +48,9 @@ import pickle
 
 #EVALUATION
 if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
+{% filter indent(width=4, first=True) %}
 {{ pipeline_json['evaluation']['code_test'] }}
+{% endfilter %}
 {% endif %}
 {% if 'output_prediction' in pipeline_json %}
 

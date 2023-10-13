@@ -1,5 +1,3 @@
-{% if pipeline.task.task_type == 'classification' %}
-# Confusion Matrix
 from sklearn.metrics import ConfusionMatrixDisplay
 {% if pipeline.task.target_columns|length == 1 %}
 ConfusionMatrixDisplay.from_predictions(target_test, y_pred)
@@ -7,6 +5,5 @@ ConfusionMatrixDisplay.from_predictions(target_test, y_pred)
 for i, column in enumerate(target_test.columns):
     disp = ConfusionMatrixDisplay.from_predictions(target_test[column], y_pred[:, i])
     disp.ax_.set_title(column)
-{% endif %}
 {% endif %}
 

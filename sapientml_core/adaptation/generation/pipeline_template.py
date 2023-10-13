@@ -14,7 +14,6 @@
 
 import json
 import os
-import textwrap
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -176,7 +175,7 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("other_templates/evaluation.py.jinja")
         code = self._render(tpl, pipeline=pipeline, target2string=target2string, macros=macros)
         pipeline.pipeline_json["evaluation"]["code_validation"] = code
-        pipeline.pipeline_json["evaluation"]["code_test"] = textwrap.indent(code, "    ")
+        pipeline.pipeline_json["evaluation"]["code_test"] = code
 
         # Adding confusion_matrix
         tpl = env.get_template("other_templates/confusion_matrix.py.jinja")
