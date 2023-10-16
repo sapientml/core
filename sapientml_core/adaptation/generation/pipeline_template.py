@@ -168,9 +168,15 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("other_templates/target_separation_predict.py.jinja")
         pipeline.pipeline_json["target_separation"]["code_predict"] = self._render(tpl, pipeline=pipeline)
 
+        flag_hyperparameter_tuning = (
+            pipeline.config.hyperparameter_tuning and model_name not in NO_TUNABLE_PARAMS_MODELS
+        )
         if pipeline.inverse_target:
             tpl = env.get_template("other_templates/inverse_target.py.jinja")
             pipeline.pipeline_json["inverse_target"]["code"] = self._render(tpl, pipeline=pipeline)
+            pipeline.pipeline_json["inverse_target_hpo"]["code"] = self._render(
+                tpl, pipeline=pipeline, flag_hyperparameter_tuning=flag_hyperparameter_tuning
+            )
 
         tpl = env.get_template("other_templates/evaluation.py.jinja")
         code = self._render(tpl, pipeline=pipeline, target2string=target2string, macros=macros)
@@ -188,9 +194,6 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
         pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, macros=macros)
 
-        flag_hyperparameter_tuning = (
-            pipeline.config.hyperparameter_tuning and model_name not in NO_TUNABLE_PARAMS_MODELS
-        )
         if flag_hyperparameter_tuning:
             tpl = env.get_template("model_templates/hyperparameters.py.jinja")
             pipeline.pipeline_json["hyperparameters"]["code"] = self._render(tpl, model_name=model_name)
