@@ -15,6 +15,7 @@
 
 import pickle
 from collections import OrderedDict, defaultdict
+from typing import Literal
 
 import pandas as pd
 from sapientml.util.logging import setup_logger
@@ -48,7 +49,7 @@ def train_p_model(X, y):
     return model
 
 
-def _train_preprocessors(train_data, feature_selection):
+def _train_preprocessors(train_data, feature_selection: Literal["select_manually", "customized"]):
     logger.info("Training skeleton predictor for preprocessors...")
     data = train_data
     data.drop(
@@ -88,7 +89,7 @@ def _train_preprocessors(train_data, feature_selection):
                 X = main_df[selected_features]
 
             pp_model = train_p_model(X, y)
-            pp_models[label] = pp_model
+            pp_models[label] = (pp_model, selected_features)
 
     return pp_models
 

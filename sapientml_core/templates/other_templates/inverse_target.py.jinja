@@ -2,8 +2,13 @@
 import numpy as np
 
 COLS_TO_BE_INVERSED = list(set(NUMERIC_COLS_TO_SCALE) & set(TARGET_COLUMNS))
+{% if flag_hyperparameter_tuning %}
+target_test[COLS_TO_BE_INVERSED] = np.expm1(target_test[COLS_TO_BE_INVERSED])
+y_pred = pd.DataFrame(data=y_pred, columns=TARGET_COLUMNS, index=feature_test.index)
+{% else %}
 if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
     target_test[COLS_TO_BE_INVERSED] = np.expm1(target_test[COLS_TO_BE_INVERSED])
 y_pred = pd.DataFrame(data=y_pred, columns=TARGET_COLUMNS, index=test_dataset.index)
+{% endif %}
 y_pred[COLS_TO_BE_INVERSED] = np.expm1(y_pred[COLS_TO_BE_INVERSED])
 y_pred = y_pred.to_numpy()

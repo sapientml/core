@@ -52,7 +52,17 @@ best_params = study.best_params
 
 #EVALUATION
 if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
+{% filter indent(width=4, first=True) %}
 {{ pipeline_json['evaluation']['code_test'] }}
+{% endfilter %}
+{% endif %}
+
+{% if 'confusion_matrix' in pipeline_json and pipeline.task.task_type == 'classification'%}
+# Confusion Matrix
+if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
+{% filter indent(width=4, first=True) %}
+{{ pipeline_json['confusion_matrix']['code'] }}
+{% endfilter %}
 {% endif %}
 {% if 'output_prediction' in pipeline_json %}
 
@@ -61,4 +71,9 @@ if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
 {% if 'permutation_importance' in pipeline_json %}
 
 {{ pipeline_json['permutation_importance']['code'] }}
+{% endif %}
+
+{% if 'shap' in pipeline_json %}
+
+{{ pipeline_json['shap']['code'] }}
 {% endif %}
