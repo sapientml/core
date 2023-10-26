@@ -9,6 +9,8 @@ simple_imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
 {% endif %}
 {% if cols_almost_missing_string %}
 STRING_ALMOST_MISSING_COLS = {{ cols_almost_missing_string }}
+{{ train_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ train_dataset }}[STRING_ALMOST_MISSING_COLS].astype(str)
+{{ test_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ test_dataset }}[STRING_ALMOST_MISSING_COLS].astype(str)
 {{ train_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ train_dataset }}[STRING_ALMOST_MISSING_COLS].fillna('')
 {{ test_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ test_dataset }}[STRING_ALMOST_MISSING_COLS].fillna('')
 {% endif %}
