@@ -143,8 +143,8 @@ def read_csv(csv_path, notebook_path):
 
     def read(path, **kwargs):
         if str(path).endswith(".csv"):
-            return pd.read_csv(path, **kwargs)
-        return pd.read_table(path, **kwargs)
+            return pd.read_csv(path, encoding_errors="ignore", on_bad_lines="warn", **kwargs)
+        return pd.read_table(path, encoding_errors="ignore", on_bad_lines="warn", **kwargs)
 
     encoding = get_dataset_encoding(notebook_path)
     dataset = read(csv_path, encoding=encoding)
