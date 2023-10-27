@@ -11,5 +11,6 @@ with open('simpleimputer-string.pkl', 'wb') as f:
 {% endif %}
 {% if cols_almost_missing_string %}
 STRING_ALMOST_MISSING_COLS = {{ cols_almost_missing_string }}
+{{ train_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ train_dataset }}[STRING_ALMOST_MISSING_COLS].astype(str)
 {{ train_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ train_dataset }}[STRING_ALMOST_MISSING_COLS].fillna('')
 {% endif %}
