@@ -116,7 +116,7 @@ def main():
     """
     training_data_path = internal_path.training_cache / "pp_metafeatures_training.csv"
     # "select_manually" | "customized"
-    feature_selection = "customized"
+    feature_selection = "select_manually"  # "customized"
     raw_meta_feature_train = pd.read_csv(training_data_path)
     meta_feature_train = _prepare_model_training_data(raw_meta_feature_train)
     pp_models = _train_preprocessors(meta_feature_train, feature_selection)
