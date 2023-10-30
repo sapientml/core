@@ -162,17 +162,17 @@ def select_features(label):
     """
     selection_model = {
         ps_macros.FILL: [ps_macros.MISSING_PRESENCE],
-        ps_macros.DROP: [ps_macros.MISSING_PRESENCE],
+        # ps_macros.DROP: [ps_macros.MISSING_PRESENCE],
         ps_macros.IN_PLACE_CONVERT: [
             ps_macros.CATG_PRESENCE,
-            ps_macros.IS_TARGET_STR,
+            # ps_macros.IS_TARGET_STR,
             ps_macros.BINARY_CATG_PRESENCE,
             ps_macros.SMALL_CATG_PRESENCE,
             ps_macros.LARGE_CATG_PRESENCE,
         ],
         ps_macros.ONE_HOT: [
             ps_macros.CATG_PRESENCE,
-            ps_macros.IS_TARGET_STR,
+            # ps_macros.IS_TARGET_STR,
             ps_macros.BINARY_CATG_PRESENCE,
             ps_macros.SMALL_CATG_PRESENCE,
             ps_macros.LARGE_CATG_PRESENCE,
