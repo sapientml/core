@@ -222,8 +222,12 @@ class PipelineTemplate(BaseModel):
             or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
             or pipeline.config.predict_option == macros.PRED_PROBABILITY
         ):
-            pipeline.pipeline_json["evaluation"]["code_test"] = pipeline.pipeline_json["evaluation"]["code_test"].replace("y_pred", "y_prob")
-            pipeline.pipeline_json["output_prediction"]["code_test"] = pipeline.pipeline_json["output_prediction"]["code_test"].replace("y_pred", "y_prob")
+            pipeline.pipeline_json["evaluation"]["code_test"] = pipeline.pipeline_json["evaluation"][
+                "code_test"
+            ].replace("y_pred", "y_prob")
+            pipeline.pipeline_json["output_prediction"]["code_test"] = pipeline.pipeline_json["output_prediction"][
+                "code_test"
+            ].replace("y_pred", "y_prob")
 
         if pipeline.config.permutation_importance:
             tpl = env.get_template("other_templates/permutation_importance.py.jinja")
