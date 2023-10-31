@@ -178,7 +178,7 @@ def test_feature_preprocess(raw_df: pd.DataFrame, is_clf_task: Literal[0, 1]):
     """
     raw_df = raw_df.drop(axis=1, columns=["target_column_name"]).reset_index(drop=True)
     clf_row = [is_clf_task]
-    raw_df["feature:is_cls"] = clf_row
+    raw_df["feature:is_clf"] = clf_row
     return real_feature_preprocess(raw_df)
 
 
