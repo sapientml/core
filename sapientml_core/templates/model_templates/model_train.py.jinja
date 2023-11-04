@@ -17,24 +17,46 @@ model = {{ model_name }}(random_state=random_state_model, {{ params }})
 from sklearn.multioutput import MultiOutputRegressor
 
 model = MultiOutputRegressor(model)
+
 {% elif is_multioutput_classification %}
 from sklearn.multioutput import MultiOutputClassifier
 
 model = MultiOutputClassifier(model)
 {% endif %}
+
 {% set xgbclassifier = "XGBClassifier" %}
-{% if model_name == xgbclassifier %}
-from sklearn.preprocessing import LabelEncoder
 
-label_encoder = LabelEncoder()
-target_train = pd.DataFrame(label_encoder.fit_transform(target_train), columns=TARGET_COLUMNS)
-with open('target_LabelEncoder.pkl', 'wb') as f:
-    pickle.dump(label_encoder, f)
-
-{% endif %}
 {% if pipeline.task.target_columns|length == 1 %}
+from sklearn.preprocessing import LabelEncoder
+flag=0
+if target_train.select_dtypes(include=['object']).columns.any():
+   str_columns = target_train.select_dtypes(include=['object']).columns
+   label_encoder= LabelEncoder()
+   flag=1
+   for col in str_columns:
+       target_train[col] = label_encoder.fit_transform(target_train[col])
+
+if flag==1:
+    with open('target_LabelEncoder.pkl', 'wb') as f:
+        pickle.dump(label_encoder, f)
+    flag=0
+
 model.fit(feature_train, target_train.values.ravel())
 {% else %}
+from sklearn.preprocessing import LabelEncoder
+flag=0
+if target_train.select_dtypes(include=['object']).columns.any():
+   str_columns = target_train.select_dtypes(include=['object']).columns
+   label_encoder= LabelEncoder()
+   flag=1
+   for col in str_columns:
+       target_train[col] = label_encoder.fit_transform(target_train[col])
+
+if flag==1:
+    with open('target_LabelEncoder.pkl', 'wb') as f:
+        pickle.dump(label_encoder, f)
+    flag=0
+
 model.fit(feature_train, target_train)
 {% endif %}
 with open('model.pkl', 'wb') as f:
