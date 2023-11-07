@@ -32,6 +32,7 @@ from sapientml.macros import metric_lower_is_better
 from sapientml.params import Code, Dataset, PipelineResult, RunningResult, Task
 from sapientml.util.json_util import JSONEncoder
 from sapientml.util.logging import setup_logger
+from jinja2 import Environment, FileSystemLoader
 from tqdm import tqdm
 
 from . import internal_path
@@ -42,7 +43,7 @@ from .seeding.predictor import predict
 from .training import project_corpus
 
 logger = setup_logger()
-
+env = Environment(loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates"), trim_blocks=True)
 
 def add_prefix(filename, prefix):
     """Add prefix to filename if prefix exists.
@@ -216,11 +217,18 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
         code_block = loaddata_block + preprocess_block
         dataset, sapientml_results = self.generate_code(dataset, task)
+        tpl_return_column_name = env.get_template("other_templates/return_column_name.py.jinja")
+        code_return_column_name = tpl_return_column_name.render()
+
 
         result_pipelines: list[Code] = []
         for pipeline in sapientml_results:
             pipeline.validation = code_block.validation + pipeline.validation
             pipeline.test = code_block.test + pipeline.test
+            if "cols_has_symbols" in pipeline.test:
+                addindex = pipeline.test.index("# OUTPUT PREDICTION")
+                pipeline.test = pipeline.test[:addindex-1] + code_return_column_name + pipeline.test[addindex-1:]
+
             pipeline.train = code_block.train + pipeline.train
             pipeline.predict = code_block.predict + pipeline.predict
             result_pipelines.append(pipeline)
