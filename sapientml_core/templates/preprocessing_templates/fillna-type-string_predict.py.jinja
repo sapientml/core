@@ -7,5 +7,6 @@ STRING_COLS_WITH_MISSING_VALUES = {{ columns }}
 {% endif %}
 {% if cols_almost_missing_string %}
 STRING_ALMOST_MISSING_COLS = {{ cols_almost_missing_string }}
+{{ test_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ test_dataset }}[STRING_ALMOST_MISSING_COLS].astype(str)
 {{ test_dataset }}[STRING_ALMOST_MISSING_COLS] = {{ test_dataset }}[STRING_ALMOST_MISSING_COLS].fillna('')
 {% endif %}

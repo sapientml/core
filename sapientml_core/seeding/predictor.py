@@ -149,19 +149,17 @@ def _predict_preprocessors(pp_models, meta_features: pd.DataFrame, target_labels
     output = meta_features[search_space.meta_feature_list].copy()
     labels: list[str] = []
     rules = {}
-    for label, model_info in pp_models.items():
+    for label, (model, relevant_features) in pp_models.items():
         if label not in target_labels:
             continue
         labels.append(label)
 
-        all_feat_cols = model_info["relevant_features"]
+        final_meta_features = meta_features[relevant_features]
 
-        final_meta_features = meta_features[all_feat_cols]
+        prediction = model.predict(final_meta_features)
 
-        prediction = model_info["model"].predict(final_meta_features)
-
-        prediction_proba = model_info["model"].predict_proba(final_meta_features)[:, 1]
-        rules[label] = get_decision_path(model_info["model"], final_meta_features)
+        prediction_proba = model.predict_proba(final_meta_features)[:, 1]
+        rules[label] = get_decision_path(model, final_meta_features)
         output[label] = prediction
         output[label + "_proba"] = prediction_proba
 
@@ -182,7 +180,7 @@ def _predict_preprocessors(pp_models, meta_features: pd.DataFrame, target_labels
                 )
             label_info = {
                 "probability": row[label + "_proba"],
-                "features": pp_models[label]["relevant_features"],
+                "features": pp_models[label][1],
                 "predicates": predicates,
             }
             labels_info[label] = label_info
