@@ -192,8 +192,8 @@ class PipelineTemplate(BaseModel):
         pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline)
 
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
-        pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, macros=macros)
-        pipeline.pipeline_json["output_prediction"]["code_test"] = self._render(tpl, pipeline=pipeline, macros=macros)
+        pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, model_name=model_name, macros=macros)
+        pipeline.pipeline_json["output_prediction"]["code_test"] = self._render(tpl, pipeline=pipeline, model_name=model_name, macros=macros)
 
         if flag_hyperparameter_tuning:
             tpl = env.get_template("model_templates/hyperparameters.py.jinja")

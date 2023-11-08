@@ -1,9 +1,12 @@
 # OUTPUT PREDICTION
+{% set xgbclassifier = "XGBClassifier" %}
 {% if pipeline.task.is_multiclass == True and pipeline.adaptation_metric == "LogLoss"%}
 prediction = pd.DataFrame(y_pred, columns=model.classes_, index=feature_test.index)
 {% elif pipeline.adaptation_metric.startswith("MAP_") %}
 {% set k = pipeline.adaptation_metric.split("_")[1] %}
 prediction = pd.DataFrame(y_pred, columns=[TARGET_COLUMNS[0] + "_" +str(i) for i in range(1, y_pred.shape[1] + 1)], index=feature_test.index)
+{% elif model_name == xgbclassifier and  pipeline.task.is_multiclass == True and (pipeline.adaptation_metric in ["auc", "ROC_AUC", "Gini"]) %}
+prediction = pd.DataFrame(label_encoder.inverse_transform(model.classes_[np.argmax(y_pred, axis=1)]), columns=TARGET_COLUMNS, index=feature_test.index)
 {% elif pipeline.task.is_multiclass == True and (pipeline.adaptation_metric in ["auc", "ROC_AUC", "Gini"]) %}
 prediction = pd.DataFrame(model.classes_[np.argmax(y_pred, axis=1)], columns=TARGET_COLUMNS, index=feature_test.index)
 {% else %}
