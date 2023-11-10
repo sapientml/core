@@ -189,7 +189,7 @@ class PipelineTemplate(BaseModel):
 
         # Adding Shap Visualization data
         tpl = env.get_template("other_templates/shap.py.jinja")
-        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline)
+        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline, model_name=model_name)
 
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
         pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, model_name=model_name, macros=macros)
