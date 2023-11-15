@@ -42,7 +42,7 @@ best_params = study.best_params
 {% if 'model' in pipeline_json %}
 
 # MODEL
-{{ pipeline_json['model']['code'] }}
+{{ pipeline_json['model']['code_test'] }}
 {% endif %}
 {% if 'inverse_target' in pipeline_json %}
 
@@ -66,7 +66,7 @@ if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
 {% endif %}
 {% if 'output_prediction' in pipeline_json %}
 
-{{ pipeline_json['output_prediction']['code'] }}
+{{ pipeline_json['output_prediction']['code_test'] }}
 {% endif %}
 {% if 'permutation_importance' in pipeline_json %}
 
