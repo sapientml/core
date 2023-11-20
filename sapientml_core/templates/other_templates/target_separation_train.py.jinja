@@ -1,4 +1,4 @@
 # DETACH TARGET
 TARGET_COLUMNS = {{ pipeline.task.target_columns }}
 feature_train = train_dataset.drop(TARGET_COLUMNS, axis=1)
-target_train = train_dataset[TARGET_COLUMNS].copy()
+target_train = train_dataset[TARGET_COLUMNS].copy().astype(str)
