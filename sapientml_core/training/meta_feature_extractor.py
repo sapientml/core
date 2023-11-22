@@ -152,6 +152,8 @@ def collect_training_meta_feature(mode):
             logger.warning("Could not read CSV: {}".format(dataset_path))
             continue
 
+        df.rename(columns=lambda x: x.strip(), inplace=True)
+
         proj_name = pipeline_path
         target_column_name = projects[i].target_column_name
         # Generate the meta-features
