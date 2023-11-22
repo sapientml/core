@@ -188,6 +188,8 @@ def select_features(label):
         ps_macros.DATE: [ps_macros.DATE_PRESENCE],
         ps_macros.LEMMITIZE: [ps_macros.TEXT_PRESENCE],
         ps_macros.BALANCING: [ps_macros.IMBALANCE],
-        ps_macros.LOG: [ps_macros.MAX_SKEW],
+        ps_macros.LOG: [
+            ps_macros.MAX_SKEW,
+        ],
     }
     return selection_model[label]
