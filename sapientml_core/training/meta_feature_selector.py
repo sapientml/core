@@ -190,9 +190,6 @@ def select_features(label):
         ps_macros.BALANCING: [ps_macros.IMBALANCE],
         ps_macros.LOG: [
             ps_macros.MAX_SKEW,
-            ps_macros.NORMALIZED_MEAN,
-            ps_macros.NORMALIZED_STD_DEV,
-            ps_macros.NORMALIZED_VARIATION_ACROSS_COLUMNS,
         ],
     }
     return selection_model[label]
