@@ -1,6 +1,6 @@
 from imblearn.over_sampling import SMOTE
 
-smote = SMOTE()
+smote = SMOTE(random_state=0)
 {% if pipeline.sparse_matrix %}
 feature_columns = feature_train.columns
 feature_train = feature_train.sparse.to_coo()
