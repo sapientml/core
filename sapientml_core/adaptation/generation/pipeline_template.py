@@ -192,11 +192,12 @@ class PipelineTemplate(BaseModel):
 
         # Adding Shap Visualization data
         tpl = env.get_template("other_templates/shap.py.jinja")
-        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline)
+        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline, model_name=model_name)
 
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
-        pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, macros=macros)
-
+        pipeline.pipeline_json["output_prediction"]["code"] = self._render(
+            tpl, pipeline=pipeline, model_name=model_name, macros=macros
+        )
         if flag_hyperparameter_tuning:
             tpl = env.get_template("model_templates/hyperparameters.py.jinja")
             pipeline.pipeline_json["hyperparameters"]["code"] = self._render(tpl, model_name=model_name)
@@ -219,6 +220,17 @@ class PipelineTemplate(BaseModel):
 
         self.populate_model()
 
+<<<<<<< HEAD
+=======
+        if pipeline.adaptation_metric and (
+            pipeline.adaptation_metric in macros.metric_needing_predict_proba
+            or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
+        ):
+            pipeline.pipeline_json["evaluation"]["code_test"] = pipeline.pipeline_json["evaluation"][
+                "code_test"
+            ].replace("y_pred", "y_prob")
+
+>>>>>>> f0d33b1 (fix: Fix pipeline_test that partially stopped working due to introduction of shap and confusion matrix. (#30))
         if pipeline.config.permutation_importance:
             tpl = env.get_template("other_templates/permutation_importance.py.jinja")
             pipeline.pipeline_json["permutation_importance"]["code"] = self._render(
@@ -506,6 +518,7 @@ class PipelineTemplate(BaseModel):
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
             metric_needing_predict_proba=macros.metric_needing_predict_proba,
+            macros=macros,
         )
 
         # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, Gini since they require probability to be calculated
@@ -518,9 +531,8 @@ class PipelineTemplate(BaseModel):
             tpl = env.get_template("model_templates/classification_post_process.jinja")
             snippet += "\n" + self._render(tpl, pipeline=pipeline)
 
-            snippet_predict = snippet_predict.replace("predict", "predict_proba")
             tpl_predict = env.get_template("model_templates/classification_post_process.jinja")
-            snippet_predict += "\n" + self._render(tpl_predict, pipeline=pipeline)
+            snippet_predict += "\n" + self._render(tpl_predict, pipeline=pipeline).replace("y_pred", "y_prob")
 
         model_component_json["code"] = snippet
         model_component_json["code_train"] = snippet_train
