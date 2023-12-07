@@ -5,5 +5,4 @@ preprocess_dataset=pd.concat([pd.concat([feature_train,
                                       target_train], axis=1),
                            pd.concat([feature_test,
                                       target_test], axis=1)])
-
 preprocess_dataset.to_pickle(f"./preprocess_dataset_{timestamp_str}.pickle")
