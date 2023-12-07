@@ -66,14 +66,14 @@ if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
 {% endif %}
 {% if 'output_prediction' in pipeline_json %}
 
-{{ pipeline_json['output_prediction']['code_test'] }}
+{{ pipeline_json['output_prediction']['code'] }}
 {% endif %}
 {% if 'permutation_importance' in pipeline_json %}
 
 {{ pipeline_json['permutation_importance']['code'] }}
 {% endif %}
 
-{% if 'shap' in pipeline_json %}
+{% if 'shap' in pipeline_json and not pipeline.task.is_multiclass %}
 
 {{ pipeline_json['shap']['code'] }}
 {% endif %}

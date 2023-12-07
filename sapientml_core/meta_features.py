@@ -184,7 +184,9 @@ def test_feature_preprocess(raw_df: pd.DataFrame, is_clf_task: Literal[0, 1]):
 
 # Generate the model mata features for training processing
 def _collect_model_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
-    if isinstance(target_column_name, str):
+    if isinstance(target_column_name, int):
+        target_column_name = [data_df.columns[target_column_name]]
+    elif isinstance(target_column_name, str):
         target_column_name = [target_column_name]
     try:
         dataX = data_df.drop(target_column_name, axis=1)
@@ -735,9 +737,11 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
     """
     try:
         meta_feature_dict = _collect_model_meta_features(df, target_column_name)
-    except Exception as e:
+    except Exception:
         logger.warning("Could not generate model meta-features for {}".format(proj_name))
-        logger.warning("Exception: {}".format(e))
+        import traceback
+
+        logger.warning(traceback.format_exc())
         # raise
         return None
 
@@ -758,7 +762,9 @@ def compute_model_meta_features(df, proj_name, project, target_column_name):
 
 # Generate the pp mata features for training processing
 def _collect_pp_meta_features(data_df: pd.DataFrame, target_column_name: Union[str, list[str]]):
-    if isinstance(target_column_name, str):
+    if isinstance(target_column_name, int):
+        target_column_name = [data_df.columns[target_column_name]]
+    elif isinstance(target_column_name, str):
         target_column_name = [target_column_name]
     try:
         dataX = data_df.drop(target_column_name, axis=1)
@@ -1090,9 +1096,11 @@ def compute_pp_meta_features(df, proj_name, project, target_column_name):
     """
     try:
         meta_feature_dict = _collect_pp_meta_features(df, target_column_name)
-    except Exception as e:
+    except Exception:
         logger.warning("Could not generate pp meta-features for {}".format(proj_name))
-        logger.warning("Exception: {}".format(e))
+        import traceback
+
+        logger.warning(traceback.format_exc())
         return None
 
     # Add the file name and the notebook name
@@ -1128,9 +1136,11 @@ def generate_pp_meta_features(
     """
     try:
         pp_meta_feature_dict = _collect_pp_meta_features(dataframe, target_columns)
-    except Exception as e:
+    except Exception:
         logger.error("Could not generate meta-features.")
-        logger.error("Exception: {}".format(e))
+        import traceback
+
+        logger.warning(traceback.format_exc())
         raise
     interesting_features = search_space.meta_feature_list + [ps_macros.STR_OTHER]
     return {k: v for k, v in pp_meta_feature_dict.items() if k in interesting_features}
@@ -1158,9 +1168,11 @@ def generate_model_meta_features(
     # Generate the meta-features
     try:
         meta_feature_dict = _collect_model_meta_features(user_training, target_column_name)
-    except Exception as e:
+    except Exception:
         logger.error("Could not generate meta-features for")
-        logger.error("Exception: {}".format(e))
+        import traceback
+
+        logger.warning(traceback.format_exc())
         raise
 
     # Write the train data under 'features' directory

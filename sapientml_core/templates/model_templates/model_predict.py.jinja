@@ -5,13 +5,16 @@ import numpy as np
 with open('model.pkl', 'rb') as f:
     model = pickle.load(f)
 
+{% if (pipeline.adaptation_metric not in macros.metric_needing_predict_proba) or (pipeline.config.predict_option == macros.PRED_DEFAULT) %}
 y_pred = model.predict(feature_test)
-{% if flag_predict_proba and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
-y_pred = model.classes_[np.argmax(y_pred, axis=1)].reshape(-1, 1)
 {% endif %}
-{% if model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
+{% if pipeline.adaptation_metric and flag_predict_proba %}
+y_prob = model.predict_proba(feature_test)
+{% endif %}
+{% if model_name == xgbclassifier %}
 with open('target_LabelEncoder.pkl', 'rb') as f:
     label_encoder = pickle.load(f)
-
+{% endif %}
+{% if model_name == xgbclassifier and ((pipeline.adaptation_metric not in macros.metric_needing_predict_proba) or (pipeline.config.predict_option == macros.PRED_DEFAULT)) %}
 y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}

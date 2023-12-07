@@ -43,12 +43,6 @@ y_pred = model.predict(feature_test)
 {% if pipeline.adaptation_metric and flag_predict_proba %}
 y_prob = model.predict_proba(feature_test)
 {% endif %}
-{% if flag_predict_proba and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
-y_prob = model.classes_[np.argmax(y_prob, axis=1)].reshape(-1, 1)
-{% endif %}
-{% if flag_predict_proba and model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
-y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
-y_prob = label_encoder.inverse_transform(y_prob).reshape(-1, 1)
-{% elif model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
+{% if model_name == xgbclassifier %}
 y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}
