@@ -459,6 +459,7 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("model_templates/model.py.jinja")
         tpl_train = env.get_template("model_templates/model_train.py.jinja")
         tpl_predict = env.get_template("model_templates/model_predict.py.jinja")
+        tpl_test = env.get_template("model_templates/model_test.py.jinja")
 
         flag_no_random_seed_model = model_name in NO_RANDOM_SEED_MODELS
         flag_hyperparameter_tuning = (
@@ -520,6 +521,18 @@ class PipelineTemplate(BaseModel):
             metric_needing_predict_proba=macros.metric_needing_predict_proba,
             macros=macros,
         )
+        snippet_test = self._render(
+            tpl_test,
+            pipeline=pipeline,
+            import_library=MODEL_IMPORT_LIBRARY_MAP[model_name],
+            model_name=model_name,
+            params=pipeline.model.hyperparameters or "",
+            model_arg=model_arg,
+            flag_predict_proba=flag_predict_proba,
+            is_multioutput_regression=_is_multioutput_regression,
+            is_multioutput_classification=_is_multioutput_classification,
+            metric_needing_predict_proba=macros.metric_needing_predict_proba,
+        )
 
         # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, Gini since they require probability to be calculated
         if pipeline.adaptation_metric and (
@@ -533,6 +546,9 @@ class PipelineTemplate(BaseModel):
 
             tpl_predict = env.get_template("model_templates/classification_post_process.jinja")
             snippet_predict += "\n" + self._render(tpl_predict, pipeline=pipeline).replace("y_pred", "y_prob")
+
+            tpl_test = env.get_template("model_templates/classification_post_process.jinja")
+            snippet_test += "\n" + self._render(tpl_test, pipeline=pipeline).replace("y_pred", "y_prob")
 
         model_component_json["code"] = snippet
         model_component_json["code_train"] = snippet_train
