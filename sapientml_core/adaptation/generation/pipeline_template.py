@@ -171,7 +171,6 @@ class PipelineTemplate(BaseModel):
             tpl = env.get_template("other_templates/preprocess_dataset.py.jinja")
             pipeline.pipeline_json["preprocess_dataset"]["code_test"] = self._render(tpl, pipeline=pipeline)
 
-
         flag_hyperparameter_tuning = (
             pipeline.config.hyperparameter_tuning and model_name not in NO_TUNABLE_PARAMS_MODELS
         )
