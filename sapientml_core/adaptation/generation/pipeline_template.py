@@ -220,8 +220,6 @@ class PipelineTemplate(BaseModel):
 
         self.populate_model()
 
-<<<<<<< HEAD
-=======
         if pipeline.adaptation_metric and (
             pipeline.adaptation_metric in macros.metric_needing_predict_proba
             or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
@@ -230,7 +228,6 @@ class PipelineTemplate(BaseModel):
                 "code_test"
             ].replace("y_pred", "y_prob")
 
->>>>>>> f0d33b1 (fix: Fix pipeline_test that partially stopped working due to introduction of shap and confusion matrix. (#30))
         if pipeline.config.permutation_importance:
             tpl = env.get_template("other_templates/permutation_importance.py.jinja")
             pipeline.pipeline_json["permutation_importance"]["code"] = self._render(
