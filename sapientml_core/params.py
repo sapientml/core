@@ -67,8 +67,8 @@ class SapientMLConfig(Config):
         Ignored when hyperparameter_tuning is False.
     hyperparameter_tuning_random_state: int, default 1023
         Random seed for hyperparameter tuning.
-    predict_option: Literal["default", "probability"], default "default"
-        Specify predict method (default: predict(), probability: predict_proba().)
+    predict_option: Literal["default", "probability", None], default None
+        Specify predict method (default: predict(), probability: predict_proba(), None: Comply with metric requirements.)
     permutation_importance: bool, default True
         On/Off of outputting permutation importance calculation code.
     add_explanation: bool, default False
@@ -84,7 +84,7 @@ class SapientMLConfig(Config):
     hyperparameter_tuning_n_trials: int = 10
     hyperparameter_tuning_timeout: int = 0
     hyperparameter_tuning_random_state: int = 1023
-    predict_option: Literal["default", "probability"] = "default"
+    predict_option: Optional[Literal["default", "probability"]] = None
     permutation_importance: bool = True
     add_explanation: bool = False
 

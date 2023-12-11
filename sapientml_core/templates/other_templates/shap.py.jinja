@@ -1,9 +1,14 @@
 # Models are restricted because of execution time.
+{% set lgbmclassifier = "LGBMClassifier" %}
 models_for_shap = ['XGBClassifier', 'XGBRegressor', 'LGBMClassifier', 'LGBMRegressor', 'GradientBoostingClassifier', 'GradientBoostingRegressor']
 if model.__class__.__name__ in models_for_shap:
     import shap
     feature_shap = feature_train.sample(1000) if feature_train.shape[0] > 1000 else feature_train
+{% if model_name == lgbmclassifier %}
+    explainer = shap.Explainer(model,feature_shap)
+{% else %}
     explainer = shap.Explainer(model)
+{% endif %}
     shap_values = explainer(feature_shap)
 
     # summarize the effects of all the features

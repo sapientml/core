@@ -107,7 +107,7 @@
             params['reg_alpha'] = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True) # 0 
             params['reg_lambda'] = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True) # 0 
 {% elif model_name == "GradientBoostingRegressor" %}
-            params['loss'] =  trial.suggest_categorical('loss', ['squared_error', 'ls', 'lad', 'huber', 'quantile']) # ls 
+            params['loss'] =  trial.suggest_categorical('loss', ['squared_error', 'lad', 'huber', 'quantile']) # ls 
             params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
             params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
             params['criterion'] = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error']) # 'friedman_mse' 

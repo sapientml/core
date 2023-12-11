@@ -1,0 +1,48 @@
+import numpy as np
+from {{import_library}} import {{ model_name }}
+
+{% if "CatBoost" in model_name %}
+{% set silent="silent=True, " %}
+{% else %}
+{% set silent="" %}
+{% endif %}
+{% if model_arg == "HPO_noRandomSeed" %}
+model = {{ model_name }}(**best_params)
+{% elif model_arg == "HPO_RandomSeed" %}
+random_state_model = {{ pipeline.config.seed_for_model}}
+model = {{ model_name }}(random_state=random_state_model, **best_params)
+{% elif model_arg == "noHPO_noRandomSeed" %}
+model = {{ model_name }}({{ silent }}{{ params }})
+{% elif model_arg == "noHPO_RandomSeed" %}
+random_state_model = {{ pipeline.config.seed_for_model}}
+model = {{ model_name }}({{ silent }}random_state=random_state_model, {{ params }})
+{% endif %}
+
+{% if is_multioutput_regression%}
+from sklearn.multioutput import MultiOutputRegressor
+
+model = MultiOutputRegressor(model)
+{% elif is_multioutput_classification %}
+from sklearn.multioutput import MultiOutputClassifier
+
+model = MultiOutputClassifier(model)
+{% endif %}
+{% set xgbclassifier = "XGBClassifier" %}
+{% if model_name == xgbclassifier %}
+from sklearn.preprocessing import LabelEncoder
+
+label_encoder = LabelEncoder()
+target_train = pd.DataFrame(label_encoder.fit_transform(target_train), columns=TARGET_COLUMNS)
+{% endif %}
+{% if pipeline.task.target_columns|length == 1 %}
+model.fit(feature_train, target_train.values.ravel())
+{% else %}
+model.fit(feature_train, target_train)
+{% endif %}
+y_pred = model.predict(feature_test)
+{% if pipeline.adaptation_metric and flag_predict_proba %}
+y_prob = model.predict_proba(feature_test)
+{% endif %}
+{% if model_name == xgbclassifier %}
+y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
+{% endif %}

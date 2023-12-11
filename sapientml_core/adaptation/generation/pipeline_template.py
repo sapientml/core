@@ -189,10 +189,12 @@ class PipelineTemplate(BaseModel):
 
         # Adding Shap Visualization data
         tpl = env.get_template("other_templates/shap.py.jinja")
-        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline)
+        pipeline.pipeline_json["shap"]["code"] = self._render(tpl, pipeline=pipeline, model_name=model_name)
 
         tpl = env.get_template("other_templates/prediction_result.py.jinja")
-        pipeline.pipeline_json["output_prediction"]["code"] = self._render(tpl, pipeline=pipeline, macros=macros)
+        pipeline.pipeline_json["output_prediction"]["code"] = self._render(
+            tpl, pipeline=pipeline, model_name=model_name, macros=macros
+        )
 
         if flag_hyperparameter_tuning:
             tpl = env.get_template("model_templates/hyperparameters.py.jinja")
@@ -215,6 +217,14 @@ class PipelineTemplate(BaseModel):
             )
 
         self.populate_model()
+
+        if pipeline.adaptation_metric and (
+            pipeline.adaptation_metric in macros.metric_needing_predict_proba
+            or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
+        ):
+            pipeline.pipeline_json["evaluation"]["code_test"] = pipeline.pipeline_json["evaluation"][
+                "code_test"
+            ].replace("y_pred", "y_prob")
 
         if pipeline.config.permutation_importance:
             tpl = env.get_template("other_templates/permutation_importance.py.jinja")
@@ -444,6 +454,7 @@ class PipelineTemplate(BaseModel):
         tpl = env.get_template("model_templates/model.py.jinja")
         tpl_train = env.get_template("model_templates/model_train.py.jinja")
         tpl_predict = env.get_template("model_templates/model_predict.py.jinja")
+        tpl_test = env.get_template("model_templates/model_test.py.jinja")
 
         flag_no_random_seed_model = model_name in NO_RANDOM_SEED_MODELS
         flag_hyperparameter_tuning = (
@@ -503,6 +514,19 @@ class PipelineTemplate(BaseModel):
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
             metric_needing_predict_proba=macros.metric_needing_predict_proba,
+            macros=macros,
+        )
+        snippet_test = self._render(
+            tpl_test,
+            pipeline=pipeline,
+            import_library=MODEL_IMPORT_LIBRARY_MAP[model_name],
+            model_name=model_name,
+            params=pipeline.model.hyperparameters or "",
+            model_arg=model_arg,
+            flag_predict_proba=flag_predict_proba,
+            is_multioutput_regression=_is_multioutput_regression,
+            is_multioutput_classification=_is_multioutput_classification,
+            metric_needing_predict_proba=macros.metric_needing_predict_proba,
         )
 
         # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, Gini since they require probability to be calculated
@@ -515,13 +539,16 @@ class PipelineTemplate(BaseModel):
             tpl = env.get_template("model_templates/classification_post_process.jinja")
             snippet += "\n" + self._render(tpl, pipeline=pipeline)
 
-            snippet_predict = snippet_predict.replace("predict", "predict_proba")
             tpl_predict = env.get_template("model_templates/classification_post_process.jinja")
-            snippet_predict += "\n" + self._render(tpl_predict, pipeline=pipeline)
+            snippet_predict += "\n" + self._render(tpl_predict, pipeline=pipeline).replace("y_pred", "y_prob")
+
+            tpl_test = env.get_template("model_templates/classification_post_process.jinja")
+            snippet_test += "\n" + self._render(tpl_test, pipeline=pipeline).replace("y_pred", "y_prob")
 
         model_component_json["code"] = snippet
         model_component_json["code_train"] = snippet_train
         model_component_json["code_predict"] = snippet_predict
+        model_component_json["code_test"] = snippet_test
 
         with open(Path(os.path.dirname(__file__)) / "../../models/feature_importance.json", "r", encoding="utf-8") as f:
             model_feature_weights = json.load(f)
