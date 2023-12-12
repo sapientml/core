@@ -73,7 +73,6 @@ if set(TARGET_COLUMNS).issubset(test_dataset.columns.tolist()):
 {{ pipeline_json['permutation_importance']['code'] }}
 {% endif %}
 
-
 {% if 'shap' in pipeline_json and not pipeline.task.is_multiclass %}
 
 {{ pipeline_json['shap']['code'] }}
