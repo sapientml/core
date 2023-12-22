@@ -13,13 +13,13 @@ if len(feature_train.columns) <= 100:
     perm = permutation_importance(model, feature_train.sparse.to_dense(), {{ TARGET_TRAIN }},
                                     n_repeats=5,
                                     random_state=0)
-    perm_df = pd.DataFrame({"feature": feature_train.columns, "importance": perm.importances_mean})
+    perm_df = pd.DataFrame({"feature": feature_train_csv.columns, "importance": perm.importances_mean})
     perm_df.to_csv("./permutation_importance.csv", index=False)
 {% else %}
 if len(feature_train.columns) <= 100:
     perm = permutation_importance(model, feature_train, {{ TARGET_TRAIN }},
                                     n_repeats=5,
                                     random_state=0)
-    perm_df = pd.DataFrame({"feature": feature_train.columns, "importance": perm.importances_mean})
+    perm_df = pd.DataFrame({"feature": feature_train_csv.columns, "importance": perm.importances_mean})
     perm_df.to_csv("./permutation_importance.csv", index=False)
 {% endif %}

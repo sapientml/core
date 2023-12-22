@@ -1,5 +1,0 @@
-
-# Undo special symbols for column names 
-target_train[cols_has_symbols_target] = target_train[TARGET_COLUMNS].copy()
-target_train = target_train.drop(TARGET_COLUMNS, axis=1)
-TARGET_COLUMNS = cols_has_symbols_target
