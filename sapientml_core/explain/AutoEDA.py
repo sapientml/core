@@ -292,6 +292,9 @@ class EDA(Dataset):
         if len(unique_vals) != 2:
             # total number of elements sould be two, to be considered
             return None
+        # Check if all elements in unique_vals are strings
+        if not all(isinstance(_, str) for _ in unique_vals):
+            return None  
         sorted_unique_vals = sorted([_.lower().strip() for _ in unique_vals])
         candidates = [
             # TODO: add dynamic values
