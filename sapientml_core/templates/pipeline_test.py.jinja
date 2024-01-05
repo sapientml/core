@@ -39,6 +39,11 @@
 # PLEASE SEE THE CANDIDATE SCRIPTS FOR THE HYPERPARAMTER OPTIMIZATION CODE
 best_params = study.best_params
 {% endif %}
+
+{% if 'preprocess_dataset' in pipeline_json %}
+{{ pipeline_json['preprocess_dataset']['code_test'] }}
+
+{% endif %}
 {% if 'model' in pipeline_json %}
 
 # MODEL

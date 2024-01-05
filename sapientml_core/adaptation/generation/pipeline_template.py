@@ -167,6 +167,9 @@ class PipelineTemplate(BaseModel):
         pipeline.pipeline_json["target_separation"]["code_train"] = self._render(tpl, pipeline=pipeline)
         tpl = env.get_template("other_templates/target_separation_predict.py.jinja")
         pipeline.pipeline_json["target_separation"]["code_predict"] = self._render(tpl, pipeline=pipeline)
+        if pipeline.config.export_preprocess_dataset:
+            tpl = env.get_template("other_templates/preprocess_dataset.py.jinja")
+            pipeline.pipeline_json["preprocess_dataset"]["code_test"] = self._render(tpl, pipeline=pipeline)
 
         flag_hyperparameter_tuning = (
             pipeline.config.hyperparameter_tuning and model_name not in NO_TUNABLE_PARAMS_MODELS
