@@ -221,6 +221,29 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         for pipeline in sapientml_results:
             pipeline.validation = code_block.validation + pipeline.validation
             pipeline.test = code_block.test + pipeline.test
+            if "cols_has_symbols" in pipeline.test:
+                addindex = pipeline.test.index("perm_df = pd.DataFrame")
+                pipeline.test = (
+                    pipeline.test[:addindex]
+                    + "feature_train_csv = feature_train.rename(columns=rename_symbol_cols)\n    "
+                    + pipeline.test[addindex:]
+                )
+                addindex = pipeline.test.index("prediction = pd.DataFrame")
+                pipeline.test = (
+                    pipeline.test[:addindex]
+                    + "TARGET_COLUMNS_csv = [rename_symbol_cols[TARGET_COLUMNS[0]]]\n"
+                    + pipeline.test[addindex:]
+                )
+            else:
+                addindex = pipeline.test.index("perm_df = pd.DataFrame")
+                pipeline.test = (
+                    pipeline.test[:addindex] + "feature_train_csv = feature_train\n    " + pipeline.test[addindex:]
+                )
+                addindex = pipeline.test.index("prediction = pd.DataFrame")
+                pipeline.test = (
+                    pipeline.test[:addindex] + "TARGET_COLUMNS_csv = [TARGET_COLUMNS[0]]\n" + pipeline.test[addindex:]
+                )
+
             pipeline.train = code_block.train + pipeline.train
             pipeline.predict = code_block.predict + pipeline.predict
             result_pipelines.append(pipeline)
