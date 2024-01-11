@@ -222,27 +222,22 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
             pipeline.validation = code_block.validation + pipeline.validation
             pipeline.test = code_block.test + pipeline.test
             if "cols_has_symbols" in pipeline.test:
-                addindex = pipeline.test.index("perm_df = pd.DataFrame")
-                pipeline.test = (
-                    pipeline.test[:addindex]
-                    + "feature_train_csv = feature_train.rename(columns=rename_symbol_cols)\n    "
-                    + pipeline.test[addindex:]
+                pipeline.test = pipeline.test.replace(
+                    '"feature": feature_train.columns',
+                    '"feature": feature_train.rename(columns=rename_symbol_cols).columns',
                 )
-                addindex = pipeline.test.index("prediction = pd.DataFrame")
-                pipeline.test = (
-                    pipeline.test[:addindex]
-                    + "TARGET_COLUMNS_csv = [rename_symbol_cols[TARGET_COLUMNS[0]]]\n"
-                    + pipeline.test[addindex:]
+                pipeline.test = pipeline.test.replace(
+                    "prediction.to_csv", "prediction.rename(columns=rename_symbol_cols).to_csv"
                 )
-            else:
-                addindex = pipeline.test.index("perm_df = pd.DataFrame")
-                pipeline.test = (
-                    pipeline.test[:addindex] + "feature_train_csv = feature_train\n    " + pipeline.test[addindex:]
-                )
-                addindex = pipeline.test.index("prediction = pd.DataFrame")
-                pipeline.test = (
-                    pipeline.test[:addindex] + "TARGET_COLUMNS_csv = [TARGET_COLUMNS[0]]\n" + pipeline.test[addindex:]
-                )
+
+                def replace_targets(match_obj):
+                    return match_obj[0].replace(
+                        "TARGET_COLUMNS", "[rename_symbol_cols.get(v, v) for v in TARGET_COLUMNS]"
+                    )
+
+                pat = r"prediction = pd.DataFrame\(y_prob, columns=.?TARGET_COLUMNS.*, index=feature_test.index\)"
+                pipeline.test = re.sub(pat, replace_targets, pipeline.test)
+                pipeline.predict = re.sub(pat, replace_targets, pipeline.predict)
 
             pipeline.train = code_block.train + pipeline.train
             pipeline.predict = code_block.predict + pipeline.predict

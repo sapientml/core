@@ -5,17 +5,17 @@ prediction = pd.DataFrame(y_prob, columns=label_encoder.inverse_transform(model.
 {% elif pipeline.config.predict_option == macros.PRED_PROBABILITY and pipeline.task.is_multiclass == True and (pipeline.adaptation_metric in macros.metrics_for_classification) and (not pipeline.adaptation_metric.startswith("MAP_"))%}
 prediction = pd.DataFrame(y_prob, columns=model.classes_, index=feature_test.index)
 {% elif pipeline.config.predict_option == macros.PRED_PROBABILITY and (pipeline.adaptation_metric in macros.metrics_for_classification) and (not pipeline.adaptation_metric.startswith("MAP_"))%}
-prediction = pd.DataFrame(y_prob, columns=TARGET_COLUMNS_csv, index=feature_test.index)
+prediction = pd.DataFrame(y_prob, columns=TARGET_COLUMNS, index=feature_test.index)
 {% elif pipeline.config.predict_option is none and model_name == xgbclassifier and pipeline.task.is_multiclass == True and (pipeline.adaptation_metric in macros.metric_needing_predict_proba) and (not pipeline.adaptation_metric.startswith("MAP_"))%}
 prediction = pd.DataFrame(y_prob, columns=label_encoder.inverse_transform(model.classes_), index=feature_test.index)
 {% elif pipeline.config.predict_option is none and pipeline.task.is_multiclass == True and (pipeline.adaptation_metric in macros.metric_needing_predict_proba) and (not pipeline.adaptation_metric.startswith("MAP_"))%}
 prediction = pd.DataFrame(y_prob, columns=model.classes_, index=feature_test.index)
 {% elif pipeline.config.predict_option is none and (pipeline.adaptation_metric in macros.metric_needing_predict_proba) and (not pipeline.adaptation_metric.startswith("MAP_"))%}
-prediction = pd.DataFrame(y_prob, columns=TARGET_COLUMNS_csv, index=feature_test.index)
+prediction = pd.DataFrame(y_prob, columns=TARGET_COLUMNS, index=feature_test.index)
 {% elif pipeline.adaptation_metric.startswith("MAP_") %}
 {% set k = pipeline.adaptation_metric.split("_")[1] %}
-prediction = pd.DataFrame(y_prob, columns=[TARGET_COLUMNS_csv[0] + "_" +str(i) for i in range(1, y_prob.shape[1] + 1)], index=feature_test.index)
+prediction = pd.DataFrame(y_prob, columns=[TARGET_COLUMNS[0] + "_" +str(i) for i in range(1, y_prob.shape[1] + 1)], index=feature_test.index)
 {% else %}
-prediction = pd.DataFrame(y_pred, columns=TARGET_COLUMNS_csv, index=feature_test.index)
+prediction = pd.DataFrame(y_pred, columns=TARGET_COLUMNS, index=feature_test.index)
 {% endif %}
 prediction.to_csv("./prediction_result.csv")
