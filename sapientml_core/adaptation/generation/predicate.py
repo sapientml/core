@@ -64,6 +64,8 @@ class Predicate:
             actual_value = meta_features[self.feature_name]
             if actual_value == -1 or actual_value == 0:
                 return False
+            if actual_value is None:
+                return False
         except Exception:
             return False
 
