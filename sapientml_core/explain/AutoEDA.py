@@ -294,7 +294,7 @@ class EDA(Dataset):
             return None
         # Check if all elements in unique_vals are strings
         if not all(isinstance(_, str) for _ in unique_vals):
-            return None  
+            return None
         sorted_unique_vals = sorted([_.lower().strip() for _ in unique_vals])
         candidates = [
             # TODO: add dynamic values
