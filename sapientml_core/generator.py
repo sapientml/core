@@ -399,7 +399,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
             eps = entry_points(group="sapientml.export_modules")
             for ep in eps:
-                if ep.name in [self.__class__.__name__, 'sample-dataset']:
+                if ep.name in [self.__class__.__name__, "sample-dataset"]:
                     for file in glob(f"{ep.load().__path__[0]}/*.py"):
                         copyfile(file, lib_path / Path(file).name)
 
