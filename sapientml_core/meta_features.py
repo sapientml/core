@@ -870,6 +870,14 @@ def _collect_csv_column_type_presence_pp(X, preprocess):
                 res["num_cont"] += 1
         elif pd.api.types.is_datetime64_any_dtype(column):
             res["str_date"] += 1
+        elif pd.api.types.is_categorical_dtype(column):
+            res["str_catg"] += 1
+            if preprocess:
+                catg_type = _is_category_column_pp(column)
+            else:
+                catg_type = _is_category_column(column)
+            cellname = "str_catg_%s" % (catg_type,)
+            res[cellname] += 1
         else:
             raise RuntimeError()
     if preprocess:
@@ -888,7 +896,7 @@ def _get_target_column_type_pp(Y, preprocess):
         name,
         column,
     ) in Y.items():
-        if pd.api.types.is_object_dtype(column):
+        if pd.api.types.is_object_dtype(column) or pd.api.types.is_categorical_dtype(column):
             if preprocess:
                 catg_type = _is_category_column_pp(column)
             else:
