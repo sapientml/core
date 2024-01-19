@@ -122,14 +122,18 @@ class Adaptation:
             )
         )
 
+        # resolve conflicting preprocessing labels by keeping the one with highest probability
+        conflicting_labels = dict()
+        preprocessing_labels, conflicting_labels = self._resolve_conflicting_labels(preprocessing_labels)
+
+        # remove GausianNB and SVC if TfidfVectorizer is contain
+        if "PREPROCESS:Text:TfidfVectorizer:sklearn" in preprocessing_labels:
+            model_labels = {k: v for k, v in model_labels.items() if "GaussianNB" not in k and "SVC" not in k}
+
         n_models = self.config.n_models
         if n_models < 1:
             raise ValueError("Please set 'n_models' to a number greater than or equal to 1.")
         model_labels = dict(list(model_labels.items())[0:n_models])
-
-        # resolve conflicting preprocessing labels by keeping the one with highest probability
-        conflicting_labels = dict()
-        preprocessing_labels, conflicting_labels = self._resolve_conflicting_labels(preprocessing_labels)
 
         # order preprocessing labels and model labels
         preprocessing_labels, model_labels = self._order_labels(preprocessing_labels, model_labels)
