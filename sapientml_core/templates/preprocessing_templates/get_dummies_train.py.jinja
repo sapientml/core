@@ -1,7 +1,7 @@
 from sklearn.preprocessing import OneHotEncoder
 
 CATEGORICAL_COLS = {{ columns }}
-onehot_encoder = OneHotEncoder(handle_unknown='ignore', sparse=False)
+onehot_encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
 train_encoded = pd.DataFrame(onehot_encoder.fit_transform({{ train_dataset }}[CATEGORICAL_COLS]), columns=onehot_encoder.get_feature_names_out(), index={{ train_dataset }}.index)
 {{ train_dataset }} = pd.concat([{{ train_dataset }}, train_encoded ], axis=1)
 {{ train_dataset }}.drop(CATEGORICAL_COLS, axis=1, inplace=True)
