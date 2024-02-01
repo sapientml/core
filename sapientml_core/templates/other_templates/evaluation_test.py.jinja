@@ -1,0 +1,144 @@
+{% if target2string %}
+target_test = target_test.astype(str)
+{% endif %}
+
+{% if pipeline.task.task_type == macros.TASK_CLASSIFICATION %}
+
+## Metric: F1
+from sklearn import metrics
+
+f1 = metrics.f1_score(target_test, y_pred, average='macro')
+print('RESULT: F1 Score: ' + str(f1))
+
+{% if not pipeline.is_multi_class_multi_targets %}
+
+## Metric: Accuracy
+from sklearn.metrics import accuracy_score
+
+accuracy = accuracy_score(target_test, y_pred)
+print('RESULT: Accuracy: ' + str(accuracy))
+{% elif pipeline.is_multi_class_multi_targets %}
+from sklearn.metrics import accuracy_score
+
+__accs = []
+for i, col in enumerate(target_test.columns):
+    one_acc = accuracy_score(target_test[col], y_pred[:, i:i+1])
+    __accs.append(one_acc)
+print(f"RESULT: Accuracy : {str(sum(__accs)/len(__accs))}")
+
+{% endif %}
+
+## Metric: AUC
+from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+auc = roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr")
+{% else %}
+auc = roc_auc_score(target_test, y_prob)
+{% endif %}
+print('RESULT: AUC Score: ' + str(auc))
+
+## Metric: Gini
+from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+gini = 2 * roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr") - 1
+{% else %}
+gini = 2 * roc_auc_score(target_test, y_prob) - 1
+{% endif %}
+print('RESULT: Gini: ' + str(gini))
+
+## Metric: Log Loss
+from sklearn.metrics import log_loss
+
+log_loss = log_loss(target_test, y_prob)
+print('RESULT: Log Loss:', str(log_loss))
+
+## Metric: ROC AUC
+from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+__roc_auc = roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr")
+{% else %}
+__roc_auc = roc_auc_score(target_test, y_prob)
+{% endif %}
+print('RESULT: ROC AUC:', str(__roc_auc))
+
+{% if not is_multioutput_classification %}
+
+## Metric: MCC
+from sklearn.metrics import matthews_corrcoef
+
+mcc = matthews_corrcoef(target_test, y_pred)
+print('RESULT: MCC:', str(mcc))
+
+## Metric: QWK
+from sklearn.metrics import cohen_kappa_score
+
+qwk = cohen_kappa_score(target_test, y_pred, weights='quadratic')
+print('RESULT: QWK:', str(qwk))
+
+{% if pipeline.adaptation_metric.startswith("MAP_") %}
+## Metric: MAP@K
+{% set k = pipeline.adaptation_metric.split("_")[1] %}
+def apk(actual, predicted, k):
+    if len(predicted)>k:
+        predicted = predicted[:k]
+
+    score = 0.0
+    num_hits = 0.0
+
+    for i,p in enumerate(predicted):
+        if p in actual and p not in predicted[:i]:
+            num_hits += 1.0
+            score += num_hits / (i+1.0)
+
+    return score / min(len(actual), k)
+
+def mapk(actual, predicted, k):
+    """ Computes the mean average precision at k.
+
+    Args:
+        actual (list[list[str] or ndarray): A list of lists of elements that are to be predicted
+        predicted (list[list[str] or ndarray): A list of lists of predicted elements
+            (In each list, arrange in the order you predicted.)
+        k (int): The maximum number of predicted elements
+
+    Returns:
+        double: The mean average precision at k over the input lists
+    """
+    return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
+
+map_k = mapk(target_test.to_numpy(), y_prob_map_k, k={{ k }})
+print('RESULT: MAP@K: ' + str(map_k))
+
+{% endif %}
+{% endif %}
+
+{% elif pipeline.task.task_type == macros.TASK_REGRESSION %}
+
+## Metric: R2
+from sklearn import metrics
+
+r2 = metrics.r2_score(target_test, y_pred)
+print('RESULT: R2 Score:', str(r2))
+
+## Metric: RMSE
+from sklearn.metrics import mean_squared_error
+
+rmse = mean_squared_error(target_test, y_pred, squared=False)
+print('RESULT: RMSE:', str(rmse))
+
+## Metric: RMSLE
+import numpy as np
+from sklearn.metrics import mean_squared_log_error
+
+target_test = np.clip(target_test, 0, None)
+y_pred = np.clip(y_pred, 0, None)
+rmsle = np.sqrt(mean_squared_log_error(target_test, y_pred))
+print('RESULT: RMSLE:', str(rmsle))
+
+## Metric: MAE
+from sklearn.metrics import mean_absolute_error
+
+mae = mean_absolute_error(target_test, y_pred)
+print('RESULT: MAE:', str(mae))
+
+{% endif %}
