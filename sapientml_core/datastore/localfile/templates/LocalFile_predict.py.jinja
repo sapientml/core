@@ -1,0 +1,8 @@
+# LOAD DATA
+import pandas as pd
+
+{% if dataset.training_data_path.endswith(".pkl") %}
+test_dataset = pd.read_pickle("./test.pkl")
+{% else %}
+test_dataset = pd.read_csv("./test.csv", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
+{% endif %}
