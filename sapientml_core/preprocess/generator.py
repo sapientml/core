@@ -271,30 +271,10 @@ class DefaultPreprocess(CodeBlockGenerator):
             df = df.drop(col, axis=1)
         if cols_numeric_and_string:
             tpl = template_env.get_template("handle_mixed_typed_columns.py.jinja")
-            code.validation += _render(
-                tpl,
-                training=True,
-                test=True,
-                cols_numeric_and_string=cols_numeric_and_string
-            )
-            code.test += _render(
-                tpl,
-                training=True,
-                test=True,
-                cols_numeric_and_string=cols_numeric_and_string
-            )
-            code.train += _render(
-                tpl,
-                training=True,
-                test=False,
-                cols_numeric_and_string=cols_numeric_and_string
-            )
-            code.predict += _render(
-                tpl,
-                training=False,
-                test=True,
-                cols_numeric_and_string=cols_numeric_and_string
-            )
+            code.validation += _render(tpl, training=True, test=True, cols_numeric_and_string=cols_numeric_and_string)
+            code.test += _render(tpl, training=True, test=True, cols_numeric_and_string=cols_numeric_and_string)
+            code.train += _render(tpl, training=True, test=False, cols_numeric_and_string=cols_numeric_and_string)
+            code.predict += _render(tpl, training=False, test=True, cols_numeric_and_string=cols_numeric_and_string)
 
         # meta features must be calculated after replacing inf with nan,
         # becuase the replaced nan must be preprocessed in the generated code.
