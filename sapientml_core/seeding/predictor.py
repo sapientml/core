@@ -202,9 +202,11 @@ def _predict_models(
 
     model_ranking = [
         [
-            name_to_label_mapping[item][task_type]
-            if item in name_to_label_mapping and task_type in name_to_label_mapping[item]
-            else None
+            (
+                name_to_label_mapping[item][task_type]
+                if item in name_to_label_mapping and task_type in name_to_label_mapping[item]
+                else None
+            )
             for item in preds
         ]
         for preds, task_type in zip(model_ranking, task_type)
