@@ -434,9 +434,11 @@ class PipelineTemplate(BaseModel):
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
             flag_predict_proba=flag_predict_proba,
-            timeout=pipeline.config.hyperparameter_tuning_timeout
-            if pipeline.config.hyperparameter_tuning_timeout > 0
-            else None,
+            timeout=(
+                pipeline.config.hyperparameter_tuning_timeout
+                if pipeline.config.hyperparameter_tuning_timeout > 0
+                else None
+            ),
         )
         pipeline.pipeline_json["hyperparameter_optimization"]["code"] = snippet
 
