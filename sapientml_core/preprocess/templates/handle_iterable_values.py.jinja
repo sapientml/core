@@ -1,0 +1,10 @@
+# HANDLE ITERABLE VALUES IN DATAFRAME
+cols_iterable_values = {{ cols_iterable_values }}
+for col in cols_iterable_values:
+{% if training %}
+    train_dataset[col] = train_dataset[col].fillna("").astype(str)
+{% endif %}
+{% if test %}
+    test_dataset[col] = test_dataset[col].fillna("").astype(str)
+{% endif %}
+

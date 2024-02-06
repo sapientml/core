@@ -49,15 +49,6 @@ jobs:
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
-
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
-
-      - name: Install Packages
-        run: sudo apt install -y graphviz
         
       - name: Install Dependencies
         run: poetry install

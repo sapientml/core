@@ -1,0 +1,3 @@
+# SET ID_COLUMNS TO DATAFRAME'S INDEX
+id_columns_for_prediction = {{ id_columns_for_prediction }}
+test_dataset = test_dataset.set_index(id_columns_for_prediction, drop=False)

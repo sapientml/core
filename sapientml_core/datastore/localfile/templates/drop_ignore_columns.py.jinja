@@ -1,0 +1,12 @@
+# DROP IGNORED COLUMNS
+ignore_columns = {{ ignore_columns }}
+
+{% if train %}
+train_dataset = train_dataset.drop(ignore_columns, axis=1, errors="ignore")
+{% endif %}
+{% if validation %}
+validation_dataset = validation_dataset.drop(ignore_columns, axis=1, errors="ignore")
+{% endif %}
+{% if test %}
+test_dataset = test_dataset.drop(ignore_columns, axis=1, errors="ignore")
+{% endif %}

@@ -1,0 +1,25 @@
+# LOAD DATA
+import pandas as pd
+
+{% if dataset.training_data_path.endswith(".pkl") %}
+train_dataset = pd.read_pickle(r"{{ dataset.training_data_path }}")
+{% else %}
+train_dataset = pd.read_csv(r"{{ dataset.training_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
+{% endif %}
+
+{% if dataset.validation_data_path %}
+{% if dataset.validation_data_path.endswith(".pkl") %}
+validation_dataset = pd.read_pickle(r"{{ dataset.validation_data_path }}")
+{% else %}
+validation_dataset = pd.read_csv(r"{{ dataset.validation_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
+{% endif %}
+{% endif %}{# if dataset.validation_data_path #}
+
+{% if not validation and dataset.test_data_path %}
+{% if dataset.test_data_path.endswith(".pkl") %}
+test_dataset = pd.read_pickle(r"{{ dataset.test_data_path }}")
+{% else %}
+test_dataset = pd.read_csv(r"{{ dataset.test_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
+{% endif %}
+{% endif %}{# if not validation and dataset.test_data_path #}
+

@@ -1,0 +1,35 @@
+# HANDLE JAPANESE TEXT
+import MeCab
+import ipadic
+tokenizer = MeCab.Tagger(ipadic.MECAB_ARGS)
+use_pos_list = {{ config.use_pos_list }}
+use_word_stemming = {{ config.use_word_stemming }}
+def tokenize(text, use_pos_list, use_word_stemming, tokenizer):
+    node = tokenizer.parseToNode(text)
+    terms = []
+    while node:
+        features = node.feature.split(",")
+        pos = features[0]
+        if pos != "BOS/EOS":
+            if use_word_stemming:
+                term = features[6]
+                if (pos == "名詞") & (features[1] == "数"):
+                    term = node.surface
+            else:
+                term = node.surface
+            if use_pos_list:
+                if pos in use_pos_list:
+                    terms.append(term)
+            else:
+                terms.append(term)
+        node = node.next
+    return " ".join(terms)
+cols_japanese_text = {{ cols_japanese_text}}
+for col in cols_japanese_text:
+{% if training %}
+    train_dataset[col] = train_dataset[col].fillna("").apply(lambda x: tokenize(x, use_pos_list, use_word_stemming, tokenizer))
+{% endif %}
+{% if test %}
+    test_dataset[col] = test_dataset[col].fillna("").apply(lambda x: tokenize(x, use_pos_list, use_word_stemming, tokenizer))
+{% endif %}
+
