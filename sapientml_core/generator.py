@@ -417,8 +417,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
             eps = entry_points(group="sapientml.export_modules")
             for ep in eps:
-                for file in glob(f"{ep.load().__path__[0]}/*.py"):
-                    copyfile(file, lib_path / Path(file).name)
+                if ep.name in [self.__class__.__name__, "sample-dataset"]:
+                    for file in glob(f"{ep.load().__path__[0]}/*.py"):
+                        copyfile(file, lib_path / Path(file).name)
 
             for index, (script, detail) in enumerate(candidate_scripts, start=1):
                 script_body = script.validation
