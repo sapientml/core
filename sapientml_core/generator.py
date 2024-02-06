@@ -70,7 +70,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     Own the main functions for generating the pipeline.
     """
 
-    def __init__(self, datastore="invalid", preprocess="invalid", **kwargs):
+    def __init__(self, datastore="localfile", preprocess="default", **kwargs):
         self.config = SapientMLConfig(**kwargs)
         self.config.postinit()
         eps_datastore = entry_points(group="sapientml.datastore")
