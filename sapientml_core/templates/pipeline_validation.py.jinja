@@ -38,6 +38,10 @@
 {{ pipeline_json['hyperparameter_optimization']['code'] }}
 {% else %}
 {% if 'model' in pipeline_json %}
+{% if 'preprocess_dataset' in pipeline_json %}
+{{ pipeline_json['preprocess_dataset']['code_test'] }}
+
+{% endif %}
 
 # MODEL
 {{ pipeline_json['model']['code'] }}
