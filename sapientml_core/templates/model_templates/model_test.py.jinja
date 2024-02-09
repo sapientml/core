@@ -42,7 +42,7 @@ label_encoders = LabelEncoder()
 target_train = pd.DataFrame(label_encoders.fit_transform(target_train), columns=TARGET_COLUMNS)
 {% endif %}
 
-{% if pipeline.is_multi_class_multi_targets %}
+{% if if pipeline.task.target_columns|length == 1 %}
 model.fit(feature_train, target_train.values.ravel())
 {% else %}
 model.fit(feature_train, target_train)
