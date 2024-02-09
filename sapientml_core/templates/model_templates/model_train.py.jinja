@@ -24,7 +24,7 @@ model = MultiOutputClassifier(model)
 
 {% set xgbclassifier = "XGBClassifier" %}
 
-{% if pipeline.task.target_columns|length > 1 %}
+{% if pipeline.is_multi_class_multi_targets %}
 from sklearn.preprocessing import LabelEncoder
 label_encoders = {}
 for i, column in enumerate(target_train.columns):
