@@ -28,21 +28,37 @@ from sklearn.multioutput import MultiOutputClassifier
 model = MultiOutputClassifier(model)
 {% endif %}
 {% set xgbclassifier = "XGBClassifier" %}
-{% if model_name == xgbclassifier %}
-from sklearn.preprocessing import LabelEncoder
 
-label_encoder = LabelEncoder()
-target_train = pd.DataFrame(label_encoder.fit_transform(target_train), columns=TARGET_COLUMNS)
+{% if pipeline.task.target_columns|length > 1 %}
+from sklearn.preprocessing import LabelEncoder
+label_encoders = {}
+for i, column in enumerate(target_train.columns):
+    le = LabelEncoder()
+    target_train[column] = le.fit_transform(target_train[column])
+    label_encoders[column] = le
+{% elif model_name == xgbclassifier %}
+from sklearn.preprocessing import LabelEncoder
+label_encoders = LabelEncoder()
+target_train = pd.DataFrame(label_encoders.fit_transform(target_train), columns=TARGET_COLUMNS)
 {% endif %}
+
 {% if pipeline.task.target_columns|length == 1 %}
 model.fit(feature_train, target_train.values.ravel())
 {% else %}
 model.fit(feature_train, target_train)
 {% endif %}
+
 y_pred = model.predict(feature_test)
+
 {% if pipeline.adaptation_metric and flag_predict_proba %}
 y_prob = model.predict_proba(feature_test)
 {% endif %}
-{% if model_name == xgbclassifier %}
-y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
+
+{% if pipeline.task.target_columns|length > 1 %}
+y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
+for column in TARGET_COLUMNS:
+    y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))
+y_pred = y_pred_df
+{% elif model_name == xgbclassifier %}
+y_pred = label_encoders.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}
