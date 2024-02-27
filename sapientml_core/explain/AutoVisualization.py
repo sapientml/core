@@ -18,6 +18,7 @@ from typing import Literal, Optional
 
 import numpy as np
 import pandas as pd
+import re
 from sapientml.util.logging import setup_logger
 
 warnings.filterwarnings("ignore")
@@ -55,6 +56,11 @@ class AutoVisualization_Class:
 
         """
         problem_type = problem_type.lower()
+
+        # cols_has_symbols = df.columns.tolist()
+        # inhibited_symbol_pattern = re.compile(r"[\{\}\[\]\",:<'\\\+]+")
+        # rename_symbol_cols = {inhibited_symbol_pattern.sub("", col): col if col in cols_has_symbols else col in cols_has_symbols for col in cols_has_symbols }
+        # target_columns = {rename_symbol_cols[k] for k in target_columns}
 
         if not ignore_columns:
             ignore_columns = []

@@ -18,6 +18,7 @@ from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
+import collections
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, field_validator
 from sapientml.params import Code, Config, Task
@@ -410,6 +411,26 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
         DatasetSummary
     """
     is_multi_classes: list[bool] = []
+
+    #kakunin
+    # target_columns={}
+    # print(df_train.columns)
+    # print(task.target_columns)
+    # sametargetcolumn = collections.Counter(task.target_columns)
+    # for target in sametargetcolumn.keys():
+    #     if sametargetcolumn[target] > 1:
+    #         for i in range(sametargetcolumn[target]):
+    #             if target + str(i+1) not in df_train.columns :
+    #                 target_columns[target+str(i+1)] = target
+    #     else:
+    #         target_columns.append(target)
+    
+    # for target in target_columns.keys():
+    #     df_train = df_train.rename({target_columns[target]:target}, axis=1)
+
+    # print(target_columns)
+    # print(df_train.columns)
+
     for target in task.target_columns:
         is_multi_classes.append(len(df_train[target].unique()) > 1)
     has_multi_class_targets = all(is_multi_classes)
