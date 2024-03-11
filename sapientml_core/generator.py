@@ -221,6 +221,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         for pipeline in sapientml_results:
             pipeline.validation = code_block.validation + pipeline.validation
             pipeline.test = code_block.test + pipeline.test
+            pipeline.predict = code_block.predict + pipeline.predict
             if "cols_has_symbols" in pipeline.test:
                 pipeline.test = pipeline.test.replace(
                     '"feature": feature_train.columns',
@@ -240,7 +241,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 pipeline.predict = re.sub(pat, replace_targets, pipeline.predict)
 
             pipeline.train = code_block.train + pipeline.train
-            pipeline.predict = code_block.predict + pipeline.predict
+            # pipeline.predict = code_block.predict + pipeline.predict
             result_pipelines.append(pipeline)
 
         logger.info("Executing generated pipelines...")
