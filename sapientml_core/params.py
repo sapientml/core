@@ -74,6 +74,9 @@ class SapientMLConfig(Config):
         On/Off of outputting permutation importance calculation code.
     add_explanation: bool, default False
         If True, outputs ipynb files including EDA and explanation.
+    export_preprocess_dataset : bool, default False
+        export pre-processed (feature engineered) the input dataset
+
 
     """
 
@@ -88,6 +91,7 @@ class SapientMLConfig(Config):
     predict_option: Optional[Literal["default", "probability"]] = None
     permutation_importance: bool = True
     add_explanation: bool = False
+    export_preprocess_dataset: bool = False
 
     def postinit(self):
         """Set initial_timeout and hyperparameter_tuning_timeout.

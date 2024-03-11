@@ -1,5 +1,5 @@
 category-encoders==2.6.3
-patsy==0.5.4
-statsmodels==0.14.0
+patsy==0.5.6
+statsmodels==0.14.1
 tensorflow==2.15.0.post1
-wordcloud==1.9.2
+wordcloud==1.9.3
