@@ -52,15 +52,6 @@ from sklearn.metrics import log_loss
 log_loss = log_loss(target_test, y_prob)
 print('RESULT: Log Loss:', str(log_loss))
 
-## Metric: ROC AUC
-from sklearn.metrics import roc_auc_score
-{% if pipeline.task.is_multiclass == True %}
-__roc_auc = roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr")
-{% else %}
-__roc_auc = roc_auc_score(target_test, y_prob)
-{% endif %}
-print('RESULT: ROC AUC:', str(__roc_auc))
-
 {% if not is_multioutput_classification %}
 
 ## Metric: MCC
