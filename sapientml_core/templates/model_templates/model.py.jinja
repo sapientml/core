@@ -31,7 +31,7 @@ model = MultiOutputClassifier(model)
 
 {% set xgbclassifier = "XGBClassifier" %}
 
-{% if pipeline.is_multi_class_multi_targets %}
+{% if is_multioutput_classification %}
 from sklearn.preprocessing import LabelEncoder
 label_encoders = {}
 for i, column in enumerate(target_train.columns):
@@ -56,7 +56,7 @@ y_pred = model.predict(feature_test)
 y_pred = model.classes_[np.argmax(y_pred, axis=1)].reshape(-1, 1)
 {% endif %}
 
-{% if pipeline.is_multi_class_multi_targets %}
+{% if is_multioutput_classification %}
 y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
 for column in TARGET_COLUMNS:
     y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))

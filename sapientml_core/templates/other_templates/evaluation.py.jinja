@@ -23,13 +23,13 @@ for i, col in enumerate(target_test.columns):
     __accs.append(one_acc)
 print(f"RESULT: Accuracy : {str(sum(__accs)/len(__accs))}")
 
-{% elif (pipeline.adaptation_metric == macros.Metric.F1.value) and (not pipeline.is_multi_class_multi_targets) %}
+{% elif (pipeline.adaptation_metric == macros.Metric.F1.value) and (not is_multioutput_classification) %}
 from sklearn import metrics
 
 f1 = metrics.f1_score(target_test, y_pred, average='macro')
 print('RESULT: F1 Score: ' + str(f1))
 
-{% elif pipeline.adaptation_metric == macros.Metric.F1.value and (pipeline.is_multi_class_multi_targets)%}
+{% elif pipeline.adaptation_metric == macros.Metric.F1.value and (is_multioutput_classification)%}
 from sklearn import metrics
 f1_scores = []
 

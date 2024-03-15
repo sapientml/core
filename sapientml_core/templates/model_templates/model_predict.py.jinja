@@ -13,12 +13,12 @@ y_pred = model.predict(feature_test)
 y_prob = model.predict_proba(feature_test)
 {% endif %}
 
-{% if pipeline.is_multi_class_multi_targets or model_name == xgbclassifier %}
+{% if is_multioutput_classification or model_name == xgbclassifier %}
 with open('target_LabelEncoder.pkl', 'rb') as f:
     label_encoders = pickle.load(f)
 {% endif %}
 
-{% if pipeline.is_multi_class_multi_targets %}
+{% if is_multioutput_classification %}
 y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
 for column in TARGET_COLUMNS:
     y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))
