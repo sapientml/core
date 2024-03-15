@@ -1,6 +1,3 @@
-{% if target2string %}
-target_test = target_test.astype(str)
-{% endif %}
 {% if pipeline.adaptation_metric == macros.Metric.AUC.value %}
 from sklearn.metrics import roc_auc_score
 {% if pipeline.task.is_multiclass == True %}

@@ -5,9 +5,6 @@ from sklearn.inspection import permutation_importance
 {% else %}
 {% set TARGET_TRAIN = 'target_train' %}
 {% endif %}
-{% if target2string %}
-{{ TARGET_TRAIN }} = {{ TARGET_TRAIN }}.astype(str)
-{% endif %}
 {% if pipeline.sparse_matrix %}
 if len(feature_train.columns) <= 100:
     perm = permutation_importance(model, feature_train.sparse.to_dense(), {{ TARGET_TRAIN }},
