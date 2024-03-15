@@ -137,13 +137,6 @@ class PipelineTemplate(BaseModel):
         if pipeline.model is None:
             return
         model_name = pipeline.model.label_name.split(":")[2]
-        is_boolean_target = any(
-            [pipeline.dataset_summary.columns[col].dtype == "bool" for col in pipeline.task.target_columns]
-        )
-        if model_name == "CatBoostClassifier" and is_boolean_target:
-            target2string = True
-        else:
-            target2string = False
 
         # Use tpl.render but self._render because keep blank lines.
         if len(pipeline.dataset_summary.cols_str_other) > 0:
@@ -186,14 +179,13 @@ class PipelineTemplate(BaseModel):
         )
 
         tpl = env.get_template("other_templates/evaluation.py.jinja")
-        code = self._render(tpl, pipeline=pipeline, target2string=target2string, macros=macros)
+        code = self._render(tpl, pipeline=pipeline, macros=macros)
         pipeline.pipeline_json["evaluation"]["code_validation"] = code
         pipeline.pipeline_json["evaluation"]["code_predict"] = code
         tpl = env.get_template("other_templates/evaluation_test.py.jinja")
         code = self._render(
             tpl,
             pipeline=pipeline,
-            target2string=target2string,
             macros=macros,
             is_multioutput_classification=_is_multioutput_classification,
         )
@@ -221,7 +213,7 @@ class PipelineTemplate(BaseModel):
 
             tpl = env.get_template("other_templates/hyperparameter_tuning_evaluation.py.jinja")
             pipeline.pipeline_json["hyperparameter_tuning_evaluation"]["code"] = self._render(
-                tpl, pipeline=pipeline, target2string=target2string, macros=macros
+                tpl, pipeline=pipeline, macros=macros
             )
 
             self.populate_hyperparameter_tuning()
@@ -244,9 +236,7 @@ class PipelineTemplate(BaseModel):
 
         if pipeline.config.permutation_importance:
             tpl = env.get_template("other_templates/permutation_importance.py.jinja")
-            pipeline.pipeline_json["permutation_importance"]["code"] = self._render(
-                tpl, pipeline=pipeline, target2string=target2string
-            )
+            pipeline.pipeline_json["permutation_importance"]["code"] = self._render(tpl, pipeline=pipeline)
 
         tpl_validation = env.get_template("pipeline_validation.py.jinja")
         pipeline.validation = tpl_validation.render(
