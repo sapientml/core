@@ -159,6 +159,10 @@ class PipelineTemplate(BaseModel):
                 tpl, train=False, test=True, irrelevant_columns=irrelevant_columns
             )
 
+        _is_multioutput_classification = (
+            pipeline.task.task_type == macros.TASK_CLASSIFICATION and len(pipeline.task.target_columns) > 1
+        )
+
         tpl = env.get_template("other_templates/target_separation_validation.py.jinja")
         pipeline.pipeline_json["target_separation"]["code_validation"] = self._render(tpl, pipeline=pipeline)
         tpl = env.get_template("other_templates/target_separation_test.py.jinja")
@@ -182,13 +186,21 @@ class PipelineTemplate(BaseModel):
             )
 
         tpl = env.get_template("other_templates/evaluation.py.jinja")
-        code = self._render(tpl, pipeline=pipeline, target2string=target2string, macros=macros)
+        code = self._render(
+            tpl,
+            pipeline=pipeline,
+            target2string=target2string,
+            macros=macros,
+            is_multioutput_classification=_is_multioutput_classification,
+        )
         pipeline.pipeline_json["evaluation"]["code_validation"] = code
         pipeline.pipeline_json["evaluation"]["code_test"] = code
 
         # Adding confusion_matrix
         tpl = env.get_template("other_templates/confusion_matrix.py.jinja")
-        pipeline.pipeline_json["confusion_matrix"]["code"] = self._render(tpl, pipeline=pipeline)
+        pipeline.pipeline_json["confusion_matrix"]["code"] = self._render(
+            tpl, pipeline=pipeline, is_multioutput_classification=_is_multioutput_classification
+        )
 
         # Adding Shap Visualization data
         tpl = env.get_template("other_templates/shap.py.jinja")
