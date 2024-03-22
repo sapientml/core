@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import re
 from collections import defaultdict
 from typing import Any, Literal, Optional, Union
@@ -415,7 +414,6 @@ def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
         DatasetSummary
     """
     is_multi_classes: list[bool] = []
-
     for target in task.target_columns:
         is_multi_classes.append(len(df_train[target].unique()) > 1)
     has_multi_class_targets = all(is_multi_classes)
