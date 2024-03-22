@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import re
 from collections import defaultdict
 from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
-import collections
 from pandas.core.dtypes.common import is_numeric_dtype
 from pydantic import BaseModel, Field, field_validator
 from sapientml.params import Code, Config, Task

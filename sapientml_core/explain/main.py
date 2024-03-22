@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 from typing import Literal, Optional
 
 import pandas as pd
 from sapientml.params import CancellationToken
 from sapientml.util.logging import setup_logger
+from sapientml_preprocess.generator import check_cols_has_symbols, remove_symbols
 
 from .AutoEDA import EDA
 from .AutoVisualization import AutoVisualization_Class
@@ -81,12 +83,50 @@ def process(
     if visualization:
         # Call AutoVisualization to generate visualization codes
         AV = AutoVisualization_Class()
-        visualization_code = AV.AutoVisualization(
-            df=dataframe,
-            target_columns=target_columns,
-            problem_type=problem_type,
-            ignore_columns=ignore_columns,
-        )
+        cols_has_symbols = check_cols_has_symbols(dataframe.columns.to_list())
+        rename_col = []
+        rename_dict = {}
+        if cols_has_symbols:
+            df = list(
+                dataframe.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col).columns
+            )
+            same_column = collections.Counter(df)
+            for target in same_column.keys():
+                rename_col = []
+                rename_dict = {}
+                i = 1
+                for col in df:
+                    if target in col and same_column[target] > 1:
+                        rename_col.append(str(col + str(i)))
+                        rename_dict[str(col + str(i))] = dataframe.columns[len(rename_dict)]
+                        i = i + 1
+                    else:
+                        rename_col.append(str(col))
+                        rename_dict[col] = dataframe.columns[len(rename_dict)]
+                df = rename_col
+
+            if len(rename_dict) != 0:
+                col_has_target = [rename_dict[col] for col in target_columns]
+                visualization_code = AV.AutoVisualization(
+                    df=dataframe,
+                    target_columns=col_has_target,
+                    problem_type=problem_type,
+                    ignore_columns=ignore_columns,
+                )
+            else:
+                visualization_code = AV.AutoVisualization(
+                    df=dataframe,
+                    target_columns=target_columns,
+                    problem_type=problem_type,
+                    ignore_columns=ignore_columns,
+                )
+        else:
+            visualization_code = AV.AutoVisualization(
+                df=dataframe,
+                target_columns=target_columns,
+                problem_type=problem_type,
+                ignore_columns=ignore_columns,
+            )
     else:
         visualization_code = None
 
