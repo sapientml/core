@@ -255,7 +255,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
                 pat = r"prediction = pd.DataFrame\(y_prob, columns=.?TARGET_COLUMNS.*, index=feature_test.index\)"
                 pipeline.test = re.sub(pat, replace_targets, pipeline.test)
                 pipeline.predict = re.sub(pat, replace_targets, pipeline.predict)
-                pipeline.validation =  re.sub(pat, replace_targets, pipeline.validation)
+                pipeline.validation = re.sub(pat, replace_targets, pipeline.validation)
 
             pipeline.train = code_block.train + pipeline.train
             result_pipelines.append(pipeline)
