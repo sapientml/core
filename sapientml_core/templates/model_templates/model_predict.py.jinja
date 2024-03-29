@@ -15,11 +15,11 @@ y_prob = model.predict_proba(feature_test)
 with open('target_LabelEncoder.pkl', 'rb') as f:
     label_encoder = pickle.load(f)
 {% endif %}
-{% if model_name == xgbclassifier and ((pipeline.adaptation_metric not in macros.metric_needing_predict_proba) or (pipeline.config.predict_option == macros.PRED_DEFAULT)) %}
-y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
-{% elif is_multioutput_classification%}
+{% if is_multioutput_classification %}
 y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
 for column in TARGET_COLUMNS:
     y_pred_df[column] = label_encoder[column].inverse_transform(y_pred_df[column].astype(int))
 y_pred = y_pred_df
+{% elif model_name == xgbclassifier and ((pipeline.adaptation_metric not in macros.metric_needing_predict_proba) or (pipeline.config.predict_option == macros.PRED_DEFAULT)) %}
+y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}
