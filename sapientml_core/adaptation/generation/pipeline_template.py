@@ -179,7 +179,9 @@ class PipelineTemplate(BaseModel):
         )
 
         tpl = env.get_template("other_templates/evaluation.py.jinja")
-        code = self._render(tpl, pipeline=pipeline, macros=macros)
+        code = self._render(
+            tpl, pipeline=pipeline, macros=macros, is_multioutput_classification=_is_multioutput_classification
+        )
         pipeline.pipeline_json["evaluation"]["code_validation"] = code
         pipeline.pipeline_json["evaluation"]["code_predict"] = code
         tpl = env.get_template("other_templates/evaluation_test.py.jinja")
