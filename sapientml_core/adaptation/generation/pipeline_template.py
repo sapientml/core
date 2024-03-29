@@ -193,7 +193,9 @@ class PipelineTemplate(BaseModel):
 
         # Adding confusion_matrix
         tpl = env.get_template("other_templates/confusion_matrix.py.jinja")
-        pipeline.pipeline_json["confusion_matrix"]["code"] = self._render(tpl, pipeline=pipeline)
+        pipeline.pipeline_json["confusion_matrix"]["code"] = self._render(
+            tpl, pipeline=pipeline, is_multioutput_classification=_is_multioutput_classification
+        )
 
         # Adding Shap Visualization data
         tpl = env.get_template("other_templates/shap.py.jinja")
