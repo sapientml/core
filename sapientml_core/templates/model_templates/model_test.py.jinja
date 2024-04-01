@@ -57,7 +57,7 @@ y_pred = y_pred_df
 y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}
 
-{% if pipeline.task.task_type == 'classification' and not is_multioutput_classification%}
+{% if pipeline.task.task_type == 'classification' %}
 y_prob = model.predict_proba(feature_test)
 
 # POST PROCESSING
@@ -66,7 +66,9 @@ y_prob_sorted_index = pd.DataFrame(np.argsort(-y_prob))
 y_prob_map_k = y_prob_sorted_index.apply(lambda x: model.classes_[x]).to_numpy()
 {% endif %}
 
+{% if not is_multioutput_classification %}
 if np.shape(y_prob)[1] == 2:
     y_prob = y_prob[:, 1]
+{% endif %}
 
 {% endif %}
