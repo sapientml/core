@@ -16,7 +16,7 @@ from sklearn.metrics import accuracy_score
 
 __accs = []
 for i, col in enumerate(target_test.columns):
-    one_acc = accuracy_score(target_test[col], y_pred[:, col])
+    one_acc = accuracy_score(target_test[col], y_pred[col])
     __accs.append(one_acc)
 print(f"RESULT: Accuracy : {str(sum(__accs)/len(__accs))}")
 {% elif pipeline.adaptation_metric == macros.Metric.F1.value and not is_multioutput_classification%}
