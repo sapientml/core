@@ -28,7 +28,14 @@ from sklearn.multioutput import MultiOutputClassifier
 model = MultiOutputClassifier(model)
 {% endif %}
 {% set xgbclassifier = "XGBClassifier" %}
-{% if model_name == xgbclassifier %}
+{% if is_multioutput_classification %}
+from sklearn.preprocessing import LabelEncoder
+label_encoders = {}
+for i, column in enumerate(target_train.columns):
+    le = LabelEncoder()
+    target_train[column] = le.fit_transform(target_train[column])
+    label_encoders[column] = le
+{% elif model_name == xgbclassifier %}
 from sklearn.preprocessing import LabelEncoder
 
 label_encoder = LabelEncoder()
@@ -40,9 +47,28 @@ model.fit(feature_train, target_train.values.ravel())
 model.fit(feature_train, target_train)
 {% endif %}
 y_pred = model.predict(feature_test)
-{% if pipeline.adaptation_metric and flag_predict_proba %}
-y_prob = model.predict_proba(feature_test)
-{% endif %}
-{% if model_name == xgbclassifier %}
+
+{% if is_multioutput_classification %}
+y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
+for column in TARGET_COLUMNS:
+    y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))
+y_pred = y_pred_df
+{% elif model_name == xgbclassifier %}
 y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
+{% endif %}
+
+{% if pipeline.task.task_type == 'classification' %}
+y_prob = model.predict_proba(feature_test)
+
+# POST PROCESSING
+{% if pipeline.adaptation_metric.startswith("MAP_") %}
+y_prob_sorted_index = pd.DataFrame(np.argsort(-y_prob))
+y_prob_map_k = y_prob_sorted_index.apply(lambda x: model.classes_[x]).to_numpy()
+{% endif %}
+
+{% if not is_multioutput_classification %}
+if np.shape(y_prob)[1] == 2:
+    y_prob = y_prob[:, 1]
+{% endif %}
+
 {% endif %}
