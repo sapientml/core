@@ -84,42 +84,25 @@ def process(
         # Call AutoVisualization to generate visualization codes
         AV = AutoVisualization_Class()
         cols_has_symbols = check_cols_has_symbols(dataframe.columns.to_list())
-        no_symbol_columns = [ col for col in dataframe.columns.values if col not in cols_has_symbols ]
+        no_symbol_columns = [col for col in dataframe.columns.values if col not in cols_has_symbols]
         rename_dict = {}
         if cols_has_symbols:
             df = list(
                 dataframe.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col).columns
             )
             rename_dict = {}
-            if len(df) != len(set(df)) :
-                same_column = {k: v for k, v in collections.Counter(df).items() if v > 1 and k in no_symbol_columns}
-                for target, org_column in zip(df, dataframe.columns.tolist()):
-                    if target in same_column.keys():
-                        # rename_dict[org_column] = target + str(same_column[target] - 1)
-                        rename_dict[target + str(same_column[target] - 1)] = org_column
-                        same_column[target] = same_column[target] - 1
-                    else:
-                        rename_dict[target] = org_column
-                    
-                df = list(rename_dict.values())
-                
-            # same_column = collections.Counter(df)
-            # for target in same_column.keys():
-            #     rename_col = []
-            #     rename_dict = {}
-            #     i = 1
-            #     for col in df:
-            #         if target in col and same_column[target] > 1:
-            #             rename_col.append(str(col + str(i)))
-            #             rename_dict[str(col + str(i))] = dataframe.columns[len(rename_dict)]
-            #             i = i + 1
-            #         else:
-            #             rename_col.append(str(col))
-            #             rename_dict[col] = dataframe.columns[len(rename_dict)]
-            #     df = rename_col
+            same_column = {k: v for k, v in collections.Counter(df).items() if v > 1 and k in no_symbol_columns}
+            for target, org_column in zip(df, dataframe.columns.tolist()):
+                if target in same_column.keys():
+                    rename_dict[target + str(same_column[target] - 1)] = org_column
+                    same_column[target] = same_column[target] - 1
+                else:
+                    rename_dict[target] = org_column
+
+            df = list(rename_dict.values())
 
             if len(rename_dict) != 0:
-                col_has_target = [target for target in rename_dict.keys() if rename_dict.values() == target_columns ]
+                col_has_target = [target for target in rename_dict.keys() if rename_dict.values() == target_columns]
                 visualization_code = AV.AutoVisualization(
                     df=dataframe,
                     target_columns=col_has_target,
