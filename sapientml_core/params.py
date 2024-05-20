@@ -14,13 +14,23 @@
 
 import re
 from collections import defaultdict
-from typing import Any, Literal, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
-from pydantic import BaseModel, Field, field_validator
-from sapientml.params import Code, Config, Task
+from pydantic import BaseModel, Field, StringConstraints, field_validator
+from sapientml.params import (
+    INITIAL_TIMEOUT,
+    MAX_COLUMN_NAME_LENGTH,
+    MAX_NUM_OF_COLUMNS,
+    Code,
+    ColumnName,
+    Config,
+    Seed,
+    String,
+    Task,
+)
 
 from . import ps_macros
 from .meta_features import (
@@ -34,13 +44,14 @@ PipelineSkeleton = (
     dict  # dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
 )
 
-MAX_NUM_OF_COLUMNS = 10000000
-MAX_SEED = 2**32 - 1
-MAX_COLUMN_NAME_LENGTH = 1000
+MAX_N_MODELS = 30
 MAX_HPO_N_TRIALS = 100000
 MAX_HPO_TIMEOUT = 500000
-MAX_N_MODELS = 30
-INITIAL_TIMEOUT = 600
+
+NModels = Annotated[int, Field(strict=False, gt=0, le=MAX_N_MODELS)]
+TuningNTrials = Annotated[int, Field(strict=False, ge=1, le=MAX_HPO_N_TRIALS)]
+TuningTimeout = Annotated[int, Field(strict=False, ge=0, le=MAX_HPO_TIMEOUT)]
+Dtype = Annotated[str, StringConstraints(max_length=100)]
 
 
 class SapientMLConfig(Config):
@@ -79,14 +90,14 @@ class SapientMLConfig(Config):
 
     """
 
-    n_models: int = 3
-    seed_for_model: int = 42
-    id_columns_for_prediction: Optional[list[str]] = None
-    use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
+    n_models: NModels = 3
+    seed_for_model: Seed = 42
+    id_columns_for_prediction: Optional[list[ColumnName]] = None
+    use_word_list: Optional[Union[list[ColumnName], dict[str, list[ColumnName]]]] = None
     hyperparameter_tuning: bool = False
-    hyperparameter_tuning_n_trials: int = 10
-    hyperparameter_tuning_timeout: int = 0
-    hyperparameter_tuning_random_state: int = 1023
+    hyperparameter_tuning_n_trials: TuningNTrials = 10
+    hyperparameter_tuning_timeout: TuningTimeout = 0
+    hyperparameter_tuning_random_state: Seed = 1023
     predict_option: Optional[Literal["default", "probability"]] = None
     permutation_importance: bool = True
     add_explanation: bool = False
@@ -122,12 +133,6 @@ class SapientMLConfig(Config):
             else:
                 self.hyperparameter_tuning_timeout = INITIAL_TIMEOUT
 
-    @field_validator("n_models")
-    def _check_n_models(cls, v):
-        if v <= 0 or MAX_N_MODELS < v:
-            raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
-        return v
-
     @field_validator(
         "id_columns_for_prediction",
         "use_word_list",
@@ -137,42 +142,6 @@ class SapientMLConfig(Config):
             return v
         if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
-        return v
-
-    @field_validator(
-        "id_columns_for_prediction",
-        "use_word_list",
-    )
-    def _check_column_name_length(cls, v):
-        if v is None:
-            return v
-        for _v in v.keys() if isinstance(v, dict) else v:
-            if len(_v) >= MAX_COLUMN_NAME_LENGTH:
-                raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
-        return v
-
-    @field_validator("seed_for_model")
-    def _check_seed(cls, v):
-        if v < 0 or MAX_SEED < v:
-            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
-        return v
-
-    @field_validator("hyperparameter_tuning_n_trials")
-    def _check_hyperparameter_tuning_n_trials(cls, v):
-        if v < 1 or MAX_HPO_N_TRIALS < v:
-            raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
-        return v
-
-    @field_validator("hyperparameter_tuning_timeout")
-    def _check_hyperparameter_tuning_timeout(cls, v):
-        if v < 0 or MAX_HPO_TIMEOUT < v:
-            raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
-        return v
-
-    @field_validator("hyperparameter_tuning_random_state")
-    def _check_hyperparameter_tuning_random_state(cls, v):
-        if v < 0 or MAX_SEED < v:
-            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
 
@@ -190,15 +159,9 @@ class Column(BaseModel):
         Whether the column has a negative value.
     """
 
-    dtype: str
+    dtype: Dtype
     meta_features: Optional[MetaFeatures]
     has_negative_value: bool
-
-    @field_validator("dtype")
-    def check_dtype(cls, v):
-        if len(v) > 100:
-            raise ValueError(f"'{v}' is invalid as a dtype")
-        return v
 
     @field_validator("meta_features")
     def check_meta_features(cls, v):
@@ -248,14 +211,14 @@ class DatasetSummary(BaseModel):
         List of string columns which are neither categorical nor text columns.
     """
 
-    columns: dict[str, Column]
+    columns: dict[ColumnName, Column]
     meta_features_pp: MetaFeatures
     meta_features_m: MetaFeatures
     has_multi_class_targets: bool
     has_inf_value_targets: bool
-    cols_almost_missing_string: Optional[list[str]] = None
-    cols_almost_missing_numeric: Optional[list[str]] = None
-    cols_str_other: Optional[list[str]] = None
+    cols_almost_missing_string: Optional[list[ColumnName]] = None
+    cols_almost_missing_numeric: Optional[list[ColumnName]] = None
+    cols_str_other: Optional[list[ColumnName]] = None
 
     @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
     def check_num_of_columns(cls, v):
@@ -263,15 +226,6 @@ class DatasetSummary(BaseModel):
             return v
         if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
-        return v
-
-    @field_validator("columns", "cols_almost_missing_string", "cols_almost_missing_numeric", "cols_str_other")
-    def check_column_name_length(cls, v):
-        if v is None:
-            return v
-        for _v in v.keys() if isinstance(v, dict) else v:
-            if len(_v) >= MAX_COLUMN_NAME_LENGTH:
-                raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
     @field_validator("meta_features_pp", "meta_features_m")
@@ -311,7 +265,7 @@ class ModelLabel(BaseModel):
         List of Meta features.
     """
 
-    label_name: str
+    label_name: String
     predict_proba: bool = False
     hyperparameters: Optional[Any] = None
     meta_features: list[Any] = Field(default_factory=list)
@@ -382,12 +336,12 @@ class Pipeline(SimplePipeline):
     task: Task
     dataset_summary: DatasetSummary
     config: SapientMLConfig
-    adaptation_metric: Optional[str] = None
+    adaptation_metric: Optional[String] = None
     all_columns_datatypes: dict = Field(default_factory=dict)
     inverse_target: bool = False
     sparse_matrix: bool = False  # Whether the data is converted to sparse matrix in the pipeline
-    train_column_names: list[str] = Field(default_factory=list)
-    test_column_names: list[str] = Field(default_factory=list)
+    train_column_names: list[ColumnName] = Field(default_factory=list)
+    test_column_names: list[ColumnName] = Field(default_factory=list)
 
     # To handle following case;
     #   metrics : Accuracy
@@ -395,8 +349,8 @@ class Pipeline(SimplePipeline):
     # because sklearn.accuracy_score doesn't support multi-class
     is_multi_class_multi_targets: bool = False
 
-    id_columns_for_prediction: list[str] = Field(default_factory=list)
-    output_dir_path: str = ""
+    id_columns_for_prediction: list[ColumnName] = Field(default_factory=list)
+    output_dir_path: String = ""
 
 
 def summarize_dataset(df_train: pd.DataFrame, task: Task) -> DatasetSummary:
