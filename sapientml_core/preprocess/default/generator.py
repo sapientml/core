@@ -27,7 +27,8 @@ from jinja2 import Environment, FileSystemLoader
 from sapientml.generator import CodeBlockGenerator
 from sapientml.params import Code, Dataset, Task
 from sapientml.util.logging import setup_logger
-from sapientml_core.preprocess.params import DefaultPreprocessConfig
+
+from .params import DefaultPreprocessConfig
 
 logger = setup_logger()
 
@@ -238,6 +239,15 @@ class DefaultPreprocess(CodeBlockGenerator):
             code.test += _render(tpl, training=True, test=True, cols_has_symbols=cols_has_symbols)
             code.train += _render(tpl, training=True, test=False, cols_has_symbols=cols_has_symbols)
             code.predict += _render(tpl, training=False, test=True, cols_has_symbols=cols_has_symbols)
+
+        # If None is intentionally inserted in the data, an error occurs, so we have added an action to change None to "np.nan."
+        if df.isin([None]).any(axis=None):
+            df = df.replace([None], np.nan)
+            tpl = template_env.get_template("none_has_columns.py.jinja")
+            code.validation += _render(tpl, training=True, test=True)
+            code.test += _render(tpl, training=True, test=True)
+            code.train += _render(tpl, training=True, test=False)
+            code.predict += _render(tpl, training=False, test=True)
 
         # handle list(tuple, dict) value in dataframe.
         # in generated scripts, visualisation will be executed before pre-processing such as handle mixed-type.

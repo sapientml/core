@@ -56,10 +56,10 @@ sapientml = "sapientml_core:SapientMLGenerator"
 localfile = "sapientml_core.datastore.localfile:LocalFile"
 
 [tool.poetry.plugins."sapientml.preprocess"]
-default = "sapientml_core.preprocess:DefaultPreprocess"
+default = "sapientml_core.preprocess.default:DefaultPreprocess"
 
 [tool.poetry.plugins."sapientml.export_modules"]
-sample-dataset = "sapientml_core.datastore.localfile.lib"
+sample-dataset = "sapientml_core.datastore.localfile.export_modules"
 
 [tool.pysen]
 version = "0.10"

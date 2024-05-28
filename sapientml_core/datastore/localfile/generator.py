@@ -29,7 +29,7 @@ def _render(tpl, *args, **kwargs):
 
 
 class LocalFileConfig(Config):
-    """Configuration arguments for sapientml_loadata.LocalFile class.
+    """Configuration arguments for LocalFile class.
 
     Parameters
     ----------
@@ -88,12 +88,12 @@ class LocalFile(CodeBlockGenerator):
 
     def _generate_code_load(self, dataset: Dataset, task: Task):
         code = Code()
-        tpl = template_env.get_template("LocalFile.py.jinja")
+        tpl = template_env.get_template("load_localfile.py.jinja")
         code.validation += _render(tpl, dataset=dataset, task=task, config=self.config, validation=True)
         code.test += _render(tpl, dataset=dataset, task=task, config=self.config, validation=False)
-        tpl = template_env.get_template("LocalFile_train.py.jinja")
+        tpl = template_env.get_template("load_localfile_train.py.jinja")
         code.train += _render(tpl, dataset=dataset, task=task, config=self.config)
-        tpl = template_env.get_template("LocalFile_predict.py.jinja")
+        tpl = template_env.get_template("load_localfile_predict.py.jinja")
         code.predict += _render(tpl, dataset=dataset, task=task, config=self.config)
         return dataset, code
 
