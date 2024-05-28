@@ -72,7 +72,7 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
 
     def __init__(self, datastore="localfile", preprocess="default", **kwargs):
         self.config = SapientMLConfig(**kwargs)
-        self.config.postinit()
+        self.config.post_init()
         eps_datastore = entry_points(group="sapientml.datastore")
         eps_preprocess = entry_points(group="sapientml.preprocess")
         self.datastore = eps_datastore[datastore].load()(**kwargs)

@@ -20,7 +20,7 @@ on:
       - '*.*.*'
 
 env:
-  POETRY_VERSION: "1.5.1"
+  POETRY_VERSION: "1.7.1"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:
@@ -50,15 +50,6 @@ jobs:
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
-
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
-
-      - name: Install Packages
-        run: sudo apt install -y graphviz
 
       - name: Install Dependencies
         run: poetry install
@@ -101,15 +92,6 @@ jobs:
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
-
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
-
-      - name: Install Packages
-        run: sudo apt install -y graphviz
 
       - name: Install Dependencies
         run: poetry install
