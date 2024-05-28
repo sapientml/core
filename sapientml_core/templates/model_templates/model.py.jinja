@@ -28,7 +28,14 @@ from sklearn.multioutput import MultiOutputClassifier
 model = MultiOutputClassifier(model)
 {% endif %}
 {% set xgbclassifier = "XGBClassifier" %}
-{% if model_name == xgbclassifier %}
+{% if is_multioutput_classification %}
+from sklearn.preprocessing import LabelEncoder
+label_encoders = {}
+for i, column in enumerate(target_train.columns):
+    le = LabelEncoder()
+    target_train[column] = le.fit_transform(target_train[column])
+    label_encoders[column] = le
+{% elif model_name == xgbclassifier %}
 from sklearn.preprocessing import LabelEncoder
 
 label_encoder = LabelEncoder()
@@ -43,6 +50,11 @@ y_pred = model.predict(feature_test)
 {% if flag_predict_proba and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
 y_pred = model.classes_[np.argmax(y_pred, axis=1)].reshape(-1, 1)
 {% endif %}
-{% if model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
+{% if is_multioutput_classification %}
+y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
+for column in TARGET_COLUMNS:
+    y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))
+y_pred = y_pred_df
+{% elif model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
 y_pred = label_encoder.inverse_transform(y_pred).reshape(-1, 1)
 {% endif %}

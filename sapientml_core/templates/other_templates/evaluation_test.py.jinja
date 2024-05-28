@@ -1,0 +1,152 @@
+{% if pipeline.task.task_type == macros.TASK_CLASSIFICATION %}
+
+## Metric: F1
+from sklearn.metrics import f1_score
+{% if is_multioutput_classification%}
+f1_scores = []
+for i, column in enumerate(target_test.columns):
+    f1_score_value = f1_score(target_test[column], y_pred[column], average='macro')
+    f1_scores.append(f1_score_value)
+average_f1_score = np.mean(f1_scores)
+print('RESULT: Average F1 Score:', str(average_f1_score))
+{% else %}
+f1 = f1_score(target_test, y_pred, average='macro')
+print('RESULT: F1 Score: ' + str(f1))
+{% endif%}
+
+## Metric: Accuracy
+from sklearn.metrics import accuracy_score
+{% if not pipeline.is_multi_class_multi_targets %}
+accuracy = accuracy_score(target_test, y_pred)
+print('RESULT: Accuracy: ' + str(accuracy))
+{% elif pipeline.is_multi_class_multi_targets %}
+__accs = []
+for i, col in enumerate(target_test.columns):
+    one_acc = accuracy_score(target_test[col], y_pred[col])
+    __accs.append(one_acc)
+print(f"RESULT: Average Accuracy : {str(sum(__accs)/len(__accs))}")
+{% endif %}
+
+## Metric: AUC and Gini
+from sklearn.metrics import roc_auc_score
+{% if is_multioutput_classification %}
+auc_scores = []
+gini_scores = []
+for i, column in enumerate(target_test.columns):
+    if y_prob[i].ndim == 2 and y_prob[i].shape[1] == 2:
+        auc_score = roc_auc_score(target_test[column], y_prob[i][:, 1])
+    elif y_prob[i].ndim == 2:
+        auc_score = roc_auc_score(target_test[column], y_prob[i], multi_class="ovr")
+    gini_score = 2 * auc_score - 1
+    auc_scores.append(auc_score)
+    gini_scores.append(gini_score)
+auc = np.mean(auc_scores)
+gini = np.mean(gini_scores)
+print('RESULT: Average AUC Score:', str(auc))
+print('RESULT: Average Gini Score:', str(gini))
+{% else %}
+{% if pipeline.task.is_multiclass == True %}
+auc = roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr")
+{% else %}
+auc = roc_auc_score(target_test, y_prob)
+{% endif %}
+gini = 2 * auc - 1
+print('RESULT: AUC Score: ' + str(auc))
+print('RESULT: Gini: ' + str(gini))
+{% endif %}
+
+## Metric: Log Loss
+from sklearn.metrics import log_loss
+{% if is_multioutput_classification %}
+log_loss_scores = []
+for i, column in enumerate(target_test.columns):
+    loss = log_loss(target_test[column], y_prob[i])
+    log_loss_scores.append(loss)
+avg_log_loss = np.mean(log_loss_scores)
+print('RESULT: Average Log Loss:', str(avg_log_loss))
+{% else %}
+log_loss_score = log_loss(target_test, y_prob)
+print('RESULT: Log Loss:', str(log_loss_score))
+{% endif %}
+
+{% if not is_multioutput_classification %}
+
+## Metric: MCC
+from sklearn.metrics import matthews_corrcoef
+
+mcc = matthews_corrcoef(target_test, y_pred)
+print('RESULT: MCC:', str(mcc))
+
+## Metric: QWK
+from sklearn.metrics import cohen_kappa_score
+
+qwk = cohen_kappa_score(target_test, y_pred, weights='quadratic')
+print('RESULT: QWK:', str(qwk))
+
+{% if pipeline.adaptation_metric.startswith("MAP_") %}
+## Metric: MAP@K
+{% set k = pipeline.adaptation_metric.split("_")[1] %}
+def apk(actual, predicted, k):
+    if len(predicted)>k:
+        predicted = predicted[:k]
+
+    score = 0.0
+    num_hits = 0.0
+
+    for i,p in enumerate(predicted):
+        if p in actual and p not in predicted[:i]:
+            num_hits += 1.0
+            score += num_hits / (i+1.0)
+
+    return score / min(len(actual), k)
+
+def mapk(actual, predicted, k):
+    """ Computes the mean average precision at k.
+
+    Args:
+        actual (list[list[str] or ndarray): A list of lists of elements that are to be predicted
+        predicted (list[list[str] or ndarray): A list of lists of predicted elements
+            (In each list, arrange in the order you predicted.)
+        k (int): The maximum number of predicted elements
+
+    Returns:
+        double: The mean average precision at k over the input lists
+    """
+    return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
+
+map_k = mapk(target_test.to_numpy(), y_prob_map_k, k={{ k }})
+print('RESULT: MAP@K: ' + str(map_k))
+
+{% endif %}
+{% endif %}
+
+{% elif pipeline.task.task_type == macros.TASK_REGRESSION %}
+
+## Metric: R2
+from sklearn import metrics
+
+r2 = metrics.r2_score(target_test, y_pred)
+print('RESULT: R2 Score:', str(r2))
+
+## Metric: RMSE
+from sklearn.metrics import mean_squared_error
+
+rmse = mean_squared_error(target_test, y_pred, squared=False)
+print('RESULT: RMSE:', str(rmse))
+
+## Metric: RMSLE
+import numpy as np
+from sklearn.metrics import mean_squared_log_error
+
+target_test = np.clip(target_test, 0, None)
+y_pred = np.clip(y_pred, 0, None)
+rmsle = np.sqrt(mean_squared_log_error(target_test, y_pred))
+print('RESULT: RMSLE:', str(rmsle))
+
+## Metric: MAE
+from sklearn.metrics import mean_absolute_error
+
+mae = mean_absolute_error(target_test, y_pred)
+print('RESULT: MAE:', str(mae))
+
+{% endif %}
