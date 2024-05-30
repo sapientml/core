@@ -23,7 +23,16 @@ from sklearn.multioutput import MultiOutputClassifier
 model = MultiOutputClassifier(model)
 {% endif %}
 {% set xgbclassifier = "XGBClassifier" %}
-{% if model_name == xgbclassifier %}
+{% if is_multioutput_classification %}
+from sklearn.preprocessing import LabelEncoder
+label_encoders = {}
+for i, column in enumerate(target_train.columns):
+    le = LabelEncoder()
+    target_train[column] = le.fit_transform(target_train[column])
+    label_encoders[column] = le
+with open('target_LabelEncoder.pkl', 'wb') as f:
+    pickle.dump(label_encoders, f)
+{% elif model_name == xgbclassifier %}
 from sklearn.preprocessing import LabelEncoder
 
 label_encoder = LabelEncoder()

@@ -14,7 +14,13 @@ prediction = pd.DataFrame(y_prob, columns=model.classes_, index=feature_test.ind
 prediction = pd.DataFrame(y_prob, columns=TARGET_COLUMNS, index=feature_test.index)
 {% elif pipeline.adaptation_metric.startswith("MAP_") %}
 {% set k = pipeline.adaptation_metric.split("_")[1] %}
+{% if y_prob_map_k is none %}
 prediction = pd.DataFrame(y_prob, columns=[TARGET_COLUMNS[0] + "_" +str(i) for i in range(1, y_prob.shape[1] + 1)], index=feature_test.index)
+{% elif is_multioutput_classification %}
+prediction = y_pred
+{% else %}
+prediction = pd.DataFrame(y_prob_map_k, columns=[TARGET_COLUMNS[0] + "_" +str(i) for i in range(1, y_prob_map_k.shape[1] + 1)], index=feature_test.index)
+{% endif %}
 {% else %}
 prediction = pd.DataFrame(y_pred, columns=TARGET_COLUMNS, index=feature_test.index)
 {% endif %}
