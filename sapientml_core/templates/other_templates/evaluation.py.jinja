@@ -1,6 +1,3 @@
-{% if target2string %}
-target_test = target_test.astype(str)
-{% endif %}
 {% if pipeline.adaptation_metric == macros.Metric.AUC.value %}
 from sklearn.metrics import roc_auc_score
 {% if pipeline.task.is_multiclass == True %}
@@ -19,14 +16,22 @@ from sklearn.metrics import accuracy_score
 
 __accs = []
 for i, col in enumerate(target_test.columns):
-    one_acc = accuracy_score(target_test[col], y_pred[:, i:i+1])
+    one_acc = accuracy_score(target_test[col], y_pred[col])
     __accs.append(one_acc)
 print(f"RESULT: Accuracy : {str(sum(__accs)/len(__accs))}")
-{% elif pipeline.adaptation_metric == macros.Metric.F1.value %}
+{% elif pipeline.adaptation_metric == macros.Metric.F1.value and not is_multioutput_classification%}
 from sklearn import metrics
 
 f1 = metrics.f1_score(target_test, y_pred, average='macro')
 print('RESULT: F1 Score: ' + str(f1))
+{% elif pipeline.adaptation_metric == macros.Metric.F1.value and is_multioutput_classification%}
+from sklearn import metrics
+
+__f1s = []
+for i, col in enumerate(target_test.columns):
+    one_f1 = metrics.f1_score(target_test[col], y_pred[col], average='macro')
+    __f1s.append(one_f1)
+print(f"RESULT: F1 Score : {str(sum(__f1s)/len(__f1s))}")
 {% elif pipeline.adaptation_metric == macros.Metric.R2.value %}
 from sklearn import metrics
 
