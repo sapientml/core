@@ -1,0 +1,8 @@
+# DISCARD COLUMNS WITH ONE VALUE ONLY
+cols_one_value_only = {{ cols_one_value_only }}
+{% if training %}
+train_dataset = train_dataset.drop(cols_one_value_only, axis=1, errors="ignore")
+{% endif %}
+{% if test %}
+test_dataset = test_dataset.drop(cols_one_value_only, axis=1, errors="ignore")
+{% endif %}
