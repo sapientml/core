@@ -15,6 +15,7 @@
 import os
 from typing import Optional
 
+import numpy as np
 from jinja2 import Environment, FileSystemLoader
 from sapientml.generator import CodeBlockGenerator
 from sapientml.params import Code, Config, Dataset, Task
@@ -71,6 +72,8 @@ class LocalFile(CodeBlockGenerator):
         dataset, tmp_code = self._generate_code_load(dataset, task)
         code += tmp_code
         dataset, tmp_code = self._generate_code_concat_train_validation(dataset, task)
+        code += tmp_code
+        dataset, tmp_code = self._generate_code_drop_inf_or_nan(dataset, task)
         code += tmp_code
         dataset, tmp_code = self._generate_code_split(dataset, task)
         code += tmp_code
@@ -150,4 +153,15 @@ class LocalFile(CodeBlockGenerator):
         code = Code()
         tpl = template_env.get_template("set_validation_as_test.py.jinja")
         code.validation += _render(tpl)
+        return dataset, code
+
+    def _generate_code_drop_inf_or_nan(self, dataset: Dataset, task: Task):
+        code = Code()
+        # handle nan or inf value in the target columns.
+        drop_flag = dataset.training_dataframe[task.target_columns].isin([np.inf, -np.inf, np.nan]).any(axis=1).any()
+        if drop_flag:
+            tpl = template_env.get_template("drop_inf_or_nan_rows.py.jinja")
+            code.validation += _render(tpl, target_columns=task.target_columns)
+            code.test += _render(tpl, target_columns=task.target_columns)
+            code.train += _render(tpl, target_columns=task.target_columns)
         return dataset, code
