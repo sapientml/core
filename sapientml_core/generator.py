@@ -70,12 +70,13 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     Own the main functions for generating the pipeline.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, datastore="localfile", preprocess="default", **kwargs):
         self.config = SapientMLConfig(**kwargs)
-        self.config.postinit()
-        eps = entry_points(group="sapientml.code_block_generator")
-        self.loaddata = eps["loaddata"].load()(**kwargs)
-        self.preprocess = eps["preprocess"].load()(**kwargs)
+        self.config.post_init()
+        eps_datastore = entry_points(group="sapientml.datastore")
+        eps_preprocess = entry_points(group="sapientml.preprocess")
+        self.datastore = eps_datastore[datastore].load()(**kwargs)
+        self.preprocess = eps_preprocess[preprocess].load()(**kwargs)
 
     def train(self, tag=None, num_parallelization=200):
         """Run meta-training.
@@ -211,10 +212,10 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         self.task = task
 
         logger.info("Generating pipelines...")
-        dataset, loaddata_block = self.loaddata.generate_code(dataset, task)
+        dataset, datastore_block = self.datastore.generate_code(dataset, task)
         dataset.check_dataframes(task.target_columns)
         dataset, preprocess_block = self.preprocess.generate_code(dataset, task)
-        code_block = loaddata_block + preprocess_block
+        code_block = datastore_block + preprocess_block
         dataset, sapientml_results = self.generate_code(dataset, task)
 
         result_pipelines: list[Code] = []
