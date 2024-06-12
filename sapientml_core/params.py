@@ -103,7 +103,7 @@ class SapientMLConfig(Config):
     add_explanation: bool = False
     export_preprocess_dataset: bool = False
 
-    def postinit(self):
+    def post_init(self):
         """Set initial_timeout and hyperparameter_tuning_timeout.
 
         If initial_timeout is set as None and hyperparameter_tuning is false, set initial_timeout as INITIAL_TIMEOUT.
