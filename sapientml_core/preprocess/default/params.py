@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sapientml.params import Config
+from sapientml.params import Config, String
 
 
 class DefaultPreprocessConfig(Config):
@@ -19,5 +19,5 @@ class DefaultPreprocessConfig(Config):
 
     """
 
-    use_pos_list: Optional[list[str]] = ["名詞", "動詞", "助動詞", "形容詞", "副詞"]
+    use_pos_list: Optional[list[String]] = ["名詞", "動詞", "助動詞", "形容詞", "副詞"]
     use_word_stemming: bool = True
