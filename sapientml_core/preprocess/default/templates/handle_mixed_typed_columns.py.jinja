@@ -1,0 +1,16 @@
+# HANDLE MIXED TYPE
+import numpy as np
+cols_numeric_and_string = {{ cols_numeric_and_string}}
+for col in cols_numeric_and_string:
+{% if training %}
+    train_dataset[col + '__str'] = np.where(pd.to_numeric(train_dataset[col], errors='coerce').isnull(), train_dataset[col], np.nan)
+    train_dataset[col + '__str'] = np.where(train_dataset[col + '__str'].notnull(), train_dataset[col + '__str'].astype(str), np.nan)
+    train_dataset[col + '__num'] = np.where(pd.to_numeric(train_dataset[col], errors='coerce').isnull(), np.nan, train_dataset[col]).astype(float)
+    train_dataset = train_dataset.drop(col, axis=1)
+{% endif %}
+{% if test %}
+    test_dataset[col + '__str'] = np.where(pd.to_numeric(test_dataset[col], errors='coerce').isnull(), test_dataset[col], np.nan)
+    test_dataset[col + '__str'] = np.where(test_dataset[col + '__str'].notnull(), test_dataset[col + '__str'].astype(str), np.nan)
+    test_dataset[col + '__num'] = np.where(pd.to_numeric(test_dataset[col], errors='coerce').isnull(), np.nan, test_dataset[col]).astype(float)
+    test_dataset = test_dataset.drop(col, axis=1)
+{% endif %}

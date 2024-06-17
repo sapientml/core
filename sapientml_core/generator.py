@@ -70,9 +70,9 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
     Own the main functions for generating the pipeline.
     """
 
-    def __init__(self, datastore="invalid", preprocess="invalid", **kwargs):
+    def __init__(self, datastore="localfile", preprocess="default", **kwargs):
         self.config = SapientMLConfig(**kwargs)
-        self.config.postinit()
+        self.config.post_init()
         eps_datastore = entry_points(group="sapientml.datastore")
         eps_preprocess = entry_points(group="sapientml.preprocess")
         self.datastore = eps_datastore[datastore].load()(**kwargs)
@@ -263,8 +263,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         # Generate the meta-features
         logger.info("Generating meta features...")
         dataset_summary = summarize_dataset(df, task)  # type: ignore
-        if dataset_summary.has_inf_value_targets:
-            raise ValueError("Stopped generation because target columns have infinity value.")
 
         labels = predict(task, dataset_summary)
         adapt = Adaptation(

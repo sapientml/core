@@ -15,6 +15,7 @@
 import os
 from typing import Optional
 
+import numpy as np
 from jinja2 import Environment, FileSystemLoader
 from sapientml.generator import CodeBlockGenerator
 from sapientml.params import Code, Config, Dataset, Task
@@ -29,7 +30,7 @@ def _render(tpl, *args, **kwargs):
 
 
 class LocalFileConfig(Config):
-    """Configuration arguments for sapientml_loadata.LocalFile class.
+    """Configuration arguments for LocalFile class.
 
     Parameters
     ----------
@@ -72,6 +73,8 @@ class LocalFile(CodeBlockGenerator):
         code += tmp_code
         dataset, tmp_code = self._generate_code_concat_train_validation(dataset, task)
         code += tmp_code
+        dataset, tmp_code = self._generate_code_drop_inf_or_nan(dataset, task)
+        code += tmp_code
         dataset, tmp_code = self._generate_code_split(dataset, task)
         code += tmp_code
         dataset, tmp_code = self._generate_code_subsample(dataset, task)
@@ -88,12 +91,12 @@ class LocalFile(CodeBlockGenerator):
 
     def _generate_code_load(self, dataset: Dataset, task: Task):
         code = Code()
-        tpl = template_env.get_template("LocalFile.py.jinja")
+        tpl = template_env.get_template("load_localfile.py.jinja")
         code.validation += _render(tpl, dataset=dataset, task=task, config=self.config, validation=True)
         code.test += _render(tpl, dataset=dataset, task=task, config=self.config, validation=False)
-        tpl = template_env.get_template("LocalFile_train.py.jinja")
+        tpl = template_env.get_template("load_localfile_train.py.jinja")
         code.train += _render(tpl, dataset=dataset, task=task, config=self.config)
-        tpl = template_env.get_template("LocalFile_predict.py.jinja")
+        tpl = template_env.get_template("load_localfile_predict.py.jinja")
         code.predict += _render(tpl, dataset=dataset, task=task, config=self.config)
         return dataset, code
 
@@ -150,4 +153,15 @@ class LocalFile(CodeBlockGenerator):
         code = Code()
         tpl = template_env.get_template("set_validation_as_test.py.jinja")
         code.validation += _render(tpl)
+        return dataset, code
+
+    def _generate_code_drop_inf_or_nan(self, dataset: Dataset, task: Task):
+        code = Code()
+        # handle nan or inf value in the target columns.
+        drop_flag = dataset.training_dataframe[task.target_columns].isin([np.inf, -np.inf, np.nan]).any(axis=1).any()
+        if drop_flag:
+            tpl = template_env.get_template("drop_inf_or_nan_rows.py.jinja")
+            code.validation += _render(tpl, target_columns=task.target_columns)
+            code.test += _render(tpl, target_columns=task.target_columns)
+            code.train += _render(tpl, target_columns=task.target_columns)
         return dataset, code

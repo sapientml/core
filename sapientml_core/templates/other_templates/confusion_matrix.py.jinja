@@ -1,6 +1,10 @@
 from sklearn.metrics import ConfusionMatrixDisplay
 {% if pipeline.task.target_columns|length == 1 %}
 ConfusionMatrixDisplay.from_predictions(target_test, y_pred)
+{% elif is_multioutput_classification %}
+for i, column in enumerate(y_pred.columns):
+    disp = ConfusionMatrixDisplay.from_predictions(target_test[column], y_pred[column].values)
+    disp.ax_.set_title(column)
 {% else %}
 for i, column in enumerate(target_test.columns):
     disp = ConfusionMatrixDisplay.from_predictions(target_test[column], y_pred[:, i])
