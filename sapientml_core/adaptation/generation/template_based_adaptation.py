@@ -265,6 +265,8 @@ class Adaptation:
                 except Exception:
                     raise ValueError("Please set number for K in MAP_K.")
                 return macros.Metric.MAP_K.value + k
+            elif metric == "mape":
+                return macros.Metric.MAPE.value
             else:
                 raise ValueError(f"Invalid metric: {metric}")
         else:
