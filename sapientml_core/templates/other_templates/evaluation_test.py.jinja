@@ -149,4 +149,10 @@ from sklearn.metrics import mean_absolute_error
 mae = mean_absolute_error(target_test, y_pred)
 print('RESULT: MAE:', str(mae))
 
+## Metric: MAPE
+from sklearn.metrics import mean_absolute_percentage_error
+
+mape = mean_absolute_percentage_error(target_test, y_pred)
+print('RESULT: MAPE:', str(mape))
+
 {% endif %}

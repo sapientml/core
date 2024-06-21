@@ -118,6 +118,12 @@ from sklearn.metrics import cohen_kappa_score
 
 qwk = cohen_kappa_score(target_test, y_pred, weights='quadratic')
 print('RESULT: QWK:', str(qwk))
+{% elif pipeline.adaptation_metric == macros.Metric.MAPE.value %}
+from sklearn.metrics import mean_absolute_percentage_error
+
+mape = mean_absolute_percentage_error(target_test, y_pred)
+print('RESULT: MAPE:', str(mape))
+
 {% elif pipeline.task_type == macros.TASK_REGRESSION.value %}
 from sklearn import metrics
 
