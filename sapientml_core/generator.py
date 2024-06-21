@@ -298,8 +298,6 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         # Generate the meta-features
         logger.info("Generating meta features...")
         dataset_summary = summarize_dataset(df, task)  # type: ignore
-        if dataset_summary.has_inf_value_targets:
-            raise ValueError("Stopped generation because target columns have infinity value.")
 
         labels = predict(task, dataset_summary)
         adapt = Adaptation(

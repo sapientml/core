@@ -1,0 +1,3 @@
+import numpy as np
+train_dataset = train_dataset[~train_dataset[{{target_columns}}].isin([np.inf, -np.inf, np.nan]).any(axis=1)]
+
