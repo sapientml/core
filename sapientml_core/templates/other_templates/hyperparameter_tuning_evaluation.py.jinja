@@ -74,6 +74,9 @@
             return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
     
         score = mapk(target_test.to_numpy(), y_pred, k={{ k }})
+{% elif pipeline.adaptation_metric == macros.Metric.MAPE.value %}
+        from sklearn.metrics import mean_absolute_percentage_error
+        score = mean_absolute_percentage_error(target_test, y_pred)        
 {% elif pipeline.task.task_type == macros.TASK_REGRESSION %}
         from sklearn import metrics
         score = metrics.r2_score(target_test, y_pred)

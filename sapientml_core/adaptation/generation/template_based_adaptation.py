@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -265,6 +265,8 @@ class Adaptation:
                 except Exception:
                     raise ValueError("Please set number for K in MAP_K.")
                 return macros.Metric.MAP_K.value + k
+            elif metric == "mape":
+                return macros.Metric.MAPE.value
             else:
                 raise ValueError(f"Invalid metric: {metric}")
         else:
