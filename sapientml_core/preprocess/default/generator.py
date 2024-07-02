@@ -324,7 +324,9 @@ class DefaultPreprocess(CodeBlockGenerator):
                 tpl, config=self.config, training=False, test=True, cols_japanese_text=cols_japanese_text
             )
 
-        cols_one_value_only = df.columns[df.nunique(dropna=False) == 1].tolist()
+        cols_one_value_only = dataset.training_dataframe.columns[
+            dataset.training_dataframe.nunique(dropna=False) == 1
+        ].tolist()
         if cols_one_value_only:
             df = df.drop(cols_one_value_only, axis=1)
             tpl = template_env.get_template("drop_one_value_columns.py.jinja")
