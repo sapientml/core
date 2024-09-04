@@ -18,10 +18,10 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 from datetime import datetime
 from glob import glob
-from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
 from typing import Tuple, Union
@@ -40,6 +40,11 @@ from .explain.main import process as explain
 from .params import SapientMLConfig, SimplePipeline, summarize_dataset
 from .seeding.predictor import predict
 from .training import project_corpus
+
+if sys.version_info.minor <= 9:
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 logger = setup_logger()
 
