@@ -227,8 +227,43 @@ class SapientMLGenerator(PipelineGenerator, CodeBlockGenerator):
         for pipeline in sapientml_results:
             pipeline.validation = code_block.validation + pipeline.validation
             pipeline.test = code_block.test + pipeline.test
-            pipeline.train = code_block.train + pipeline.train
             pipeline.predict = code_block.predict + pipeline.predict
+            if "cols_has_symbols" in pipeline.test:
+                pipeline.test = pipeline.test.replace(
+                    '"feature": feature_train.columns',
+                    '"feature": feature_train.rename(columns=rename_symbol_cols).columns',
+                )
+                pipeline.test = pipeline.test.replace(
+                    "prediction.to_csv", "prediction.rename(columns=rename_symbol_cols).to_csv"
+                )
+
+                pipeline.predict = pipeline.predict.replace(
+                    '"feature": feature_train.columns',
+                    '"feature": feature_train.rename(columns=rename_symbol_cols).columns',
+                )
+                pipeline.predict = pipeline.predict.replace(
+                    "prediction.to_csv", "prediction.rename(columns=rename_symbol_cols).to_csv"
+                )
+
+                pipeline.validation = pipeline.validation.replace(
+                    '"feature": feature_train.columns',
+                    '"feature": feature_train.rename(columns=rename_symbol_cols).columns',
+                )
+                pipeline.validation = pipeline.validation.replace(
+                    "prediction.to_csv", "prediction.rename(columns=rename_symbol_cols).to_csv"
+                )
+
+                def replace_targets(match_obj):
+                    return match_obj[0].replace(
+                        "TARGET_COLUMNS", "[rename_symbol_cols.get(v, v) for v in TARGET_COLUMNS]"
+                    )
+
+                pat = r"prediction = pd.DataFrame\(y_prob, columns=.?TARGET_COLUMNS.*, index=feature_test.index\)"
+                pipeline.test = re.sub(pat, replace_targets, pipeline.test)
+                pipeline.predict = re.sub(pat, replace_targets, pipeline.predict)
+                pipeline.validation = re.sub(pat, replace_targets, pipeline.validation)
+
+            pipeline.train = code_block.train + pipeline.train
             result_pipelines.append(pipeline)
 
         logger.info("Executing generated pipelines...")
