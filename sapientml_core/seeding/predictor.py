@@ -15,6 +15,7 @@
 import collections
 import os
 import pickle
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -263,13 +264,26 @@ def predict(task: Task, dataset_summary: DatasetSummary) -> PipelineSkeleton:
     task_type = task.task_type
     p_meta_feature_test = dict_to_df(dataset_summary.meta_features_pp)
     m_meta_feature_test = dict_to_df(dataset_summary.meta_features_m)
-    with open(Path(os.path.dirname(__file__)) / "../models/pp_models.pkl", "rb") as f:
-        pp_model = pickle.load(f)
+    # check python version and store as a variable
+    python_minor_version = sys.version_info.minor
 
-    with open(Path(os.path.dirname(__file__)) / "../models/mp_model_1.pkl", "rb") as f1:
-        with open(Path(os.path.dirname(__file__)) / "../models/mp_model_2.pkl", "rb") as f2:
-            m_model = (pickle.load(f1), pickle.load(f2))
+    # Load all the pkl files based on python version
+    if python_minor_version in [9, 10, 11]:
+        base_path = Path(os.path.dirname(__file__)) / ("../models/PY3" + str(python_minor_version))
+        with open(base_path / "pp_models.pkl", "rb") as f:
+            pp_model = pickle.load(f)
 
+        with open(base_path / "mp_model_1.pkl", "rb") as f1:
+            with open(base_path / "mp_model_2.pkl", "rb") as f2:
+                m_model = (pickle.load(f1), pickle.load(f2))
+
+    else:  # Default
+        with open(Path(os.path.dirname(__file__)) / "../models/pp_models.pkl", "rb") as f:
+            pp_model = pickle.load(f)
+
+        with open(Path(os.path.dirname(__file__)) / "../models/mp_model_1.pkl", "rb") as f1:
+            with open(Path(os.path.dirname(__file__)) / "../models/mp_model_2.pkl", "rb") as f2:
+                m_model = (pickle.load(f1), pickle.load(f2))
     preprocessor_labels = _predict_preprocessors(pp_model, p_meta_feature_test, search_space.target_labels)
     all_labels = _predict_models(m_model, task_type, m_meta_feature_test, preprocessor_labels)
 
