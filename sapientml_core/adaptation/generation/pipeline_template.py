@@ -548,7 +548,6 @@ class PipelineTemplate(BaseModel):
             or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
             or pipeline.config.predict_option == macros.PRED_PROBABILITY
         ):
-            snippet = snippet.replace("predict", "predict_proba")
             tpl = env.get_template("model_templates/classification_post_process.jinja")
             snippet += "\n" + self._render(tpl, pipeline=pipeline)
 
