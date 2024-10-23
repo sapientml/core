@@ -15,6 +15,7 @@
 import copy
 import json
 import os
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
@@ -90,9 +91,17 @@ class Adaptation:
         self.config = config
         self.adaptation_metric: Optional[str] = self._get_adaptation_metric_label()
 
-        # Load all the training Data
-        with open(Path(os.path.dirname(__file__)) / "../artifacts/label_order.json", "r", encoding="utf-8") as f:
-            label_order = json.load(f)
+        # check python version and store as a variable
+        python_minor_version = sys.version_info.minor
+
+        # Load all the training Data based on python version
+        if python_minor_version in [9, 10, 11]:
+            base_path = Path(os.path.dirname(__file__)) / ("../artifacts/PY3" + str(python_minor_version))
+            with open(base_path / "label_order.json", "r", encoding="utf-8") as f:
+                label_order = json.load(f)
+        else:  # Default
+            with open(Path(os.path.dirname(__file__)) / "../artifacts/label_order.json", "r", encoding="utf-8") as f:
+                label_order = json.load(f)
 
         self.label_order = label_order
         self.dataset_summary = dataset_summary

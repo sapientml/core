@@ -14,6 +14,7 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -559,8 +560,20 @@ class PipelineTemplate(BaseModel):
         model_component_json["code_predict"] = snippet_predict
         model_component_json["code_test"] = snippet_test
 
-        with open(Path(os.path.dirname(__file__)) / "../../models/feature_importance.json", "r", encoding="utf-8") as f:
-            model_feature_weights = json.load(f)
+        # check python version and store as a variable
+        python_minor_version = sys.version_info.minor
+
+        # Load all the training Data based on python version
+        if python_minor_version in [9, 10, 11]:
+            base_path = Path(os.path.dirname(__file__)) / ("../../models/PY3" + str(python_minor_version))
+            with open(base_path / "feature_importance.json", "r", encoding="utf-8") as f:
+                model_feature_weights = json.load(f)
+
+        else:  # Default
+            with open(
+                Path(os.path.dirname(__file__)) / "../../models/feature_importance.json", "r", encoding="utf-8"
+            ) as f:
+                model_feature_weights = json.load(f)
 
         for key, task_label in name_to_label_mapping.items():
             if pipeline.model.label_name in task_label.values():
