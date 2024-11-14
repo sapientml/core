@@ -1,4 +1,5 @@
 import numpy as np
 
 NUMERIC_COLS_TO_SCALE = {{ columns }}
-{{ train_dataset }}[NUMERIC_COLS_TO_SCALE] = np.log1p({{ train_dataset }}[NUMERIC_COLS_TO_SCALE])
+{{ train_dataset }}[NUMERIC_COLS_TO_SCALE] = np.log1p({{ train_dataset }}[NUMERIC_COLS_TO_SCALE]).replace([np.inf, -np.inf], np.nan).fillna({{ train_dataset }}[NUMERIC_COLS_TO_SCALE].mean())
+
