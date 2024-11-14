@@ -2,4 +2,5 @@ import numpy as np
 
 NUMERIC_COLS_TO_SCALE = {{ columns }}
 NUMERIC_COLS_TO_SCALE_FOR_TEST = list(set(test_dataset.columns) & set(NUMERIC_COLS_TO_SCALE))
-{{ test_dataset }}[NUMERIC_COLS_TO_SCALE_FOR_TEST] = np.log1p({{ test_dataset }}[NUMERIC_COLS_TO_SCALE_FOR_TEST])
+{{ test_dataset }}[NUMERIC_COLS_TO_SCALE_FOR_TEST] = np.log1p({{ test_dataset }}[NUMERIC_COLS_TO_SCALE_FOR_TEST]).replace([np.inf, -np.inf], np.nan).fillna({{ test_dataset }}[NUMERIC_COLS_TO_SCALE_FOR_TEST].mean())
+
