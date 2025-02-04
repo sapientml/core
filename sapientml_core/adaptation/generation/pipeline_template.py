@@ -17,6 +17,7 @@ import os
 import sys
 from pathlib import Path
 
+import pandas as pd
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 from sapientml import macros
@@ -320,6 +321,12 @@ class PipelineTemplate(BaseModel):
         if not is_allowed_to_apply_to_target(component.label_name):
             relevant_cols = sorted(list(set(relevant_cols) - set(pipeline.task.target_columns)))
         api_label = component.label_name.split(":")[2]
+
+        # Ensure only numerical columns are selected before parsing to 'log' transformation.
+        if api_label == "log":
+            relevant_cols = [
+                col for col in relevant_cols if pd.api.types.is_numeric_dtype(pipeline.all_columns_datatypes[col])
+            ]
 
         if len(relevant_cols) == 0 and api_label not in ["STANDARD", "SMOTE"]:
             logger.debug("No relevant columns found for " + api_label)
