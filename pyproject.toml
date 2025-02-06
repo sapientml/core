@@ -65,7 +65,7 @@ default = "sapientml_core.preprocess.default:DefaultPreprocess"
 sample-dataset = "sapientml_core.datastore.localfile.export_modules"
 
 [tool.pysen]
-version = "0.10"
+version = "0.11.0"
 
 [tool.pysen-cli]
 settings_dir = ".pysen"
