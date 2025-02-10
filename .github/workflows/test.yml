@@ -63,6 +63,7 @@ jobs:
           include-hidden-files: true
           path: .coverage
           retention-days: 1
+          overwrite: true
 
   report_coverage:
     runs-on: ubuntu-latest
