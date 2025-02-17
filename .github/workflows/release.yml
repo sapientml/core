@@ -58,12 +58,14 @@ jobs:
         run: poetry run -- pytest -k ${{ matrix.test }}
       
       - name: Upload Coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name:  ${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
+          overwrite: true
+          
 
   additional_test:
     strategy:
@@ -101,12 +103,13 @@ jobs:
         run: poetry run -- pytest -k ${{ matrix.test }}
 
       - name: Upload Coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name:  ${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
+          overwrite: true
 
   report_coverage:
     runs-on: ubuntu-latest
@@ -123,7 +126,7 @@ jobs:
           python-version: 3.11
 
       - name: Download Coverage Files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Install coverage
         run: pip install coverage
