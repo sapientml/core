@@ -1,4 +1,4 @@
-category-encoders==2.6.4
+category-encoders==2.8.1
 patsy==1.0.2
 statsmodels==0.14.4
 tensorflow==2.18.0
