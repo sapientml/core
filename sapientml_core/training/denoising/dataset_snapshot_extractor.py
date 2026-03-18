@@ -80,8 +80,7 @@ class Injector(ast.NodeTransformer):
 
         tree = self.visit(tree)
 
-        loading_statements = ast.parse(
-            f"""
+        loading_statements = ast.parse(f"""
 with open("{new_script_path.replace('.py', '.txt')}", "w") as f:
     f.write('started')
 import types
@@ -91,18 +90,15 @@ mod = types.ModuleType(loader.name)
 loader.exec_module(mod)
 update_column_names = mod.update_column_names
 collector = dict()
-"""
-        ).body
+""").body
 
         # dumping statement
         # also dump the line no. of our determined training stmt
-        dumping_statement = ast.parse(
-            f"""
+        dumping_statement = ast.parse(f"""
 collector = [collector, {self.last_train_lineno}]
 import json
 with open("{new_script_path.replace('.py', '.json')}", 'w', encoding='utf-8') as f: json.dump(collector, f, indent=4)
-"""
-        ).body
+""").body
 
         tree.body = loading_statements + tree.body + dumping_statement
 
