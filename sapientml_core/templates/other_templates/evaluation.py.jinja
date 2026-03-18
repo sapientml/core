@@ -38,9 +38,9 @@ from sklearn import metrics
 r2 = metrics.r2_score(target_test, y_pred)
 print('RESULT: R2 Score:', str(r2))
 {% elif pipeline.adaptation_metric == macros.Metric.RMSE.value %}
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 
-rmse = mean_squared_error(target_test, y_pred, squared=False)
+rmse = root_mean_squared_error(target_test, y_pred)
 print('RESULT: RMSE:', str(rmse))
 {% elif pipeline.adaptation_metric == macros.Metric.RMSLE.value %}
 import numpy as np
