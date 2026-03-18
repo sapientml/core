@@ -1,68 +1,73 @@
-[tool.poetry]
-authors = ["The SapientML Authors"]
-description = "A SapientML plugin of SapientMLGenerator"
-license = "Apache-2.0"
-maintainers = [
-  "Kosaku Kimura <kimura.kosaku@fujitsu.com>",
-  "Akira Ura <ura.akira@fujitsu.com>",
-]
+[project]
 name = "sapientml-core"
 version = "0"
+description = "A SapientML plugin of SapientMLGenerator"
+license = { text = "Apache-2.0" }
+authors = [{ name = "The SapientML Authors" }]
+maintainers = [
+  { name = "Kosaku Kimura", email = "kimura.kosaku@fujitsu.com" },
+  { name = "Akira Ura", email = "ura.akira@fujitsu.com" },
+]
+requires-python = ">=3.9,<3.13"
+dependencies = [
+  "catboost>=1.2.3",
+  "imbalanced-learn>=0.11,<0.15",
+  "ipykernel>=6.25.1,<8.0.0",
+  "japanize-matplotlib>=1.1.3,<2.0.0",
+  "jinja2>=3.1.2,<4.0.0",
+  "libcst>=1.0.1,<2.0.0",
+  "lightgbm>=4.0.0,<5.0.0",
+  "nbconvert>=7.7.4,<8.0.0",
+  "nbformat>=5.9.2,<6.0.0",
+  "nltk>=3.8.1,<4.0.0",
+  "numba>=0.57.1,<0.65.0",
+  "optuna>=3.2,<5.0",
+  "sapientml",
+  "scikit-learn>=1.6.1,<2.0",
+  "scipy>=1.11.1,<2.0.0",
+  "seaborn>=0.12.2,<0.14.0",
+  "shap>=0.43,<0.52",
+  "tqdm>=4.66.1,<5.0.0",
+  "xgboost>=1.7.6,<4.0.0",
+  "mecab-python3>=1.0.6,<2.0.0",
+  "ipadic>=1.0.0,<2.0.0",
+  "fasttext-wheel>=0.9.2,<0.10.0",
+  "requests>=2.31.0,<3.0.0",
+]
 
-[tool.poetry.dependencies]
-catboost = ">=1.2.3"
-imbalanced-learn = ">=0.11,<0.15"
-ipykernel = ">=6.25.1,<8.0.0"
-japanize-matplotlib = "^1.1.3"
-jinja2 = "^3.1.2"
-libcst = "^1.0.1"
-lightgbm = "^4.0.0"
-nbconvert = "^7.7.4"
-nbformat = "^5.9.2"
-nltk = "^3.8.1"
-numba = ">=0.57.1,<0.65.0"
-optuna = ">=3.2,<5.0"
-python = ">=3.9,<3.13"
-sapientml = "*"
-scikit-learn = ">=1.6.1,<2.0"
-scipy = "^1.11.1"
-seaborn = ">=0.12.2,<0.14.0"
-shap = ">=0.43,<0.52"
-tqdm = "^4.66.1"
-xgboost = ">=1.7.6,<4.0.0"
-mecab-python3 = "^1.0.6"
-ipadic = "^1.0.0"
-fasttext-wheel = "^0.9.2"
-requests = "^2.31.0"
+[dependency-groups]
+dev = [
+  "black>=23.7,<27.0",
+  "flake8>=6.1,<8.0",
+  "isort>=5.12,<9.0",
+  "pre-commit>=3.3.3,<5.0.0",
+  "pysen>=0.10.5,<0.13.0",
+  "pytest>=7.4,<10.0",
+  "pytest-cov>=4.1,<8.0",
+  "pytest-xdist>=3.3.1,<4.0.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-black = ">=23.7,<27.0"
-flake8 = ">=6.1,<8.0"
-isort = ">=5.12,<9.0"
-pre-commit = ">=3.3.3,<5.0.0"
-pysen = ">=0.10.5,<0.13.0"
-pytest = ">=7.4,<10.0"
-pytest-cov = ">=4.1,<8.0"
-pytest-xdist = "^3.3.1"
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
-
-[tool.poetry.plugins."sapientml.config"]
+[project.entry-points."sapientml.config"]
 sapientml = "sapientml_core:SapientMLConfig"
 
-[tool.poetry.plugins."sapientml.pipeline_generator"]
+[project.entry-points."sapientml.pipeline_generator"]
 sapientml = "sapientml_core:SapientMLGenerator"
 
-[tool.poetry.plugins."sapientml.datastore"]
+[project.entry-points."sapientml.datastore"]
 localfile = "sapientml_core.datastore.localfile:LocalFile"
 
-[tool.poetry.plugins."sapientml.preprocess"]
+[project.entry-points."sapientml.preprocess"]
 default = "sapientml_core.preprocess.default:DefaultPreprocess"
 
-[tool.poetry.plugins."sapientml.export_modules"]
+[project.entry-points."sapientml.export_modules"]
 sample-dataset = "sapientml_core.datastore.localfile.export_modules"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sapientml_core"]
 
 [tool.pysen]
 version = "0.11.0"
