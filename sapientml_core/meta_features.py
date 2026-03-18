@@ -153,11 +153,11 @@ def real_feature_preprocess(df: pd.DataFrame) -> pd.DataFrame:
     for col in normalize_features:
         if nf in df.columns:
             if col in df.columns:
-                df.loc[:, col] = df[col].astype(float) / df[nf].astype(float)
+                df[col] = df[col].astype(float) / df[nf].astype(float)
 
     for key in transform_features:
         if key in df.columns:
-            df.loc[:, key] = transform_features[key](df[key].astype(float))
+            df[key] = transform_features[key](df[key].astype(float))
 
     valid_cols = [col for col in df.columns if col not in ban_features]
     df = df[valid_cols]
@@ -897,7 +897,7 @@ def _get_target_column_type_pp(Y, preprocess):
         name,
         column,
     ) in Y.items():
-        if pd.api.types.is_object_dtype(column) or pd.api.types.is_categorical_dtype(column):
+        if pd.api.types.is_object_dtype(column) or isinstance(column.dtype, pd.CategoricalDtype):
             if preprocess:
                 catg_type = _is_category_column_pp(column)
             else:

@@ -146,7 +146,7 @@ def get_decision_path(clf, X):
 
 def _predict_preprocessors(pp_models, meta_features: pd.DataFrame, target_labels: list[str]) -> PipelineSkeleton:
     for col in meta_features.columns:
-        meta_features[col].fillna(0, inplace=True)
+        meta_features[col] = meta_features[col].fillna(0)
     output = meta_features[search_space.meta_feature_list].copy()
     labels: list[str] = []
     rules = {}
@@ -194,7 +194,7 @@ def _predict_models(
     m_model, task_type: str, m_meta_features_test: pd.DataFrame, preprocessor_labels: PipelineSkeleton
 ) -> PipelineSkeleton:
     meta_features_test = m_meta_features_test[[x for x in m_meta_features_test.columns if x.startswith("feature:")]]
-    meta_features = meta_features_test.fillna(0)
+    meta_features = meta_features_test.fillna(0).infer_objects(copy=False)
 
     predict_proba = m_model[0].predict_proba(meta_features) + m_model[1].predict_proba(meta_features)
 
