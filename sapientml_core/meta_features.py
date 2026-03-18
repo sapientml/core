@@ -22,6 +22,7 @@ import scipy
 import scipy.stats
 from sapientml.util.logging import setup_logger
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import validate_data
 
 from . import ps_macros
 from .design import search_space
@@ -416,12 +417,12 @@ def _collect_csv_column_with_outlier(X):
 
     FLOAT_DTYPES = (np.float64, np.float32, np.float16)
     first_call = not hasattr(scaler, "n_samples_seen_")
-    tmpX = scaler._validate_data(
+    tmpX = validate_data(
+        scaler,
         tmpX,
         accept_sparse=("csr", "csc"),
-        estimator=scaler,
         dtype=FLOAT_DTYPES,
-        force_all_finite="allow-nan",
+        ensure_all_finite="allow-nan",
         reset=first_call,
     )
     if sparse.issparse(tmpX):
