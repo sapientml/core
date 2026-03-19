@@ -439,6 +439,7 @@ def _collect_csv_column_with_outlier(X):
 
 
 def _get_ttest_pvalue(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
@@ -458,6 +459,7 @@ def _get_ttest_pvalue(c, y):
 
 
 def _get_kstest_pvalue(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
@@ -477,6 +479,7 @@ def _get_kstest_pvalue(c, y):
 
 
 def _get_pearsonr_values(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
