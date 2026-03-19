@@ -19,11 +19,7 @@ on:
     branches:
       - main
 
-env:
-  POETRY_VERSION: "1.5.1"
-  POETRY_URL: https://install.python-poetry.org
-
-jobs:  
+jobs:
   test:
     strategy:
       matrix:
@@ -40,26 +36,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.version }}
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.version }}
 
-      - name: Install Poetry
-        run: |
-          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-        
       - name: Install Dependencies
-        run: poetry install
+        run: uv sync --group dev
 
       - name: Pytest
-        run: poetry run -- pytest -k ${{ matrix.test }}
-      
+        run: uv run pytest -k ${{ matrix.test }}
+
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
-          name:  ${{ matrix.test }}
+          name: ${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
@@ -73,22 +64,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: 3.11
+          python-version: "3.11"
 
       - name: Download Coverage Files
         uses: actions/download-artifact@v4
 
       - name: Install coverage
-        run: pip install coverage
+        run: uv tool install coverage
 
       - name: Combine Coverage Files
         run: |
           mv --backup=t */.coverage .
-          coverage combine -a
-          coverage report
+          uvx coverage combine -a
+          uvx coverage report
 
       - name: Report Coverage to CodeCov
         uses: codecov/codecov-action@v3
