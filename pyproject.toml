@@ -88,3 +88,6 @@ includes = ["sapientml_core/", "tests/"]
 [tool.pytest.ini_options]
 addopts = "-s -x --cov=sapientml_core"
 testpaths = ["tests"]
+
+[tool.uv]
+override-dependencies = ["numpy>=1.19.5,<3.0.0"]
