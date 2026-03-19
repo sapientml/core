@@ -3,7 +3,7 @@
 ## Repository Overview
 - **Purpose**: SapientML plugin that generates scikit-learn ML pipelines from tabular data
 - **Package**: `sapientml-core`; entry-points register config, generator, datastore, preprocess
-- **Python support**: `>=3.9,<3.13`; CI matrix covers 3.10, 3.11
+- **Python support**: `>=3.9,<3.14`; CI matrix covers 3.10, 3.11, 3.12, 3.13
 - **Package manager**: uv (migrated from Poetry in `build/update-dependencies` → PR #113)
 - **Build backend**: hatchling (PEP 621)
 
@@ -12,17 +12,28 @@
 | Package | Constraint | Reason |
 |---------|-----------|--------|
 | `xgboost` | `>=1.7.6,<3.0.0` | XGBoost 3.x stores `base_score` as bracketed UBJ string `'[5.0482047E-1]'`; SHAP 0.49.1 `float()` parse fails |
-| `shap` | `>=0.43,<0.52` | SHAP 0.50+ requires `numpy>=2`; blocked by `sapientml` package constraint |
-| `numpy` | `<2.0.0` (via `sapientml`) | fasttext-wheel 0.9.2 requires numpy<2 |
-| `numba` | `>=0.57.1,<0.65.0` | SHAP transitive dependency; numba 0.64 supports numpy<2.5 |
+| `shap` | `>=0.43,<0.52` | SHAP 0.50+ requires `numpy>=2` |
+| `numpy` | `>=1.19.5,<3.0.0` (via `[tool.uv] override-dependencies`) | Overrides `sapientml`'s legacy `<2.0.0` cap (that cap was for fasttext-wheel, now replaced by langdetect). uv resolves numpy 2.0.2/2.2.6/2.4.3 per Python version. |
+| `numba` | `>=0.57.1,<0.65.0` | SHAP transitive dep; 0.60.0 (Python <3.10) requires numpy<2.1; 0.64.0 (Python >=3.10) requires numpy<2.5 |
+| `langdetect` | `>=1.0.9` | Replaced `fasttext-wheel` (no cp313 wheels, numpy<2 required) |
 | `isort` | `<8.0` | isort 8.x changes pysen integration |
 | `scikit-learn` | `>=1.6.1,<2.0` | `_validate_data` removed in 1.6; public `validate_data` used |
 
 ## SHAP / XGBoost Compatibility
 - **Root cause**: XGBoost 3.x UBJ serialisation wraps `base_score` in brackets; `shap.XGBTreeModelLoader` calls `float('[5.0...]')` → `ValueError`
 - **Fix**: `xgboost<3.0.0` in `pyproject.toml` → uv resolves `xgboost==2.1.4`
-- **Dead end avoided**: Upgrading to `shap>=0.50` requires `numpy>=2`, which `sapientml` (dep of this package) forbids
 - **Template**: `sapientml_core/templates/other_templates/shap.py.jinja` uses `shap.TreeExplainer(model)` directly for all tree models
+
+## Python 3.13 / numpy 2.x Support (PR #116)
+- **Problem**: `numpy==1.26.4` has no cp313 wheel → source build in CI → job timeout
+- **Root cause chain**: `sapientml` (PyPI ≤0.4.16) required `numpy<2.0.0` due to `fasttext-wheel` incompatibility (sapientml commit 279f99d). fasttext-wheel has been replaced by `langdetect` in sapientml-core.
+- **Fix**: `[tool.uv] override-dependencies = ["numpy>=1.19.5,<3.0.0"]` in `pyproject.toml` overrides sapientml's transitive constraint.
+- **Lock split**: uv now resolves three numpy versions by Python range:
+  - `2.0.2` for Python <3.10 (numba 0.60.0 requires `<2.1`)
+  - `2.2.6` for Python 3.10 (last numpy supporting 3.10)
+  - `2.4.3` for Python ≥3.11 (has cp313 wheels; numba 0.64.0 requires `<2.5`)
+- **Companion PR**: `sapientml/sapientml` PR #112 removes the `<2.0.0` cap and extends `requires-python` to `<3.14` permanently
+- **CI fix**: Added `fail-fast: false`; coverage artifact names now include Python version (`py${{ver}}-${{test}}`) to avoid overwrite collisions
 
 ## Releases
 | Version | Date | Notes |
