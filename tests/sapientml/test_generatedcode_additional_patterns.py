@@ -779,6 +779,47 @@ def test_additional_classifier_works_with_preprocess(
     assert "StandardScaler" in code_for_test
 
 
+@pytest.mark.parametrize("adaptation_metric", ["f1"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_imbalance"])
+def test_smote_not_recommended_for_multiclass(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test_ipynb,
+    test_data,
+):
+    """SMOTE must be suppressed when task.is_multiclass=True.
+
+    Tests the edge case where the full dataset has more than 2 target classes but the
+    training split happens to contain only 2, causing _get_target_imbalance_score to
+    return a high score that would normally trigger SMOTE.
+    """
+    task, config, dataset = setup_request_parameters()
+
+    df = test_data
+    config.n_models = 1
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    # Force multiclass flag even though the column is binary, simulating the scenario where
+    # the full dataset has a 3rd rare class absent from the training split.
+    task.is_multiclass = True
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+    dataset.ignore_columns.extend(
+        ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
+    )
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
+    code_for_test = test_result_df.loc[0, "code_for_test"]
+    assert "SMOTE" not in code_for_test
+
+
 @pytest.mark.parametrize("adaptation_metric", ["MCC", "QWK"])
 @pytest.mark.parametrize("target_col", ["target_category_binary_num"])
 def test_additional_classifier_category_binary_num_use_proba_with_metric_default_noproba(
