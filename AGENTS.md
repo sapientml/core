@@ -24,9 +24,13 @@
 - **Dead end avoided**: Upgrading to `shap>=0.50` requires `numpy>=2`, which `sapientml` (dep of this package) forbids
 - **Template**: `sapientml_core/templates/other_templates/shap.py.jinja` uses `shap.TreeExplainer(model)` directly for all tree models
 
+## Releases
+| Version | Date | Notes |
+|---------|------|-------|
+| 0.7.4 | 2026-03-18 | uv migration (#113), bool dtype fix (#114) |
+
 ## CI / GitHub Actions
 - Workflow: `.github/workflows/test.yml`
-- Active PR: #113 `build/update-dependencies` → `main` (uv migration)
 - `test_regressor_works_number[target_number-r2]` / `[target_number-RMSE]` exercise SHAP with generated XGBoost code
 
 ## Common Commands
