@@ -14,21 +14,21 @@
 
 import os
 import re
-from pathlib import Path
 from typing import Tuple
 
-import fasttext
 import ipadic
 import MeCab
 import numpy as np
 import pandas as pd
-import requests
 from jinja2 import Environment, FileSystemLoader
+from langdetect import DetectorFactory, LangDetectException, detect
 from sapientml.generator import CodeBlockGenerator
 from sapientml.params import Code, Dataset, Task
 from sapientml.util.logging import setup_logger
 
 from .params import DefaultPreprocessConfig
+
+DetectorFactory.seed = 0  # make language detection deterministic
 
 logger = setup_logger()
 
@@ -78,8 +78,8 @@ def _render(tpl, *args, **kwargs):
     return "\n".join([line for line in code.split("\n") if len(line) > 0]) + "\n\n"
 
 
-def check_column_language(df: pd.DataFrame) -> list[str]:
-    """This function checks the language of column using fasttext.
+def check_column_language(df: pd.DataFrame) -> dict[str, str]:
+    """Check the dominant language of each object column using langdetect.
 
     Parameters
     ----------
@@ -87,19 +87,10 @@ def check_column_language(df: pd.DataFrame) -> list[str]:
 
     Returns
     -------
-    col_language_dict : list[str]
-        Return list of all the column of specific language.
+    col_language_dict : dict[str, str]
+        Mapping of column name to its detected ISO 639-1 language code.
 
     """
-    os.makedirs(Path(os.path.dirname(__file__)) / "lib", exist_ok=True)
-    model_path = Path(os.path.dirname(__file__)) / "lib" / "lid.176.bin"
-    if not model_path.exists():
-        response = requests.get("https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin")
-        response.raise_for_status()  # check download status and raise if download is failed
-        with open(model_path, mode="wb") as f:
-            f.write(response.content)
-    fasttext.FastText.eprint = lambda x: None
-    model = fasttext.load_model(model_path._str)
     object_columns = df.select_dtypes("object").columns
     col_language_dict = {}
     for col in object_columns:
@@ -107,12 +98,14 @@ def check_column_language(df: pd.DataFrame) -> list[str]:
             c2 = df[col][df[col].notnull()]
             if c2.shape[0] > 1000:
                 c2 = c2.sample(1000, random_state=17)
-            value_languages = (
-                c2.astype(str)
-                .str.replace("\n", "")
-                .str.replace("\r", "")
-                .apply(lambda x: model.predict(x)[0][0].split("__label__")[1])
-            )
+
+            def _detect(x: str) -> str:
+                try:
+                    return detect(x.replace("\n", "").replace("\r", ""))
+                except LangDetectException:
+                    return "unknown"
+
+            value_languages = c2.astype(str).apply(_detect)
             col_language_dict[col] = value_languages.mode()[0]
     return col_language_dict
 
