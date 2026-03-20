@@ -303,8 +303,11 @@ class Adaptation:
         columns = self.dataset_summary.columns
 
         for component in preprocessing_components:
-            # handle special case for SMOTE, don't apply if target columns are > 1. SMOTE fails in such cases
-            if "PREPROCESS:Balancing:SMOTE:imblearn" == component.label_name and len(self.task.target_columns) > 1:
+            # handle special case for SMOTE: skip if multiple target columns (SMOTE fails),
+            # or if the task is multiclass (SMOTE is only valid for binary classification)
+            if "PREPROCESS:Balancing:SMOTE:imblearn" == component.label_name and (
+                len(self.task.target_columns) > 1 or self.task.is_multiclass
+            ):
                 continue
 
             rel_cols = component.get_relevant_columns(
