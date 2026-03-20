@@ -63,8 +63,8 @@ pip install sapientml-core
 ```bash
 git clone https://github.com/sapientml/core.git
 cd core
-pip install poetry
-poetry install
+pip install uv
+uv sync
 ```
 
 ## Quick Start
@@ -151,7 +151,7 @@ sml.fit(df_train, output_dir="./outputs")
 | Missing value imputation | Per-column imputation for numeric and string columns |
 | Categorical encoding | One-Hot encoding, Label encoding |
 | Scaling | StandardScaler |
-| Text processing | CountVectorizer, TF-IDF, MeCab (Japanese), fastText |
+| Text processing | CountVectorizer, TF-IDF, MeCab (Japanese), langdetect (language detection) |
 | Date handling | Numeric conversion of date columns |
 | Class imbalance | SMOTE |
 | Log transformation | log1p applied to target columns |
@@ -187,34 +187,35 @@ Results are saved to `sapientml_core/.cache/[tag]/`.
 ### Setup
 
 ```bash
-poetry install
-poetry run pre-commit install
+uv sync --group dev
+uv run pre-commit install
 ```
 
 ### Linting
 
 ```bash
-poetry run pysen run lint
+uv run pysen run lint
 # Auto-fix
-poetry run pysen run format
+uv run pysen run format
 ```
 
 ### Testing
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 Coverage is reported automatically via `--cov=sapientml_core` (configured in `pytest.ini_options`).
 
 ## Python Version Support
 
-| Version | Supported | Dedicated Models |
+| Version | Supported | Models Used |
 |---|---|---|
 | 3.9 | ✅ | `models/PY39/` |
 | 3.10 | ✅ | `models/PY310/` |
 | 3.11 | ✅ | `models/PY311/` |
-| 3.12 | ✅ | `models/` (default) |
+| 3.12 | ✅ | `models/PY311/` (clamped to newest) |
+| 3.13 | ✅ | `models/PY311/` (clamped to newest) |
 
 ## License
 
