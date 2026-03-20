@@ -22,6 +22,7 @@ import scipy
 import scipy.stats
 from sapientml.util.logging import setup_logger
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import validate_data
 
 from . import ps_macros
 from .design import search_space
@@ -152,11 +153,11 @@ def real_feature_preprocess(df: pd.DataFrame) -> pd.DataFrame:
     for col in normalize_features:
         if nf in df.columns:
             if col in df.columns:
-                df.loc[:, col] = df[col].astype(float) / df[nf].astype(float)
+                df[col] = df[col].astype(float) / df[nf].astype(float)
 
     for key in transform_features:
         if key in df.columns:
-            df.loc[:, key] = transform_features[key](df[key].astype(float))
+            df[key] = transform_features[key](df[key].astype(float))
 
     valid_cols = [col for col in df.columns if col not in ban_features]
     df = df[valid_cols]
@@ -416,12 +417,12 @@ def _collect_csv_column_with_outlier(X):
 
     FLOAT_DTYPES = (np.float64, np.float32, np.float16)
     first_call = not hasattr(scaler, "n_samples_seen_")
-    tmpX = scaler._validate_data(
+    tmpX = validate_data(
+        scaler,
         tmpX,
         accept_sparse=("csr", "csc"),
-        estimator=scaler,
         dtype=FLOAT_DTYPES,
-        force_all_finite="allow-nan",
+        ensure_all_finite="allow-nan",
         reset=first_call,
     )
     if sparse.issparse(tmpX):
@@ -438,6 +439,7 @@ def _collect_csv_column_with_outlier(X):
 
 
 def _get_ttest_pvalue(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
@@ -457,6 +459,7 @@ def _get_ttest_pvalue(c, y):
 
 
 def _get_kstest_pvalue(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
@@ -476,6 +479,7 @@ def _get_kstest_pvalue(c, y):
 
 
 def _get_pearsonr_values(c, y):
+    c = c.astype(float)
     cnotnan = c.notnull()
     ynotnan = y.notnull()
     notnan = cnotnan & ynotnan
@@ -896,7 +900,7 @@ def _get_target_column_type_pp(Y, preprocess):
         name,
         column,
     ) in Y.items():
-        if pd.api.types.is_object_dtype(column) or pd.api.types.is_categorical_dtype(column):
+        if pd.api.types.is_object_dtype(column) or isinstance(column.dtype, pd.CategoricalDtype):
             if preprocess:
                 catg_type = _is_category_column_pp(column)
             else:
