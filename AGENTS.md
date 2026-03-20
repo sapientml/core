@@ -35,6 +35,15 @@
 - **Companion PR**: `sapientml/sapientml` PR #112 removes the `<2.0.0` cap and extends `requires-python` to `<3.14` permanently
 - **CI fix**: Added `fail-fast: false`; coverage artifact names now include Python version (`py${{ver}}-${{test}}`) to avoid overwrite collisions
 
+## Pull Request Requirements (must do before opening or updating a PR)
+1. **DCO sign-off**: Every commit on the branch must carry `Signed-off-by: <name> <email>`.
+   - Add to new commits: `git commit -s`
+   - Retrofit all existing commits on branch: `git rebase --signoff main` (then `git push --force-with-lease`)
+   - If a commit already has a duplicate sign-off, remove it with interactive rebase (`git rebase -i`) and `git commit --amend`.
+2. **All tests green**: CI must pass for every Python version in the matrix (currently 3.10, 3.11, 3.12, 3.13) before requesting a review or merging.
+   - Watch a run: `gh run watch <RUN_ID> --repo sapientml/core --interval 30`
+   - Rerun failed jobs: `gh run rerun <RUN_ID> --repo sapientml/core --failed`
+
 ## Releases
 | Version | Date | Notes |
 |---------|------|-------|
