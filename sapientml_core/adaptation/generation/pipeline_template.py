@@ -212,7 +212,9 @@ class PipelineTemplate(BaseModel):
 
         if flag_hyperparameter_tuning:
             tpl = env.get_template("model_templates/hyperparameters.py.jinja")
-            pipeline.pipeline_json["hyperparameters"]["code"] = self._render(tpl, model_name=model_name)
+            pipeline.pipeline_json["hyperparameters"]["code"] = self._render(
+                tpl, model_name=model_name, is_multiclass=pipeline.task.is_multiclass
+            )
 
             tpl = env.get_template("model_templates/hyperparameters_default_value.py.jinja")
             pipeline.pipeline_json["hyperparameters_default_value"]["code"] = self._render(tpl, model_name=model_name)
