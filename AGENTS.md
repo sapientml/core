@@ -3,7 +3,7 @@
 ## Repository Overview
 - **Purpose**: SapientML plugin that generates scikit-learn ML pipelines from tabular data
 - **Package**: `sapientml-core`; entry-points register config, generator, datastore, preprocess
-- **Python support**: `>=3.9,<3.14`; CI matrix covers 3.10, 3.11, 3.12, 3.13
+- **Python support**: `>=3.10,<3.15`; CI matrix covers 3.10, 3.11, 3.12, 3.13, 3.14
 - **Package manager**: uv (migrated from Poetry in `build/update-dependencies` → PR #113)
 - **Build backend**: hatchling (PEP 621)
 
@@ -40,7 +40,7 @@
    - Add to new commits: `git commit -s`
    - Retrofit all existing commits on branch: `git rebase --signoff main` (then `git push --force-with-lease`)
    - If a commit already has a duplicate sign-off, remove it with interactive rebase (`git rebase -i`) and `git commit --amend`.
-2. **All tests green**: CI must pass for every Python version in the matrix (currently 3.10, 3.11, 3.12, 3.13) before requesting a review or merging.
+2. **All tests green**: CI must pass for every Python version in the matrix (currently 3.10, 3.11, 3.12, 3.13, 3.14) before requesting a review or merging.
    - Watch a run: `gh run watch <RUN_ID> --repo sapientml/core --interval 30`
    - Rerun failed jobs: `gh run rerun <RUN_ID> --repo sapientml/core --failed`
 

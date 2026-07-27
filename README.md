@@ -216,6 +216,7 @@ Coverage is reported automatically via `--cov=sapientml_core` (configured in `py
 | 3.11 | ✅ | `models/PY311/` |
 | 3.12 | ✅ | `models/PY311/` (clamped to newest) |
 | 3.13 | ✅ | `models/PY311/` (clamped to newest) |
+| 3.14 | ✅ | `models/PY311/` (clamped to newest) |
 
 ## License
 
