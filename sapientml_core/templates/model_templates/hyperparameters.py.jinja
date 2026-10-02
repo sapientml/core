@@ -39,7 +39,11 @@
             params['bootstrap_type'] =  trial.suggest_categorical('bootstrap_type', ['Bayesian','Bernoulli', 'MVS']) #
             params['silent'] = True
 {% elif model_name == "GradientBoostingClassifier" %}
-            params['loss'] =  trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential']) # log_loss 
+{% if is_multiclass %}
+            params['loss'] = trial.suggest_categorical('loss', ['log_loss']) # log_loss only — binary-only losses excluded
+{% else %}
+            params['loss'] = trial.suggest_categorical('loss', ['log_loss', 'exponential']) # log_loss
+{% endif %}
             params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
             params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
             params['criterion'] = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error']) # 'friedman_mse'

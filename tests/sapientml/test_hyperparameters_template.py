@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Regression tests for sapientml/core#63.
+"""Regression tests for sapientml/core#63 and sapientml/core#64.
 
 Verify that:
 1. hyperparameters.py.jinja renders ``suggest_float('alpha', 1e-6, 1e-3, log=True)``
@@ -22,6 +22,9 @@ Verify that:
    (removed in optuna v4+).
 3. An optuna study using the fixed alpha range on synthetic data completes all
    trials without ValueError for both MLPClassifier and MLPRegressor.
+4. GradientBoostingClassifier never includes 'exponential' loss when is_multiclass=True
+   — sklearn raises "ExponentialLoss requires 2 classes" for multiclass targets.
+5. 'deviance' (removed in sklearn 1.3) never appears in the rendered template.
 """
 
 from pathlib import Path
@@ -31,6 +34,7 @@ import optuna
 import pandas as pd
 import pytest
 from jinja2 import Environment, FileSystemLoader
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 # ---------------------------------------------------------------------------
@@ -74,9 +78,11 @@ _ALL_MODEL_NAMES = [
 ]
 
 
-def _render(model_name: str) -> str:
+def _render(model_name: str, is_multiclass: bool = False) -> str:
     env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), trim_blocks=True)
-    return env.get_template("model_templates/hyperparameters.py.jinja").render(model_name=model_name)
+    return env.get_template("model_templates/hyperparameters.py.jinja").render(
+        model_name=model_name, is_multiclass=is_multiclass
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -154,3 +160,70 @@ def test_misc_mlp_tuning_fixed_alpha_range_completes_without_error(model_cls, ta
     assert len(study.trials) > 0, "No trials ran"
     failed = [t for t in study.trials if t.state != optuna.trial.TrialState.COMPLETE]
     assert not failed, f"{len(failed)} trial(s) did not complete: {[t.state for t in failed]}"
+
+
+# ---------------------------------------------------------------------------
+# Template content — GradientBoostingClassifier multiclass loss (issue #64)
+# ---------------------------------------------------------------------------
+
+
+def test_gradient_boosting_classifier_multiclass_excludes_exponential():
+    """Fix #64: 'exponential' must not appear when is_multiclass=True.
+
+    sklearn raises "ExponentialLoss requires 2 classes" for any target with
+    more than two classes, so the template must guard that candidate.
+    """
+    code = _render("GradientBoostingClassifier", is_multiclass=True)
+    assert "exponential" not in code
+
+
+def test_gradient_boosting_classifier_binary_includes_exponential():
+    """Fix #64: 'exponential' must be available for binary classification."""
+    code = _render("GradientBoostingClassifier", is_multiclass=False)
+    assert "exponential" in code
+
+
+def test_gradient_boosting_classifier_always_excludes_deviance():
+    """'deviance' was removed in sklearn 1.3 and must never appear in the template."""
+    for is_multiclass in (False, True):
+        code = _render("GradientBoostingClassifier", is_multiclass=is_multiclass)
+        assert "deviance" not in code, f"'deviance' found with is_multiclass={is_multiclass}"
+
+
+# ---------------------------------------------------------------------------
+# Integration — optuna study with multiclass GradientBoostingClassifier (issue #64)
+# ---------------------------------------------------------------------------
+
+
+def _synthetic_multiclass_dataset():
+    rng = np.random.default_rng(1)
+    X = pd.DataFrame(rng.standard_normal((150, 4)))
+    y = pd.Series(rng.integers(0, 3, 150).astype(int))  # 3 classes (like Iris)
+    return X.iloc[:112], X.iloc[112:], y.iloc[:112], y.iloc[112:]
+
+
+def test_gradient_boosting_multiclass_tuning_completes_without_error():
+    """Fix #64: optuna trials for GradientBoostingClassifier on 3-class data must not
+    raise 'ExponentialLoss requires 2 classes'.
+
+    Uses only loss candidates that are valid for multiclass (log_loss).
+    """
+    X_train, X_test, y_train, y_test = _synthetic_multiclass_dataset()
+
+    def objective(trial):
+        params = {
+            "loss": trial.suggest_categorical("loss", ["log_loss"]),
+            "n_estimators": trial.suggest_int("n_estimators", 10, 100, log=True),
+            "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+        }
+        model = GradientBoostingClassifier(random_state=0, **params)
+        model.fit(X_train, y_train)
+        return model.score(X_test, y_test)
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=1))
+    study.optimize(objective, n_trials=5, timeout=30)
+
+    assert len(study.trials) > 0, "No trials ran"
+    failed = [t for t in study.trials if t.state != optuna.trial.TrialState.COMPLETE]
+    assert not failed, f"{len(failed)} trial(s) failed: {[t.state for t in failed]}"
