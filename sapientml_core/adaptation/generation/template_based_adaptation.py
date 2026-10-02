@@ -17,6 +17,7 @@ import json
 import os
 import sys
 from collections import defaultdict
+from functools import cmp_to_key
 from pathlib import Path
 from typing import Optional
 
@@ -221,23 +222,32 @@ class Adaptation:
         return sorted_preprocessing_labels, sorted_model_labels
 
     def _sort(self, preprocessing_set, label_order):
-        n = len(preprocessing_set)
+        """Sort preprocessing labels based on pairwise ordering constraints.
 
-        # Traverse through all array elements
-        for i in range(n - 1):
-            # range(n) also work but outer loop will repeat one time more than needed.
+        Uses Python's built-in sorted() with a custom comparator for O(n log n)
+        time complexity instead of the previous O(n^2) bubble sort approach.
 
-            # Last i elements are already in place
-            for j in range(0, n - i - 1):
-                # traverse the array from 0 to n-i-1
-                # Swap if the element found is greater
-                # than the next element
-                combination = preprocessing_set[j + 1] + "#" + preprocessing_set[j]
+        Parameters
+        ----------
+        preprocessing_set : list
+            List of preprocessing label names to sort.
+        label_order : list
+            List of ordering constraints in "A#B" format, meaning A should come before B.
 
-                if combination in label_order:
-                    # logger.debug('combination', combination)
-                    preprocessing_set[j], preprocessing_set[j + 1] = preprocessing_set[j + 1], preprocessing_set[j]
-        return preprocessing_set
+        Returns
+        -------
+        list
+            Sorted list of preprocessing labels.
+        """
+
+        def compare(a, b):
+            if a + "#" + b in label_order:
+                return -1
+            elif b + "#" + a in label_order:
+                return 1
+            return 0
+
+        return sorted(preprocessing_set, key=cmp_to_key(compare))
 
     def _get_adaptation_metric_label(self) -> Optional[str]:
         if self.task.adaptation_metric:
