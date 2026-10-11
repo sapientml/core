@@ -75,6 +75,17 @@ uv lock
 gh run list --repo sapientml/core --branch build/update-dependencies --limit 5
 ```
 
+## Issue #64 — GradientBoostingClassifier ValueError on multiclass targets during HPO
+- **File**: `sapientml_core/templates/model_templates/hyperparameters.py.jinja` (line 42)
+- **Root cause**: The `loss` parameter candidates included `'exponential'` and `'deviance'` unconditionally.
+  - `'exponential'` → sklearn raises `"ExponentialLoss requires 2 classes"` for multiclass targets
+  - `'deviance'` → removed in sklearn 1.3; always raises `ValueError` on modern installs
+- **Fix** (PR #120, branch `fix/gradient-boosting-multiclass-loss`):
+  - Template: gate `'exponential'` behind `{% if not is_multiclass %}`; remove `'deviance'` entirely
+  - Renderer (`pipeline_template.py`): forward `pipeline.task.is_multiclass` to the template render context
+  - Tests: added 4 regression tests in `test_hyperparameters_template.py` (multiclass/binary template content + end-to-end optuna study)
+- **Key pattern**: `is_multiclass` flag lives at `pipeline.task.is_multiclass` (set in `template_based_adaptation.py:309`)
+
 ## Issue #84 — bool dtype ValueError in scipy stats helpers
 - **File**: `sapientml_core/meta_features.py`
 - **Affected functions**: `_get_ttest_pvalue`, `_get_kstest_pvalue`, `_get_pearsonr_values`
