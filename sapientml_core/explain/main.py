@@ -17,6 +17,7 @@ from typing import Literal, Optional
 import pandas as pd
 from sapientml.params import CancellationToken
 from sapientml.util.logging import setup_logger
+from sapientml_core.preprocess.default.generator import check_cols_has_symbols, remove_symbols, rename_cols
 
 from .AutoEDA import EDA
 from .AutoVisualization import AutoVisualization_Class
@@ -81,12 +82,40 @@ def process(
     if visualization:
         # Call AutoVisualization to generate visualization codes
         AV = AutoVisualization_Class()
-        visualization_code = AV.AutoVisualization(
-            df=dataframe,
-            target_columns=target_columns,
-            problem_type=problem_type,
-            ignore_columns=ignore_columns,
-        )
+        cols_has_symbols = check_cols_has_symbols(dataframe.columns.to_list())
+        no_symbol_columns = [col for col in dataframe.columns.values if col not in cols_has_symbols]
+        if cols_has_symbols:
+            rename_dict = {}
+            org_df_column = dataframe.columns.to_list()
+            df_columns = list(
+                dataframe.rename(columns=lambda col: remove_symbols(col) if col in cols_has_symbols else col).columns
+            )
+            rename_dict = rename_cols(org_df_column, no_symbol_columns, df_columns)
+            if len(rename_dict) != 0:
+                col_has_target = []
+                for org_column, target in zip(list(rename_dict.keys()), list(rename_dict.values())):
+                    if target in target_columns:
+                        col_has_target.append(org_column)
+                visualization_code = AV.AutoVisualization(
+                    df=dataframe,
+                    target_columns=col_has_target,
+                    problem_type=problem_type,
+                    ignore_columns=ignore_columns,
+                )
+            else:
+                visualization_code = AV.AutoVisualization(
+                    df=dataframe,
+                    target_columns=col_has_target,
+                    problem_type=problem_type,
+                    ignore_columns=ignore_columns,
+                )
+        else:
+            visualization_code = AV.AutoVisualization(
+                df=dataframe,
+                target_columns=target_columns,
+                problem_type=problem_type,
+                ignore_columns=ignore_columns,
+            )
     else:
         visualization_code = None
 

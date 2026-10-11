@@ -49,7 +49,7 @@ model.fit(feature_train, target_train)
 y_pred = model.predict(feature_test)
 
 {% if is_multioutput_classification %}
-y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS)
+y_pred_df = pd.DataFrame(y_pred, columns=TARGET_COLUMNS, index=feature_test.index)
 for column in TARGET_COLUMNS:
     y_pred_df[column] = label_encoders[column].inverse_transform(y_pred_df[column].astype(int))
 y_pred = y_pred_df
