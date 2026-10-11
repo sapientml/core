@@ -1,11 +1,23 @@
-{% if pipeline.adaptation_metric == macros.Metric.AUC.value %}
+{% if pipeline.adaptation_metric == macros.Metric.AUC.value and not is_multioutput_classification%}
 from sklearn.metrics import roc_auc_score
 {% if pipeline.task.is_multiclass == True %}
-auc = roc_auc_score(target_test.values.ravel(), y_pred, multi_class="ovr")
+auc = roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr")
 {% else %}
-auc = roc_auc_score(target_test, y_pred)
+auc = roc_auc_score(target_test, y_prob)
 {% endif %}
 print('RESULT: AUC Score: ' + str(auc))
+{% elif pipeline.adaptation_metric == macros.Metric.AUC.value and is_multioutput_classification%}
+from sklearn.metrics import roc_auc_score
+auc_scores = []
+for i, col in enumerate(target_test.columns):
+{% if pipeline.task.is_multiclass == True %}
+    one_auc = roc_auc_score(target_test[column], y_prob[i], multi_class="ovr")
+{% else %}
+    one_auc = roc_auc_score(target_test[column], y_prob[i][:, 1])
+{% endif %}
+    auc_scores.append(one_auc)
+auc = np.mean(auc_scores)
+print('RESULT: Average AUC Score:', str(auc))
 {% elif (pipeline.adaptation_metric == macros.Metric.Accuracy.value) and (not pipeline.is_multi_class_multi_targets) %}
 from sklearn.metrics import accuracy_score
 
@@ -50,24 +62,47 @@ target_test = np.clip(target_test, 0, None)
 y_pred = np.clip(y_pred, 0, None)
 rmsle = np.sqrt(mean_squared_log_error(target_test, y_pred))
 print('RESULT: RMSLE:', str(rmsle))
-{% elif pipeline.adaptation_metric == macros.Metric.Gini.value %}
+{% elif pipeline.adaptation_metric == macros.Metric.Gini.value and not is_multioutput_classification%}
 from sklearn.metrics import roc_auc_score
 {% if pipeline.task.is_multiclass == True %}
-gini = 2 * roc_auc_score(target_test.values.ravel(), y_pred, multi_class="ovr") - 1
+gini = 2 * roc_auc_score(target_test.values.ravel(), y_prob, multi_class="ovr") - 1
 {% else %}
-gini = 2 * roc_auc_score(target_test, y_pred) - 1
+gini = 2 * roc_auc_score(target_test, y_prob) - 1
 {% endif %}
 print('RESULT: Gini: ' + str(gini))
+{% elif pipeline.adaptation_metric == macros.Metric.Gini.value and is_multioutput_classification%}
+from sklearn.metrics import roc_auc_score
+gini_scores = []
+for i, col in enumerate(target_test.columns):
+{% if pipeline.task.is_multiclass == True %}
+    one_auc = roc_auc_score(target_test[column], y_prob[i], multi_class="ovr")
+{% else %}
+    one_auc = roc_auc_score(target_test[column], y_prob[i][:, 1])
+{% endif %}
+    gini_score = 2 * one_auc - 1
+    gini_scores.append(gini_score)
+gini = np.mean(gini_scores)
+print('RESULT: Average Gini Score:', str(gini))
 {% elif pipeline.adaptation_metric == macros.Metric.MAE.value %}
 from sklearn.metrics import mean_absolute_error
 
 mae = mean_absolute_error(target_test, y_pred)
 print('RESULT: MAE:', str(mae))
-{% elif pipeline.adaptation_metric == macros.Metric.LogLoss.value %}
+{% elif pipeline.adaptation_metric == macros.Metric.LogLoss.value and not is_multioutput_classification%}
 from sklearn.metrics import log_loss
 
-log_loss = log_loss(target_test, y_pred)
+log_loss = log_loss(target_test, y_prob)
 print('RESULT: Log Loss:', str(log_loss))
+
+{% elif pipeline.adaptation_metric == macros.Metric.LogLoss.value and is_multioutput_classification%}
+from sklearn.metrics import log_loss
+
+log_loss_scores = []
+for i, column in enumerate(target_test.columns):
+    loss = log_loss(target_test[column], y_prob[i])
+    log_loss_scores.append(loss)
+avg_log_loss = np.mean(log_loss_scores)
+print('RESULT: Average Log Loss:', str(avg_log_loss))
 {% elif pipeline.adaptation_metric == macros.Metric.ROC_AUC.value %}
 from sklearn.metrics import roc_auc_score
 {% if pipeline.task.is_multiclass == True %}
